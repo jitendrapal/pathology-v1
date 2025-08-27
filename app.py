@@ -1000,6 +1000,112 @@ def assign_multiple_tests():
     tests = Test.query.all()
     return render_template('assign_multiple_tests.html', form=form, tests=tests)
 
+@app.route('/assign_tests_integrated', methods=['GET', 'POST'])
+def assign_tests_integrated():
+    """Integrated test assignment with payment options"""
+    form = MultipleTestAssignmentForm()
+
+    if request.method == 'POST':
+        try:
+            # Get form data
+            patient_id = request.form.get('patient_id')
+            test_ids = request.form.getlist('test_ids')
+            date_ordered = request.form.get('date_ordered')
+            sample_collector = request.form.get('sample_collector')
+
+            # Payment data
+            collect_payment = request.form.get('collect_payment') == '1'
+            advance_amount = float(request.form.get('advance_amount', 0))
+            payment_type = request.form.get('payment_type', 'none')
+            payment_method = request.form.get('payment_method')
+            payment_reference = request.form.get('payment_reference', '')
+
+            if not patient_id or not test_ids:
+                flash('Please select a patient and at least one test.', 'error')
+                return redirect(url_for('assign_tests_integrated'))
+
+            # Calculate total cost
+            total_cost = 0
+            for test_id in test_ids:
+                test = Test.query.get(test_id)
+                if test:
+                    total_cost += test.cost
+
+            # Create patient tests
+            for test_id in test_ids:
+                patient_test = PatientTest(
+                    patient_id=int(patient_id),
+                    test_id=int(test_id),
+                    date_ordered=datetime.strptime(date_ordered, '%Y-%m-%d').date() if date_ordered else datetime.utcnow().date(),
+                    status='Pending',
+                    sample_collector=sample_collector if sample_collector else None
+                )
+                db.session.add(patient_test)
+
+            # Create or update patient bill
+            patient_bill = PatientBill.query.filter_by(patient_id=patient_id).first()
+            if not patient_bill:
+                patient_bill = PatientBill(
+                    patient_id=int(patient_id),
+                    total_amount=total_cost,
+                    paid_amount=0,
+                    remaining_amount=total_cost,
+                    bill_status='pending',
+                    payment_status='Pending'
+                )
+                db.session.add(patient_bill)
+            else:
+                patient_bill.total_amount += total_cost
+                patient_bill.remaining_amount += total_cost
+
+            # Handle payment if collected
+            if collect_payment and advance_amount > 0:
+                payment = Payment(
+                    patient_id=int(patient_id),
+                    amount=advance_amount,
+                    payment_type=payment_type,
+                    payment_method=payment_method,
+                    reference_number=payment_reference,
+                    notes=f'Advance payment for {len(test_ids)} tests',
+                    created_by='Admin'
+                )
+                db.session.add(payment)
+
+                # Update patient bill
+                patient_bill.paid_amount += advance_amount
+                patient_bill.remaining_amount = max(0, patient_bill.total_amount - patient_bill.paid_amount)
+
+                if patient_bill.remaining_amount <= 0:
+                    patient_bill.bill_status = 'paid'
+                    patient_bill.payment_status = 'Fully Paid'
+                else:
+                    patient_bill.bill_status = 'partial'
+                    patient_bill.payment_status = 'Partially Paid'
+
+            db.session.commit()
+
+            # Success message
+            if collect_payment and advance_amount > 0:
+                flash(f'Successfully assigned {len(test_ids)} tests and collected ₹{advance_amount:.2f} advance payment! Remaining: ₹{patient_bill.remaining_amount:.2f}', 'success')
+            else:
+                flash(f'Successfully assigned {len(test_ids)} tests to patient! Total cost: ₹{total_cost:.2f}', 'success')
+
+            return redirect(url_for('patient_tests'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while assigning tests. Please try again.', 'error')
+            app.logger.error(f'Error in assign_tests_integrated: {str(e)}')
+
+    # Get all tests and patients for the form
+    tests = Test.query.all()
+    patients = Patient.query.all()
+
+    # Populate patient choices
+    form.patient_id.choices = [(0, 'Select Patient')] + [(p.id, f"{p.full_name} (ID: {p.id})") for p in patients]
+
+    return render_template('assign_tests_integrated.html', form=form, tests=tests)
+
 # API route to get test details
 @app.route('/api/test/<int:test_id>')
 def get_test_details(test_id):
