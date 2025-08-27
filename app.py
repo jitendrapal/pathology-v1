@@ -972,9 +972,39 @@ def add_sample_collector():
             app.logger.error(f'Error adding sample collector: {str(e)}')
     return render_template('add_sample_collector.html', form=form)
 
-if __name__ == '__main__':
+def create_tables():
+    """Create all database tables including Payment and PatientBill"""
     with app.app_context():
-        db.create_all()
+        try:
+            # Import all models to ensure they're registered
+            from models import Patient, Test, PatientTest, Hospital, SampleCollector, Payment, PatientBill
+
+            # Create all tables
+            db.create_all()
+            print("✅ All database tables created successfully!")
+
+            # Verify tables exist
+            tables = db.engine.table_names()
+            print(f"📋 Created tables: {', '.join(tables)}")
+
+            # Check if Payment table exists
+            if 'payment' in tables:
+                print("✅ Payment table created")
+            else:
+                print("❌ Payment table missing")
+
+            # Check if PatientBill table exists
+            if 'patient_bill' in tables:
+                print("✅ PatientBill table created")
+            else:
+                print("❌ PatientBill table missing")
+
+        except Exception as e:
+            print(f"❌ Error creating tables: {e}")
+            raise
+
+if __name__ == '__main__':
+    create_tables()
 
     # Get port from environment variable for deployment
     port = int(os.environ.get('PORT', 5000))
