@@ -48,6 +48,11 @@ This guide provides step-by-step instructions for deploying the Pathology Lab Ma
    - Go to Console tab in your app
    - Run:
    ```bash
+   python init_db.py
+   ```
+
+   Or manually:
+   ```bash
    python -c "from app import app, db; app.app_context().push(); db.create_all()"
    python sample_data.py
    ```

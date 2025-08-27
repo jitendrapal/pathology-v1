@@ -3,9 +3,15 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pathology.db'
+
+# Configuration for production and development
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///pathology.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Handle PostgreSQL URL format for DigitalOcean
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 
 # Initialize database
 from models import db, Patient, Test, PatientTest, Hospital, SampleCollector, Payment, PatientBill
@@ -969,4 +975,9 @@ def add_sample_collector():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+
+    # Get port from environment variable for deployment
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+
+    app.run(host='0.0.0.0', port=port, debug=debug)
