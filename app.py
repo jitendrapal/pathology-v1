@@ -288,6 +288,82 @@ def update_patient_tests(patient_id):
 
     return redirect(url_for('patient_detail', id=patient_id))
 
+@app.route('/test_results_dashboard')
+def test_results_dashboard():
+    """Dashboard for updating test results and managing pending payments"""
+    from sqlalchemy.orm import joinedload
+
+    # Get all pending tests that need results
+    pending_tests = PatientTest.query.options(
+        joinedload(PatientTest.patient),
+        joinedload(PatientTest.test)
+    ).filter(PatientTest.status.in_(['Pending', 'In Progress'])).order_by(
+        PatientTest.date_ordered.desc()
+    ).all()
+
+    # Get all completed tests that might need final payment
+    completed_tests = PatientTest.query.options(
+        joinedload(PatientTest.patient),
+        joinedload(PatientTest.test)
+    ).filter(PatientTest.status == 'Completed').order_by(
+        PatientTest.date_completed.desc()
+    ).limit(50).all()
+
+    # Get patient bills with pending amounts
+    pending_bills = PatientBill.query.options(
+        joinedload(PatientBill.patient)
+    ).filter(PatientBill.remaining_amount > 0).order_by(
+        PatientBill.bill_date.desc()
+    ).all()
+
+    # Calculate summary statistics
+    total_pending_tests = len(pending_tests)
+    total_pending_amount = sum([bill.remaining_amount for bill in pending_bills])
+    total_completed_today = PatientTest.query.filter(
+        PatientTest.status == 'Completed',
+        PatientTest.date_completed >= datetime.now().date()
+    ).count()
+
+    return render_template('test_results_dashboard.html',
+                         pending_tests=pending_tests,
+                         completed_tests=completed_tests,
+                         pending_bills=pending_bills,
+                         total_pending_tests=total_pending_tests,
+                         total_pending_amount=total_pending_amount,
+                         total_completed_today=total_completed_today)
+
+@app.route('/quick_update_test/<int:test_id>', methods=['GET', 'POST'])
+def quick_update_test(test_id):
+    """Quick update test results from dashboard"""
+    patient_test = PatientTest.query.get_or_404(test_id)
+
+    if request.method == 'POST':
+        try:
+            # Update test results
+            patient_test.results = request.form.get('results', '')
+            patient_test.status = request.form.get('status', 'Completed')
+            patient_test.notes = request.form.get('notes', '')
+
+            if patient_test.status == 'Completed' and not patient_test.date_completed:
+                patient_test.date_completed = datetime.now()
+
+            db.session.commit()
+            flash(f'Test results updated successfully for {patient_test.patient.full_name}!', 'success')
+
+            # Check if there are pending payments
+            patient_bill = PatientBill.query.filter_by(patient_id=patient_test.patient_id).first()
+            if patient_bill and patient_bill.remaining_amount > 0:
+                flash(f'Pending payment: ₹{patient_bill.remaining_amount:.2f} - Collect before printing report', 'warning')
+
+            return redirect(url_for('test_results_dashboard'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while updating test results. Please try again.', 'error')
+            app.logger.error(f'Error updating test results: {str(e)}')
+
+    return render_template('quick_update_test.html', patient_test=patient_test)
+
 # Payment Management Routes
 @app.route('/payments')
 def payments():

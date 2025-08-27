@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}Test Results & Payment Dashboard - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-microscope me-2"></i>Test Results & Payment Dashboard
+            </h1>
+            <div>
+                <a href="{{ url_for('patient_tests') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-list me-2"></i>All Test Orders
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_pending_tests }}</h4>
+                        <p class="mb-0">Tests Pending Results</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-hourglass-half fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>₹{{ "%.2f"|format(total_pending_amount) }}</h4>
+                        <p class="mb-0">Pending Payments</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-rupee-sign fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_completed_today }}</h4>
+                        <p class="mb-0">Completed Today</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs for different sections -->
+<ul class="nav nav-tabs" id="resultsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+            <i class="fas fa-hourglass-half me-2"></i>Pending Results ({{ total_pending_tests }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
+            <i class="fas fa-rupee-sign me-2"></i>Pending Payments ({{ pending_bills|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+            <i class="fas fa-check-circle me-2"></i>Recently Completed
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="resultsTabContent">
+    <!-- Pending Results Tab -->
+    <div class="tab-pane fade show active" id="pending" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-hourglass-half me-2"></i>Tests Pending Results
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if pending_tests %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Patient</th>
+                                <th>Test</th>
+                                <th>Date Ordered</th>
+                                <th>Status</th>
+                                <th>Sample Collector</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient_test in pending_tests %}
+                            <tr class="{% if patient_test.status == 'Pending' %}table-warning{% else %}table-info{% endif %}">
+                                <td>
+                                    <strong>{{ patient_test.patient.full_name }}</strong>
+                                    <br><small class="text-muted">ID: {{ patient_test.patient.id }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ patient_test.test.name }}</strong>
+                                    <br><small class="text-muted">₹{{ "%.2f"|format(patient_test.test.cost) }}</small>
+                                </td>
+                                <td>{{ patient_test.date_ordered.strftime('%d/%m/%Y') if patient_test.date_ordered else 'N/A' }}</td>
+                                <td>
+                                    <span class="badge {% if patient_test.status == 'Pending' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ patient_test.status }}
+                                    </span>
+                                </td>
+                                <td>{{ patient_test.sample_collector or 'Not assigned' }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('quick_update_test', test_id=patient_test.id) }}" class="btn btn-primary">
+                                            <i class="fas fa-edit"></i> Quick Update
+                                        </a>
+                                        <a href="{{ url_for('patient_detail', id=patient_test.patient.id) }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-user"></i> Patient Details
+                                        </a>
+                                        <a href="{{ url_for('edit_patient_test', id=patient_test.id) }}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-cog"></i> Edit
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-success text-center">
+                    <h5><i class="fas fa-check-circle me-2"></i>All tests have results!</h5>
+                    <p class="mb-0">No tests are currently pending results.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Payments Tab -->
+    <div class="tab-pane fade" id="payments" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-rupee-sign me-2"></i>Pending Payments for Final Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if pending_bills %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Patient</th>
+                                <th>Total Amount</th>
+                                <th>Paid Amount</th>
+                                <th>Remaining Amount</th>
+                                <th>Payment Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in pending_bills %}
+                            <tr class="table-warning">
+                                <td>
+                                    <strong>{{ bill.patient.full_name }}</strong>
+                                    <br><small class="text-muted">ID: {{ bill.patient.id }}</small>
+                                    <br><small class="text-muted">Phone: {{ bill.patient.phone }}</small>
+                                </td>
+                                <td>
+                                    <strong class="text-primary">₹{{ "%.2f"|format(bill.total_amount) }}</strong>
+                                </td>
+                                <td>
+                                    <span class="text-success">₹{{ "%.2f"|format(bill.paid_amount) }}</span>
+                                </td>
+                                <td>
+                                    <strong class="text-danger">₹{{ "%.2f"|format(bill.remaining_amount) }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge {% if bill.payment_status == 'Fully Paid' %}bg-success{% elif bill.payment_status == 'Partially Paid' %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ bill.payment_status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('patient_billing', patient_id=bill.patient.id) }}" class="btn btn-warning">
+                                            <i class="fas fa-credit-card"></i> Collect Payment
+                                        </a>
+                                        <a href="{{ url_for('patient_detail', id=bill.patient.id) }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-user"></i> View Patient
+                                        </a>
+                                        {% if bill.remaining_amount <= 0 %}
+                                        <a href="{{ url_for('patient_report', patient_id=bill.patient.id) }}" class="btn btn-success" target="_blank">
+                                            <i class="fas fa-print"></i> Print Report
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-success text-center">
+                    <h5><i class="fas fa-check-circle me-2"></i>All payments collected!</h5>
+                    <p class="mb-0">No pending payments for final reports.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recently Completed Tab -->
+    <div class="tab-pane fade" id="completed" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Recently Completed Tests
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if completed_tests %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Patient</th>
+                                <th>Test</th>
+                                <th>Date Completed</th>
+                                <th>Results</th>
+                                <th>Payment Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient_test in completed_tests %}
+                            <tr class="table-success">
+                                <td>
+                                    <strong>{{ patient_test.patient.full_name }}</strong>
+                                    <br><small class="text-muted">ID: {{ patient_test.patient.id }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ patient_test.test.name }}</strong>
+                                    <br><small class="text-muted">₹{{ "%.2f"|format(patient_test.test.cost) }}</small>
+                                </td>
+                                <td>{{ patient_test.date_completed.strftime('%d/%m/%Y %H:%M') if patient_test.date_completed else 'N/A' }}</td>
+                                <td>
+                                    {% if patient_test.results %}
+                                    <span class="text-success">✓ Available</span>
+                                    {% else %}
+                                    <span class="text-muted">No results</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set patient_bill = patient_test.patient.bills|first %}
+                                    {% if patient_bill %}
+                                    <span class="badge {% if patient_bill.payment_status == 'Fully Paid' %}bg-success{% elif patient_bill.payment_status == 'Partially Paid' %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ patient_bill.payment_status }}
+                                    </span>
+                                    {% if patient_bill.remaining_amount > 0 %}
+                                    <br><small class="text-danger">Pending: ₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</small>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-secondary">No billing info</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% set patient_bill = patient_test.patient.bills|first %}
+                                        {% if patient_bill and patient_bill.remaining_amount <= 0 %}
+                                        <a href="{{ url_for('patient_report', patient_id=patient_test.patient.id) }}" class="btn btn-success" target="_blank">
+                                            <i class="fas fa-print"></i> Print Report
+                                        </a>
+                                        {% elif patient_bill and patient_bill.remaining_amount > 0 %}
+                                        <a href="{{ url_for('patient_billing', patient_id=patient_test.patient.id) }}" class="btn btn-warning">
+                                            <i class="fas fa-credit-card"></i> Collect ₹{{ "%.2f"|format(patient_bill.remaining_amount) }}
+                                        </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('patient_detail', id=patient_test.patient.id) }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-user"></i> View Patient
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info text-center">
+                    <h5><i class="fas fa-info-circle me-2"></i>No completed tests</h5>
+                    <p class="mb-0">No tests have been completed recently.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh every 5 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 300000); // 5 minutes
+    
+    // Add tooltips for better UX
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

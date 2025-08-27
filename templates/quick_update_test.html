@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Update Test Results - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-edit me-2"></i>Quick Update Test Results
+            </h1>
+            <div>
+                <a href="{{ url_for('test_results_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patient and Test Information -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Test Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Patient Details:</h6>
+                        <p><strong>Name:</strong> {{ patient_test.patient.full_name }}</p>
+                        <p><strong>Age:</strong> {{ patient_test.patient.age }} years</p>
+                        <p><strong>Gender:</strong> {{ patient_test.patient.gender }}</p>
+                        <p><strong>Phone:</strong> {{ patient_test.patient.phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Test Details:</h6>
+                        <p><strong>Test:</strong> {{ patient_test.test.name }}</p>
+                        <p><strong>Category:</strong> {{ patient_test.test.category }}</p>
+                        <p><strong>Cost:</strong> ₹{{ "%.2f"|format(patient_test.test.cost) }}</p>
+                        <p><strong>Date Ordered:</strong> {{ patient_test.date_ordered.strftime('%d/%m/%Y') if patient_test.date_ordered else 'N/A' }}</p>
+                        <p><strong>Current Status:</strong> 
+                            <span class="badge {% if patient_test.status == 'Pending' %}bg-warning{% elif patient_test.status == 'Completed' %}bg-success{% else %}bg-info{% endif %}">
+                                {{ patient_test.status }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Status Check -->
+{% set patient_bill = patient_test.patient.bills|first %}
+{% if patient_bill %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card {% if patient_bill.remaining_amount > 0 %}border-warning{% else %}border-success{% endif %}">
+            <div class="card-header {% if patient_bill.remaining_amount > 0 %}bg-warning text-dark{% else %}bg-success text-white{% endif %}">
+                <h5 class="mb-0">
+                    <i class="fas fa-rupee-sign me-2"></i>Payment Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <p><strong>Total Amount:</strong> ₹{{ "%.2f"|format(patient_bill.total_amount) }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Paid Amount:</strong> <span class="text-success">₹{{ "%.2f"|format(patient_bill.paid_amount) }}</span></p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Remaining:</strong> 
+                            {% if patient_bill.remaining_amount > 0 %}
+                            <span class="text-danger">₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</span>
+                            {% else %}
+                            <span class="text-success">₹0.00</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-3">
+                        <p><strong>Status:</strong> 
+                            <span class="badge {% if patient_bill.payment_status == 'Fully Paid' %}bg-success{% elif patient_bill.payment_status == 'Partially Paid' %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ patient_bill.payment_status }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                {% if patient_bill.remaining_amount > 0 %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Payment Pending:</strong> Collect ₹{{ "%.2f"|format(patient_bill.remaining_amount) }} before printing final report.
+                    <a href="{{ url_for('patient_billing', patient_id=patient_test.patient.id) }}" class="btn btn-warning btn-sm ms-2">
+                        <i class="fas fa-credit-card me-1"></i>Collect Payment
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-success mt-3">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Payment Complete:</strong> Ready to print final report.
+                    <a href="{{ url_for('patient_report', patient_id=patient_test.patient.id) }}" class="btn btn-success btn-sm ms-2" target="_blank">
+                        <i class="fas fa-print me-1"></i>Print Report
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Update Test Results Form -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>Update Test Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Test Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="Pending" {% if patient_test.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="In Progress" {% if patient_test.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                <option value="Completed" {% if patient_test.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                <option value="Cancelled" {% if patient_test.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Normal Range (Reference)</label>
+                            <input type="text" class="form-control" value="{{ patient_test.test.normal_range or 'Not specified' }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Test Results</label>
+                        <textarea name="results" class="form-control" rows="6" placeholder="Enter detailed test results here...">{{ patient_test.results or '' }}</textarea>
+                        <div class="form-text">Enter the complete test results including values, observations, and interpretations.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Any additional notes or observations...">{{ patient_test.notes or '' }}</textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('test_results_dashboard') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Update Test Results
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('patient_detail', id=patient_test.patient.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user me-2"></i>View Full Patient Details
+                    </a>
+                    {% if patient_bill and patient_bill.remaining_amount > 0 %}
+                    <a href="{{ url_for('patient_billing', patient_id=patient_test.patient.id) }}" class="btn btn-outline-warning">
+                        <i class="fas fa-credit-card me-2"></i>Collect Pending Payment
+                    </a>
+                    {% endif %}
+                    {% if patient_test.status == 'Completed' and (not patient_bill or patient_bill.remaining_amount <= 0) %}
+                    <a href="{{ url_for('patient_report', patient_id=patient_test.patient.id) }}" class="btn btn-outline-success" target="_blank">
+                        <i class="fas fa-print me-2"></i>Print Final Report
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on results textarea
+    const resultsTextarea = document.querySelector('textarea[name="results"]');
+    if (resultsTextarea) {
+        resultsTextarea.focus();
+    }
+    
+    // Auto-set status to Completed when results are entered
+    const statusSelect = document.querySelector('select[name="status"]');
+    resultsTextarea.addEventListener('input', function() {
+        if (this.value.trim() && statusSelect.value === 'Pending') {
+            statusSelect.value = 'Completed';
+        }
+    });
+});
+</script>
+{% endblock %}
