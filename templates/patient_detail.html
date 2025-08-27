@@ -242,7 +242,7 @@
                                                     <span class="badge bg-secondary mb-1">{{ test.category }}</span>
                                                     {% endif %}
                                                     <div class="small">
-                                                        <strong class="text-success">${{ "%.2f"|format(test.cost) }}</strong>
+                                                        <strong class="text-success">₹{{ "%.2f"|format(test.cost) }}</strong>
                                                         {% if test.normal_range %}
                                                         <br><span class="text-muted">{{ test.normal_range }}</span>
                                                         {% endif %}
@@ -257,10 +257,153 @@
                         {% endfor %}
                     </div>
 
+                    <!-- Selected New Tests Table -->
+                    <div class="card mt-4" id="selectedNewTestsCard" style="display: none;">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-list me-2"></i>Selected New Tests
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Test Name</th>
+                                            <th>Category</th>
+                                            <th>Cost (₹)</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="selectedNewTestsTableBody">
+                                        <!-- Selected tests will be added here -->
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="2">Total New Tests Cost:</th>
+                                            <th id="totalNewTestsCost">₹0.00</th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Options for New Tests -->
+                    <div class="card mt-4" id="newTestsPaymentCard" style="display: none;">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">
+                                <i class="fas fa-credit-card me-2"></i>Payment Options for New Tests
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Total Amount Display -->
+                            <div class="alert alert-info text-center mb-4">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-calculator me-2"></i>Total New Tests Cost: <span id="displayNewTestsTotal">₹0.00</span>
+                                </h5>
+                            </div>
+
+                            <!-- Payment Options -->
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="card border-secondary h-100">
+                                        <div class="card-header bg-secondary text-white text-center">
+                                            <h6 class="mb-0"><i class="fas fa-clock me-2"></i>No Payment Now</h6>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <h6 class="text-secondary mb-3">₹0.00</h6>
+                                            <button type="button" class="btn btn-secondary" id="noPaymentNewTestsBtn">
+                                                <i class="fas fa-forward me-2"></i>Assign Without Payment
+                                            </button>
+                                            <p class="small text-muted mt-2">Full payment will be collected later</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-warning h-100">
+                                        <div class="card-header bg-warning text-dark text-center">
+                                            <h6 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i>Half Payment</h6>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <h6 class="text-warning mb-3">₹<span id="halfNewTestsAmount">0.00</span></h6>
+                                            <button type="button" class="btn btn-warning" id="halfPaymentNewTestsBtn">
+                                                <i class="fas fa-credit-card me-2"></i>Pay Half Now
+                                            </button>
+                                            <p class="small text-muted mt-2">Remaining will be collected after test completion</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-success h-100">
+                                        <div class="card-header bg-success text-white text-center">
+                                            <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Full Payment</h6>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <h6 class="text-success mb-3">₹<span id="fullNewTestsAmount">0.00</span></h6>
+                                            <button type="button" class="btn btn-success" id="fullPaymentNewTestsBtn">
+                                                <i class="fas fa-money-check-alt me-2"></i>Pay Full Now
+                                            </button>
+                                            <p class="small text-muted mt-2">Complete payment - no remaining balance</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Details Form -->
+                            <div id="newTestsPaymentDetails" style="display: none;">
+                                <div class="alert alert-success">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Payment Summary</h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <p class="mb-1"><strong>Total Cost:</strong> ₹<span id="paymentNewTestsTotal">0.00</span></p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <p class="mb-1"><strong>Paying Now:</strong> ₹<span id="payingNewTestsNow">0.00</span></p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <p class="mb-0"><strong>Remaining:</strong> ₹<span id="remainingNewTestsAmount">0.00</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden form fields -->
+                                <input type="hidden" name="collect_new_tests_payment" id="collectNewTestsPayment" value="0">
+                                <input type="hidden" name="new_tests_advance_amount" id="newTestsAdvanceAmount">
+                                <input type="hidden" name="new_tests_payment_type" id="newTestsPaymentType">
+
+                                <div class="row" id="newTestsPaymentMethodSection" style="display: none;">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Payment Method</label>
+                                        <select name="new_tests_payment_method" class="form-select" id="newTestsPaymentMethod">
+                                            <option value="">Select Payment Method</option>
+                                            <option value="cash">Cash</option>
+                                            <option value="card">Credit/Debit Card</option>
+                                            <option value="upi">UPI</option>
+                                            <option value="bank_transfer">Bank Transfer</option>
+                                            <option value="cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Reference Number</label>
+                                        <input type="text" name="new_tests_payment_reference" class="form-control" placeholder="Transaction ID, Receipt #">
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 text-center">
+                                    <button type="button" class="btn btn-secondary me-2" id="cancelNewTestsPayment">
+                                        <i class="fas fa-times me-2"></i>Change Payment Option
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Submit Button -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                         <a href="{{ url_for('patients') }}" class="btn btn-secondary me-md-2">Back to Patients</a>
-                        <button type="submit" class="btn btn-success btn-lg">
+                        <button type="submit" class="btn btn-success btn-lg" id="submitAllTestsBtn">
                             <i class="fas fa-save me-2"></i>Update All Tests & Assign New
                         </button>
                     </div>
@@ -323,13 +466,146 @@ document.addEventListener('DOMContentLoaded', function() {
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
+        updateSelectedNewTestsTable();
     });
+
+    // New Tests Selection and Payment System
+    const selectedNewTests = new Map();
+    let totalNewTestsCost = 0;
+
+    const selectedNewTestsCard = document.getElementById('selectedNewTestsCard');
+    const selectedNewTestsTableBody = document.getElementById('selectedNewTestsTableBody');
+    const newTestsPaymentCard = document.getElementById('newTestsPaymentCard');
+
+    // Test data for cost calculation
+    const testData = {
+        {% for test in all_tests %}
+        {{ test.id }}: {
+            name: "{{ test.name }}",
+            category: "{{ test.category }}",
+            cost: {{ test.cost }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    // Handle new test selection
+    document.querySelectorAll('.new-test-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const testId = this.value;
+
+            if (this.checked && !this.disabled) {
+                const test = testData[testId];
+                if (test) {
+                    selectedNewTests.set(testId, test);
+                }
+            } else {
+                selectedNewTests.delete(testId);
+            }
+
+            updateSelectedNewTestsTable();
+        });
+    });
+
+    function updateSelectedNewTestsTable() {
+        selectedNewTestsTableBody.innerHTML = '';
+        totalNewTestsCost = 0;
+
+        selectedNewTests.forEach((test, testId) => {
+            totalNewTestsCost += test.cost;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${test.name}</td>
+                <td><span class="badge bg-secondary">${test.category}</span></td>
+                <td>₹${test.cost.toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeNewTest('${testId}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            selectedNewTestsTableBody.appendChild(row);
+        });
+
+        document.getElementById('totalNewTestsCost').textContent = `₹${totalNewTestsCost.toFixed(2)}`;
+
+        if (selectedNewTests.size > 0) {
+            selectedNewTestsCard.style.display = 'block';
+            newTestsPaymentCard.style.display = 'block';
+            updateNewTestsPaymentOptions();
+        } else {
+            selectedNewTestsCard.style.display = 'none';
+            newTestsPaymentCard.style.display = 'none';
+        }
+    }
+
+    function updateNewTestsPaymentOptions() {
+        const halfAmount = totalNewTestsCost / 2;
+
+        document.getElementById('displayNewTestsTotal').textContent = `₹${totalNewTestsCost.toFixed(2)}`;
+        document.getElementById('halfNewTestsAmount').textContent = halfAmount.toFixed(2);
+        document.getElementById('fullNewTestsAmount').textContent = totalNewTestsCost.toFixed(2);
+        document.getElementById('paymentNewTestsTotal').textContent = totalNewTestsCost.toFixed(2);
+    }
+
+    // Payment option handlers
+    document.getElementById('noPaymentNewTestsBtn').addEventListener('click', function() {
+        setNewTestsPaymentOption(0, 'none');
+    });
+
+    document.getElementById('halfPaymentNewTestsBtn').addEventListener('click', function() {
+        setNewTestsPaymentOption(totalNewTestsCost / 2, 'half');
+    });
+
+    document.getElementById('fullPaymentNewTestsBtn').addEventListener('click', function() {
+        setNewTestsPaymentOption(totalNewTestsCost, 'full');
+    });
+
+    function setNewTestsPaymentOption(amount, type) {
+        const remainingAmount = totalNewTestsCost - amount;
+
+        document.getElementById('payingNewTestsNow').textContent = amount.toFixed(2);
+        document.getElementById('remainingNewTestsAmount').textContent = remainingAmount.toFixed(2);
+
+        document.getElementById('collectNewTestsPayment').value = amount > 0 ? '1' : '0';
+        document.getElementById('newTestsAdvanceAmount').value = amount.toFixed(2);
+        document.getElementById('newTestsPaymentType').value = type;
+
+        document.getElementById('newTestsPaymentDetails').style.display = 'block';
+
+        if (amount > 0) {
+            document.getElementById('newTestsPaymentMethodSection').style.display = 'flex';
+        } else {
+            document.getElementById('newTestsPaymentMethodSection').style.display = 'none';
+        }
+
+        // Hide payment option buttons
+        document.querySelector('#newTestsPaymentCard .row.mb-4').style.display = 'none';
+    }
+
+    document.getElementById('cancelNewTestsPayment').addEventListener('click', function() {
+        document.getElementById('newTestsPaymentDetails').style.display = 'none';
+        document.querySelector('#newTestsPaymentCard .row.mb-4').style.display = 'flex';
+
+        // Clear form values
+        document.getElementById('collectNewTestsPayment').value = '0';
+        document.getElementById('newTestsAdvanceAmount').value = '';
+        document.getElementById('newTestsPaymentType').value = '';
+        document.getElementById('newTestsPaymentMethod').value = '';
+    });
+
+    // Global function for removing tests
+    window.removeNewTest = function(testId) {
+        selectedNewTests.delete(testId);
+        document.getElementById(`newTest${testId}`).checked = false;
+        updateSelectedNewTestsTable();
+    };
 
     // Form validation
     document.getElementById('updateTestsForm').addEventListener('submit', function(e) {
         const hasChanges = document.querySelectorAll('.new-test-checkbox:checked').length > 0 ||
                           document.querySelectorAll('textarea, select').length > 0;
-        
+
         if (!hasChanges) {
             if (!confirm('No changes detected. Are you sure you want to submit?')) {
                 e.preventDefault();

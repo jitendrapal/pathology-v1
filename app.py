@@ -207,10 +207,16 @@ def update_patient_tests(patient_id):
 
         # Handle new test assignments
         new_test_ids = request.form.getlist('new_test_ids[]')
+        new_tests_total_cost = 0
+
         if new_test_ids:
             sample_collector = request.form.get('sample_collector', '')
             for new_test_id in new_test_ids:
                 if new_test_id:
+                    test = Test.query.get(int(new_test_id))
+                    if test:
+                        new_tests_total_cost += test.cost
+
                     new_patient_test = PatientTest(
                         patient_id=patient_id,
                         test_id=int(new_test_id),
@@ -220,8 +226,63 @@ def update_patient_tests(patient_id):
                     )
                     db.session.add(new_patient_test)
 
+        # Handle payment for new tests
+        if new_test_ids and new_tests_total_cost > 0:
+            collect_payment = request.form.get('collect_new_tests_payment') == '1'
+            advance_amount = float(request.form.get('new_tests_advance_amount', 0))
+            payment_type = request.form.get('new_tests_payment_type', 'none')
+            payment_method = request.form.get('new_tests_payment_method')
+            payment_reference = request.form.get('new_tests_payment_reference', '')
+
+            # Create or update patient bill
+            patient_bill = PatientBill.query.filter_by(patient_id=patient_id).first()
+            if not patient_bill:
+                patient_bill = PatientBill(
+                    patient_id=patient_id,
+                    total_amount=new_tests_total_cost,
+                    paid_amount=0,
+                    remaining_amount=new_tests_total_cost,
+                    bill_status='pending',
+                    payment_status='Pending'
+                )
+                db.session.add(patient_bill)
+            else:
+                patient_bill.total_amount += new_tests_total_cost
+                patient_bill.remaining_amount += new_tests_total_cost
+
+            # Handle payment if collected
+            if collect_payment and advance_amount > 0:
+                payment = Payment(
+                    patient_id=patient_id,
+                    amount=advance_amount,
+                    payment_type=payment_type,
+                    payment_method=payment_method,
+                    reference_number=payment_reference,
+                    notes=f'Advance payment for {len(new_test_ids)} new tests',
+                    created_by='Admin'
+                )
+                db.session.add(payment)
+
+                # Update patient bill
+                patient_bill.paid_amount += advance_amount
+                patient_bill.remaining_amount = max(0, patient_bill.total_amount - patient_bill.paid_amount)
+
+                if patient_bill.remaining_amount <= 0:
+                    patient_bill.bill_status = 'paid'
+                    patient_bill.payment_status = 'Fully Paid'
+                else:
+                    patient_bill.bill_status = 'partial'
+                    patient_bill.payment_status = 'Partially Paid'
+
         db.session.commit()
-        flash(f'Successfully updated tests for {patient.full_name}!', 'success')
+
+        # Success message with payment info
+        if new_test_ids and collect_payment and advance_amount > 0:
+            flash(f'Successfully updated tests for {patient.full_name} and collected ₹{advance_amount:.2f} advance payment! Remaining: ₹{patient_bill.remaining_amount:.2f}', 'success')
+        elif new_test_ids:
+            flash(f'Successfully updated tests for {patient.full_name}! New tests cost: ₹{new_tests_total_cost:.2f}', 'success')
+        else:
+            flash(f'Successfully updated tests for {patient.full_name}!', 'success')
 
     except Exception as e:
         db.session.rollback()
