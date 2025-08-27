@@ -456,6 +456,29 @@ def print_test_report(test_id):
                          patient_bill=patient_bill,
                          payments=payments)
 
+@app.route('/print_bill/<int:patient_id>')
+def print_bill(patient_id):
+    """Print bill receipt for a patient"""
+    patient = Patient.query.get_or_404(patient_id)
+
+    # Get patient bill
+    patient_bill = PatientBill.query.filter_by(patient_id=patient_id).first()
+
+    # Get all tests for this patient
+    from sqlalchemy.orm import joinedload
+    patient_tests = PatientTest.query.options(
+        joinedload(PatientTest.test)
+    ).filter_by(patient_id=patient_id).order_by(PatientTest.date_ordered.desc()).all()
+
+    # Get payment history
+    payments = Payment.query.filter_by(patient_id=patient_id).order_by(Payment.payment_date.desc()).all()
+
+    return render_template('reports/bill_receipt.html',
+                         patient=patient,
+                         patient_bill=patient_bill,
+                         patient_tests=patient_tests,
+                         payments=payments)
+
 @app.route('/print_patient_report/<int:patient_id>')
 def print_patient_report(patient_id):
     """Print comprehensive report for all completed tests of a patient"""
