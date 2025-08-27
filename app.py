@@ -868,9 +868,9 @@ def assign_test():
 
             # Success message with payment info
             if advance_amount > 0:
-                flash(f'Test assigned successfully and collected ${advance_amount:.2f} advance payment! Remaining: ${max(0, test_cost - advance_amount):.2f}', 'success')
+                flash(f'Test assigned successfully and collected ₹{advance_amount:.2f} advance payment! Remaining: ₹{max(0, test_cost - advance_amount):.2f}', 'success')
             else:
-                flash(f'Test assigned successfully! Total cost: ${test_cost:.2f}', 'success')
+                flash(f'Test assigned successfully! Total cost: ₹{test_cost:.2f}', 'success')
 
             return redirect(url_for('patient_tests'))
         except Exception as e:
@@ -984,9 +984,9 @@ def assign_multiple_tests():
 
             # Success message with payment info
             if advance_amount > 0:
-                flash(f'Successfully assigned {len(test_ids)} tests and collected ${advance_amount:.2f} advance payment! Remaining: ${max(0, total_cost - advance_amount):.2f}', 'success')
+                flash(f'Successfully assigned {len(test_ids)} tests and collected ₹{advance_amount:.2f} advance payment! Remaining: ₹{max(0, total_cost - advance_amount):.2f}', 'success')
             else:
-                flash(f'Successfully assigned {len(test_ids)} tests to patient! Total cost: ${total_cost:.2f}', 'success')
+                flash(f'Successfully assigned {len(test_ids)} tests to patient! Total cost: ₹{total_cost:.2f}', 'success')
 
             return redirect(url_for('patient_tests'))
         except Exception as e:
