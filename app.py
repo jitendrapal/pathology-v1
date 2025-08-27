@@ -242,8 +242,7 @@ def update_patient_tests(patient_id):
                     total_amount=new_tests_total_cost,
                     paid_amount=0,
                     remaining_amount=new_tests_total_cost,
-                    bill_status='pending',
-                    payment_status='Pending'
+                    bill_status='pending'
                 )
                 db.session.add(patient_bill)
             else:
@@ -269,10 +268,8 @@ def update_patient_tests(patient_id):
 
                 if patient_bill.remaining_amount <= 0:
                     patient_bill.bill_status = 'paid'
-                    patient_bill.payment_status = 'Fully Paid'
                 else:
                     patient_bill.bill_status = 'partial'
-                    patient_bill.payment_status = 'Partially Paid'
 
         db.session.commit()
 
@@ -1111,8 +1108,7 @@ def assign_tests_integrated():
                     total_amount=total_cost,
                     paid_amount=0,
                     remaining_amount=total_cost,
-                    bill_status='pending',
-                    payment_status='Pending'
+                    bill_status='pending'
                 )
                 db.session.add(patient_bill)
             else:
@@ -1138,10 +1134,8 @@ def assign_tests_integrated():
 
                 if patient_bill.remaining_amount <= 0:
                     patient_bill.bill_status = 'paid'
-                    patient_bill.payment_status = 'Fully Paid'
                 else:
                     patient_bill.bill_status = 'partial'
-                    patient_bill.payment_status = 'Partially Paid'
 
             db.session.commit()
 
