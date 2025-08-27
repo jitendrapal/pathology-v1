@@ -187,7 +187,7 @@
             </div>
 
             <!-- Payment Collection Section -->
-            <div class="card mb-4" id="paymentSection" style="display: none;">
+            <div class="card mb-4" id="paymentSection">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-dollar-sign me-2"></i>Total Amount & Payment Options
@@ -196,13 +196,13 @@
                 <div class="card-body">
                     <!-- Total Cost Display -->
                     <div class="alert alert-info text-center mb-4">
-                        <h4 class="mb-0">
-                            <i class="fas fa-calculator me-2"></i>Total Amount: <span id="billTotalCost" class="text-primary">₹0.00</span>
+                        <h4 class="mb-0" id="totalCostDisplay">
+                            <i class="fas fa-calculator me-2"></i><span id="totalMessage">Select tests above to see total cost and payment options</span>
                         </h4>
                     </div>
 
                     <!-- Payment Options -->
-                    <div class="row mb-4">
+                    <div class="row mb-4" id="paymentOptionsMultiple" style="display: none;">
                         <div class="col-md-6">
                             <div class="card border-warning h-100">
                                 <div class="card-header bg-warning text-dark text-center">
@@ -353,11 +353,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedTests.size === 0) {
             selectedTestsCard.style.display = 'none';
             submitBtn.disabled = true;
-            document.getElementById('paymentSection').style.display = 'none';
+            document.getElementById('paymentOptionsMultiple').style.display = 'none';
+            document.getElementById('totalMessage').textContent = 'Select tests above to see total cost and payment options';
         } else {
             selectedTestsCard.style.display = 'block';
             submitBtn.disabled = false;
-            document.getElementById('paymentSection').style.display = 'block';
+            document.getElementById('paymentOptionsMultiple').style.display = 'flex';
+            document.getElementById('totalMessage').innerHTML = `Total Amount: <span id="billTotalCost" class="text-primary">₹${totalCost.toFixed(2)}</span>`;
         }
 
         // Update table
@@ -398,7 +400,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update payment summary
     function updatePaymentSummary() {
-        document.getElementById('billTotalCost').textContent = `₹${totalCost.toFixed(2)}`;
+        // Update total cost display
+        if (totalCost > 0) {
+            document.getElementById('totalMessage').innerHTML = `Total Amount: <span id="billTotalCost" class="text-primary">₹${totalCost.toFixed(2)}</span>`;
+        }
 
         // Update half and full amounts
         const halfAmount = totalCost / 2;

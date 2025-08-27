@@ -126,7 +126,7 @@
 
                     <!-- Payment Collection Section -->
                     <hr class="my-4">
-                    <div id="paymentSection" style="display: none;">
+                    <div id="paymentSection">
                         <div class="card border-primary">
                             <div class="card-header bg-primary text-white">
                                 <h5 class="mb-0">
@@ -137,8 +137,8 @@
                                 <!-- Test Cost Display -->
                                 <div class="alert alert-info text-center mb-4">
                                     <h6 class="mb-1">Selected Test:</h6>
-                                    <h4 class="mb-0">
-                                        <span id="selectedTestName">Select a test</span> - <span id="testCost" class="text-primary">₹0.00</span>
+                                    <h4 class="mb-0" id="testCostDisplay">
+                                        <span id="selectedTestName">Please select a test above to see cost and payment options</span>
                                     </h4>
                                 </div>
 
@@ -273,13 +273,13 @@ document.addEventListener('DOMContentLoaded', function() {
             currentTestCost = testData[this.value].cost;
             currentTestName = testData[this.value].name;
 
-            // Show payment section
-            paymentSection.style.display = 'block';
+            // Show payment options
             paymentOptions.style.display = 'flex';
 
             // Update displays
-            document.getElementById('selectedTestName').textContent = currentTestName;
-            document.getElementById('testCost').textContent = `₹${currentTestCost.toFixed(2)}`;
+            document.getElementById('testCostDisplay').innerHTML = `
+                <span id="selectedTestName">${currentTestName}</span> - <span id="testCost" class="text-primary">₹${currentTestCost.toFixed(2)}</span>
+            `;
             document.getElementById('displayTestCost').textContent = currentTestCost.toFixed(2);
 
             // Update payment amounts
@@ -287,8 +287,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('halfAmount').textContent = halfAmount.toFixed(2);
             document.getElementById('fullAmount').textContent = currentTestCost.toFixed(2);
         } else {
-            // Hide payment section
-            paymentSection.style.display = 'none';
+            // Hide payment options and show select message
+            paymentOptions.style.display = 'none';
+            document.getElementById('testCostDisplay').innerHTML = `
+                <span id="selectedTestName">Please select a test above to see cost and payment options</span>
+            `;
             currentTestCost = 0;
             currentTestName = '';
         }
