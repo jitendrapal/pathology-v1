@@ -26,7 +26,9 @@ def init_database():
         print("✅ Database tables created successfully!")
 
         # Check if tables exist
-        tables = db.engine.table_names()
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        tables = inspector.get_table_names()
         print(f"📋 Available tables: {', '.join(tables)}")
 
         # Check if we need to load sample data
@@ -1171,7 +1173,9 @@ def create_tables():
             print("✅ All database tables created successfully!")
 
             # Verify tables exist
-            tables = db.engine.table_names()
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
             print(f"📋 Created tables: {', '.join(tables)}")
 
             # Check if Payment table exists
