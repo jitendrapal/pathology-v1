@@ -87,19 +87,10 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <div class="dropdown">
-                            <button class="btn btn-primary btn-lg w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-plus me-2"></i>Register New Patient
-                            </button>
-                            <ul class="dropdown-menu w-100">
-                                <li><a class="dropdown-item" href="{{ url_for('register_patient_step1') }}">
-                                    <i class="fas fa-list-ol me-2"></i>Multi-Step Registration
-                                </a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('register_patient') }}">
-                                    <i class="fas fa-file-alt me-2"></i>Single Page Registration
-                                </a></li>
-                            </ul>
-                        </div>
+                        <a href="{{ url_for('register_patient_step1') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-user-plus me-2"></i>Register New Patient
+                            <br><small>Multi-step registration</small>
+                        </a>
                     </div>
                     <div class="col-md-4 mb-3">
                         <a href="{{ url_for('add_test') }}" class="btn btn-success btn-lg w-100">
