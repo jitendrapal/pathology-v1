@@ -86,61 +86,49 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('register_patient_step1') }}" class="btn btn-primary btn-lg w-100">
-                            <i class="fas fa-user-plus me-2"></i>Register New Patient
-                            <br><small>Multi-step registration</small>
+                    <!-- Row 1: Primary Actions -->
+                    <div class="col-md-4 mb-4">
+                        <a href="{{ url_for('register_patient_step1') }}" class="btn btn-primary btn-lg w-100 h-100 d-flex flex-column justify-content-center" style="min-height: 120px;">
+                            <i class="fas fa-user-plus fa-3x mb-3"></i>
+                            <span class="h5 mb-1">Registration</span>
+                            <small class="text-light">Register New Patient</small>
                         </a>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('add_test') }}" class="btn btn-success btn-lg w-100">
-                            <i class="fas fa-plus me-2"></i>Add New Test
+                    <div class="col-md-4 mb-4">
+                        <a href="{{ url_for('test_results_dashboard') }}" class="btn btn-success btn-lg w-100 h-100 d-flex flex-column justify-content-center" style="min-height: 120px;">
+                            <i class="fas fa-microscope fa-3x mb-3"></i>
+                            <span class="h5 mb-1">Test Results & Payment</span>
+                            <small class="text-light">Update results & collect payments</small>
                         </a>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="dropdown">
-                            <button class="btn btn-info btn-lg w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-clipboard-list me-2"></i>Assign Tests to Patient
-                            </button>
-                            <ul class="dropdown-menu w-100">
-                                <li><a class="dropdown-item" href="{{ url_for('assign_tests_integrated') }}">
-                                    <i class="fas fa-clipboard-check me-2 text-primary"></i><strong>Assign Tests + Payment</strong>
-                                    <br><small class="text-muted">Integrated workflow with payment options</small>
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('assign_multiple_tests') }}">
-                                    <i class="fas fa-th-large me-2"></i>Multiple Tests (Grid)
-                                </a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('assign_test') }}">
-                                    <i class="fas fa-file-alt me-2"></i>Single Test
-                                </a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('payments') }}" class="btn btn-warning btn-lg w-100">
-                            <i class="fas fa-dollar-sign me-2"></i>Payment Management
+                    <div class="col-md-4 mb-4">
+                        <a href="{{ url_for('assign_multiple_tests') }}" class="btn btn-info btn-lg w-100 h-100 d-flex flex-column justify-content-center" style="min-height: 120px;">
+                            <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                            <span class="h5 mb-1">Assign Tests to Patient</span>
+                            <small class="text-light">Multi-grid view assignment</small>
                         </a>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('add_payment') }}" class="btn btn-secondary btn-lg w-100">
-                            <i class="fas fa-credit-card me-2"></i>Record Payment
+
+                    <!-- Row 2: Secondary Actions -->
+                    <div class="col-md-4 mb-4">
+                        <a href="{{ url_for('patients') }}" class="btn btn-secondary btn-lg w-100 h-100 d-flex flex-column justify-content-center" style="min-height: 120px;">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <span class="h5 mb-1">Patient Search</span>
+                            <small class="text-light">Find & view patients</small>
                         </a>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('patient_tests') }}" class="btn btn-dark btn-lg w-100">
-                            <i class="fas fa-clipboard-check me-2"></i>View Test Orders
+                    <div class="col-md-4 mb-4">
+                        <a href="{{ url_for('patient_tests') }}" class="btn btn-dark btn-lg w-100 h-100 d-flex flex-column justify-content-center" style="min-height: 120px;">
+                            <i class="fas fa-list-alt fa-3x mb-3"></i>
+                            <span class="h5 mb-1">View Test Orders</span>
+                            <small class="text-light">All test orders & status</small>
                         </a>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('test_results_dashboard') }}" class="btn btn-primary btn-lg w-100">
-                            <i class="fas fa-microscope me-2"></i>Test Results & Payments
-                            <br><small>Update results & collect payments</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('bulk_update_tests') }}" class="btn btn-warning btn-lg w-100">
-                            <i class="fas fa-edit me-2"></i>Bulk Update Tests
+                    <div class="col-md-4 mb-4">
+                        <a href="{{ url_for('payment_overview') }}" class="btn btn-warning btn-lg w-100 h-100 d-flex flex-column justify-content-center" style="min-height: 120px;">
+                            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                            <span class="h5 mb-1">Payment Overview</span>
+                            <small class="text-light">Pending, Paid, Remaining</small>
                         </a>
                     </div>
                 </div>

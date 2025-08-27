@@ -364,6 +364,40 @@ def quick_update_test(test_id):
 
     return render_template('quick_update_test.html', patient_test=patient_test)
 
+@app.route('/payment_overview')
+def payment_overview():
+    """Payment overview dashboard showing pending, paid, and remaining amounts"""
+    from sqlalchemy.orm import joinedload
+    from sqlalchemy import func
+
+    # Get all patient bills with payment statistics
+    patient_bills = PatientBill.query.options(
+        joinedload(PatientBill.patient)
+    ).all()
+
+    # Calculate summary statistics
+    total_amount = sum([bill.total_amount for bill in patient_bills])
+    total_paid = sum([bill.paid_amount for bill in patient_bills])
+    total_remaining = sum([bill.remaining_amount for bill in patient_bills])
+
+    # Get bills by status
+    pending_bills = [bill for bill in patient_bills if bill.remaining_amount > 0]
+    paid_bills = [bill for bill in patient_bills if bill.remaining_amount <= 0 and bill.paid_amount > 0]
+
+    # Get recent payments
+    recent_payments = Payment.query.options(
+        joinedload(Payment.patient)
+    ).order_by(Payment.payment_date.desc()).limit(10).all()
+
+    return render_template('payment_overview.html',
+                         patient_bills=patient_bills,
+                         pending_bills=pending_bills,
+                         paid_bills=paid_bills,
+                         recent_payments=recent_payments,
+                         total_amount=total_amount,
+                         total_paid=total_paid,
+                         total_remaining=total_remaining)
+
 # Payment Management Routes
 @app.route('/payments')
 def payments():
