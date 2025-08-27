@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from datetime import datetime, date
 import os
+import random
 
 app = Flask(__name__)
 
@@ -51,7 +52,98 @@ with app.app_context():
 # Import forms
 from forms import PatientForm, TestForm, PatientTestForm, HospitalForm, SampleCollectorForm, PatientStep1Form, PatientStep2Form, PatientStep3Form, MultipleTestAssignmentForm, PaymentForm, BillForm
 
+# Authentication Routes
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Phone number login with OTP verification"""
+    if request.method == 'POST':
+        phone = request.form.get('phone', '').strip()
+
+        # Validate phone number
+        if not phone or len(phone) != 10 or not phone.isdigit():
+            flash('Please enter a valid 10-digit phone number', 'error')
+            return render_template('login.html')
+
+        # Generate dummy OTP (in production, send real SMS)
+        otp = '123456'  # Dummy OTP for testing
+
+        # Store phone and OTP in session
+        session['login_phone'] = phone
+        session['login_otp'] = otp
+        session['otp_generated_at'] = datetime.now().timestamp()
+
+        flash(f'OTP sent to +91 {phone}. Use 123456 for testing.', 'success')
+        return redirect(url_for('verify_otp'))
+
+    return render_template('login.html')
+
+@app.route('/verify_otp', methods=['GET', 'POST'])
+def verify_otp():
+    """Verify OTP and complete login"""
+    phone = session.get('login_phone')
+    if not phone:
+        flash('Please start login process again', 'error')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        # Get OTP from form
+        otp_digits = [
+            request.form.get('otp1', ''),
+            request.form.get('otp2', ''),
+            request.form.get('otp3', ''),
+            request.form.get('otp4', ''),
+            request.form.get('otp5', ''),
+            request.form.get('otp6', '')
+        ]
+        entered_otp = ''.join(otp_digits)
+
+        stored_otp = session.get('login_otp')
+        otp_time = session.get('otp_generated_at', 0)
+
+        # Check if OTP is expired (5 minutes)
+        if datetime.now().timestamp() - otp_time > 300:
+            flash('OTP has expired. Please request a new one.', 'error')
+            return redirect(url_for('login'))
+
+        # Verify OTP
+        if entered_otp == stored_otp:
+            # Login successful
+            session['logged_in'] = True
+            session['user_phone'] = phone
+
+            # Clear OTP data
+            session.pop('login_phone', None)
+            session.pop('login_otp', None)
+            session.pop('otp_generated_at', None)
+
+            flash('Login successful! Welcome to Pathology Lab.', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid OTP. Please try again.', 'error')
+
+    return render_template('verify_otp.html', phone=phone)
+
+@app.route('/logout')
+def logout():
+    """Logout user"""
+    session.clear()
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('login'))
+
+# Login required decorator
+def login_required(f):
+    """Decorator to require login for routes"""
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            flash('Please login to access this page.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route('/')
+@login_required
 def index():
     total_patients = Patient.query.count()
     total_tests = Test.query.count()
@@ -76,6 +168,7 @@ def index():
 
 # Patient Management Routes
 @app.route('/patients')
+@login_required
 def patients():
     search = request.args.get('search', '')
     if search:
