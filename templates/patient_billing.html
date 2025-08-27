@@ -59,7 +59,7 @@
     <div class="col-md-3">
         <div class="card bg-primary text-white text-center">
             <div class="card-body">
-                <h4>${{ "%.2f"|format(patient_bill.total_amount) }}</h4>
+                <h4>₹{{ "%.2f"|format(patient_bill.total_amount) }}</h4>
                 <p class="mb-0">Total Amount</p>
             </div>
         </div>
@@ -67,7 +67,7 @@
     <div class="col-md-3">
         <div class="card bg-warning text-white text-center">
             <div class="card-body">
-                <h4>${{ "%.2f"|format(patient_bill.discount_amount) }}</h4>
+                <h4>₹{{ "%.2f"|format(patient_bill.discount_amount) }}</h4>
                 <p class="mb-0">Discount</p>
             </div>
         </div>
@@ -75,7 +75,7 @@
     <div class="col-md-3">
         <div class="card bg-success text-white text-center">
             <div class="card-body">
-                <h4>${{ "%.2f"|format(patient_bill.paid_amount) }}</h4>
+                <h4>₹{{ "%.2f"|format(patient_bill.paid_amount) }}</h4>
                 <p class="mb-0">Paid Amount</p>
             </div>
         </div>
@@ -83,7 +83,7 @@
     <div class="col-md-3">
         <div class="card bg-{{ 'success' if patient_bill.remaining_amount <= 0 else 'danger' }} text-white text-center">
             <div class="card-body">
-                <h4>${{ "%.2f"|format(patient_bill.remaining_amount) }}</h4>
+                <h4>₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</h4>
                 <p class="mb-0">Remaining</p>
             </div>
         </div>
@@ -122,24 +122,24 @@
                                     </span>
                                 </td>
                                 <td>{{ pt.date_ordered.strftime('%Y-%m-%d') }}</td>
-                                <td>${{ "%.2f"|format(pt.test.cost) }}</td>
+                                <td>₹{{ "%.2f"|format(pt.test.cost) }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="table-secondary">
                             <tr>
                                 <th colspan="4">Subtotal</th>
-                                <th>${{ "%.2f"|format(patient_bill.total_amount) }}</th>
+                                <th>₹{{ "%.2f"|format(patient_bill.total_amount) }}</th>
                             </tr>
                             {% if patient_bill.discount_amount > 0 %}
                             <tr>
                                 <th colspan="4">Discount ({{ "%.1f"|format(patient_bill.discount_percentage) }}%)</th>
-                                <th class="text-danger">-${{ "%.2f"|format(patient_bill.discount_amount) }}</th>
+                                <th class="text-danger">-₹{{ "%.2f"|format(patient_bill.discount_amount) }}</th>
                             </tr>
                             {% endif %}
                             <tr class="table-primary">
                                 <th colspan="4">Final Amount</th>
-                                <th>${{ "%.2f"|format(patient_bill.final_amount) }}</th>
+                                <th>₹{{ "%.2f"|format(patient_bill.final_amount) }}</th>
                             </tr>
                         </tfoot>
                     </table>
@@ -187,10 +187,10 @@
                     {{ patient_bill.payment_status }}
                 </h5>
                 {% if patient_bill.remaining_amount > 0 %}
-                <p class="text-muted">Amount Due: <strong>${{ "%.2f"|format(patient_bill.remaining_amount) }}</strong></p>
-                <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&amount={{ patient_bill.remaining_amount }}" 
+                <p class="text-muted">Amount Due: <strong>₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</strong></p>
+                <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&amount={{ patient_bill.remaining_amount }}"
                    class="btn btn-success">
-                    <i class="fas fa-dollar-sign me-2"></i>Pay Remaining
+                    <i class="fas fa-rupee-sign me-2"></i>Pay Remaining
                 </a>
                 {% else %}
                 <p class="text-success"><i class="fas fa-check-circle me-2"></i>Fully Paid</p>
@@ -228,7 +228,7 @@
                             {% for payment in payments %}
                             <tr>
                                 <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                <td><strong class="text-success">${{ "%.2f"|format(payment.amount) }}</strong></td>
+                                <td><strong class="text-success">₹{{ "%.2f"|format(payment.amount) }}</strong></td>
                                 <td>
                                     <span class="badge bg-info">{{ payment.payment_type.title() }}</span>
                                 </td>
@@ -242,7 +242,7 @@
                         <tfoot class="table-secondary">
                             <tr>
                                 <th>Total Paid</th>
-                                <th><strong>${{ "%.2f"|format(payments|sum(attribute="amount")) }}</strong></th>
+                                <th><strong>₹{{ "%.2f"|format(payments|sum(attribute="amount")) }}</strong></th>
                                 <th colspan="5"></th>
                             </tr>
                         </tfoot>
@@ -272,17 +272,39 @@
                 </h6>
             </div>
             <div class="card-body">
-                <div class="btn-group w-100" role="group">
-                    {% if patient_bill.remaining_amount > 0 %}
-                    <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&type=advance&amount={{ (patient_bill.remaining_amount * 0.5)|round(2) }}" 
-                       class="btn btn-outline-primary">
-                        <i class="fas fa-hand-holding-usd me-2"></i>50% Advance
-                    </a>
-                    <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&type=remaining&amount={{ patient_bill.remaining_amount }}" 
-                       class="btn btn-outline-success">
-                        <i class="fas fa-check-circle me-2"></i>Pay Full Remaining
-                    </a>
-                    {% endif %}
+                {% if patient_bill.remaining_amount > 0 %}
+                <!-- Quick Payment Options -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&type=advance&amount={{ (patient_bill.remaining_amount * 0.5)|round(2) }}"
+                           class="btn btn-outline-primary w-100">
+                            <i class="fas fa-hand-holding-usd me-2"></i>50% Advance<br>
+                            <small>₹{{ "%.2f"|format(patient_bill.remaining_amount * 0.5) }}</small>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&type=remaining&amount={{ patient_bill.remaining_amount }}"
+                           class="btn btn-outline-success w-100">
+                            <i class="fas fa-check-circle me-2"></i>Pay Full Remaining<br>
+                            <small>₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</small>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info">
+                            <div class="card-body p-2">
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control" id="customPaymentAmount"
+                                           placeholder="0.00" min="0" step="0.01" max="{{ patient_bill.remaining_amount }}">
+                                </div>
+                                <button type="button" class="btn btn-info btn-sm w-100" id="customPaymentBtn" disabled>
+                                    <i class="fas fa-rupee-sign me-2"></i>Pay Custom Amount
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                     <a href="{{ url_for('patient_report', patient_id=patient.id) }}" 
                        class="btn btn-outline-info" target="_blank">
                         <i class="fas fa-print me-2"></i>Print Bill & Report
@@ -315,6 +337,53 @@ document.addEventListener('DOMContentLoaded', function() {
             discountPercentage.value = percentage.toFixed(1);
         }
     });
+});
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const customAmountInput = document.getElementById('customPaymentAmount');
+    const customPaymentBtn = document.getElementById('customPaymentBtn');
+    const maxAmount = {{ patient_bill.remaining_amount }};
+
+    if (customAmountInput && customPaymentBtn) {
+        // Real-time validation for custom amount input
+        customAmountInput.addEventListener('input', function() {
+            const customAmount = parseFloat(this.value) || 0;
+
+            if (customAmount <= 0) {
+                customPaymentBtn.disabled = true;
+                customPaymentBtn.innerHTML = '<i class="fas fa-rupee-sign me-2"></i>Enter Amount';
+                customPaymentBtn.className = 'btn btn-info btn-sm w-100';
+            } else if (customAmount > maxAmount) {
+                customPaymentBtn.disabled = true;
+                customPaymentBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Amount Too High';
+                customPaymentBtn.className = 'btn btn-danger btn-sm w-100';
+            } else {
+                customPaymentBtn.disabled = false;
+                customPaymentBtn.innerHTML = '<i class="fas fa-rupee-sign me-2"></i>Pay ₹' + customAmount.toFixed(2);
+                customPaymentBtn.className = 'btn btn-success btn-sm w-100';
+            }
+        });
+
+        // Handle custom payment button click
+        customPaymentBtn.addEventListener('click', function() {
+            const customAmount = parseFloat(customAmountInput.value) || 0;
+            if (customAmount > 0 && customAmount <= maxAmount) {
+                const paymentUrl = "{{ url_for('add_payment') }}?patient={{ patient.id }}&type=custom&amount=" + customAmount;
+                window.location.href = paymentUrl;
+            }
+        });
+
+        // Allow Enter key to trigger payment
+        customAmountInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !customPaymentBtn.disabled) {
+                customPaymentBtn.click();
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -49,9 +49,9 @@
                         <div class="col-md-6">
                             <label class="form-label">Patient Bill Summary</label>
                             <div id="billSummary" class="bg-light p-3 rounded">
-                                <p class="mb-1"><strong>Total Amount:</strong> <span id="totalAmount">$0.00</span></p>
-                                <p class="mb-1"><strong>Paid Amount:</strong> <span id="paidAmount">$0.00</span></p>
-                                <p class="mb-0"><strong>Remaining:</strong> <span id="remainingAmount">$0.00</span></p>
+                                <p class="mb-1"><strong>Total Amount:</strong> <span id="totalAmount">₹0.00</span></p>
+                                <p class="mb-1"><strong>Paid Amount:</strong> <span id="paidAmount">₹0.00</span></p>
+                                <p class="mb-0"><strong>Remaining:</strong> <span id="remainingAmount">₹0.00</span></p>
                             </div>
                         </div>
                     </div>
@@ -61,7 +61,7 @@
                         <div class="col-md-6">
                             <label for="{{ form.amount.id }}" class="form-label">{{ form.amount.label.text }}</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">₹</span>
                                 {{ form.amount(class="form-control", step="0.01", min="0.01") }}
                             </div>
                             {% if form.amount.errors %}
@@ -131,9 +131,9 @@
                     <!-- Payment Summary -->
                     <div class="alert alert-info">
                         <h6><i class="fas fa-info-circle me-2"></i>Payment Summary</h6>
-                        <p class="mb-1">Payment Amount: <strong id="summaryAmount">$0.00</strong></p>
+                        <p class="mb-1">Payment Amount: <strong id="summaryAmount">₹0.00</strong></p>
                         <p class="mb-1">Payment Type: <strong id="summaryType">-</strong></p>
-                        <p class="mb-0">After Payment Remaining: <strong id="afterPaymentRemaining">$0.00</strong></p>
+                        <p class="mb-0">After Payment Remaining: <strong id="afterPaymentRemaining">₹0.00</strong></p>
                     </div>
 
                     <!-- Submit Button -->
@@ -205,18 +205,18 @@ document.addEventListener('DOMContentLoaded', function() {
             remaining: 100.00
         };
         
-        document.getElementById('totalAmount').textContent = `$${currentBill.total.toFixed(2)}`;
-        document.getElementById('paidAmount').textContent = `$${currentBill.paid.toFixed(2)}`;
-        document.getElementById('remainingAmount').textContent = `$${currentBill.remaining.toFixed(2)}`;
+        document.getElementById('totalAmount').textContent = `₹${currentBill.total.toFixed(2)}`;
+        document.getElementById('paidAmount').textContent = `₹${currentBill.paid.toFixed(2)}`;
+        document.getElementById('remainingAmount').textContent = `₹${currentBill.remaining.toFixed(2)}`;
         
         updateSummary();
     }
 
     function clearBillSummary() {
         currentBill = null;
-        document.getElementById('totalAmount').textContent = '$0.00';
-        document.getElementById('paidAmount').textContent = '$0.00';
-        document.getElementById('remainingAmount').textContent = '$0.00';
+        document.getElementById('totalAmount').textContent = '₹0.00';
+        document.getElementById('paidAmount').textContent = '₹0.00';
+        document.getElementById('remainingAmount').textContent = '₹0.00';
         updateSummary();
     }
 
@@ -224,14 +224,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const amount = parseFloat(amountInput.value) || 0;
         const type = paymentTypeSelect.value;
         
-        document.getElementById('summaryAmount').textContent = `$${amount.toFixed(2)}`;
+        document.getElementById('summaryAmount').textContent = `₹${amount.toFixed(2)}`;
         document.getElementById('summaryType').textContent = type ? type.replace('_', ' ').toUpperCase() : '-';
-        
+
         if (currentBill) {
             const afterPayment = Math.max(0, currentBill.remaining - amount);
-            document.getElementById('afterPaymentRemaining').textContent = `$${afterPayment.toFixed(2)}`;
+            document.getElementById('afterPaymentRemaining').textContent = `₹${afterPayment.toFixed(2)}`;
         } else {
-            document.getElementById('afterPaymentRemaining').textContent = '$0.00';
+            document.getElementById('afterPaymentRemaining').textContent = '₹0.00';
         }
     }
 

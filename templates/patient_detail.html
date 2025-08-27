@@ -307,45 +307,62 @@
 
                             <!-- Payment Options -->
                             <div class="row mb-4">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="card border-secondary h-100">
                                         <div class="card-header bg-secondary text-white text-center">
                                             <h6 class="mb-0"><i class="fas fa-clock me-2"></i>No Payment Now</h6>
                                         </div>
                                         <div class="card-body text-center">
                                             <h6 class="text-secondary mb-3">₹0.00</h6>
-                                            <button type="button" class="btn btn-secondary" id="noPaymentNewTestsBtn">
+                                            <button type="button" class="btn btn-secondary btn-sm" id="noPaymentNewTestsBtn">
                                                 <i class="fas fa-forward me-2"></i>Assign Without Payment
                                             </button>
                                             <p class="small text-muted mt-2">Full payment will be collected later</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="card border-warning h-100">
                                         <div class="card-header bg-warning text-dark text-center">
                                             <h6 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i>Half Payment</h6>
                                         </div>
                                         <div class="card-body text-center">
                                             <h6 class="text-warning mb-3">₹<span id="halfNewTestsAmount">0.00</span></h6>
-                                            <button type="button" class="btn btn-warning" id="halfPaymentNewTestsBtn">
+                                            <button type="button" class="btn btn-warning btn-sm" id="halfPaymentNewTestsBtn">
                                                 <i class="fas fa-credit-card me-2"></i>Pay Half Now
                                             </button>
-                                            <p class="small text-muted mt-2">Remaining will be collected after test completion</p>
+                                            <p class="small text-muted mt-2">50% of total amount</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="card border-success h-100">
                                         <div class="card-header bg-success text-white text-center">
                                             <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Full Payment</h6>
                                         </div>
                                         <div class="card-body text-center">
                                             <h6 class="text-success mb-3">₹<span id="fullNewTestsAmount">0.00</span></h6>
-                                            <button type="button" class="btn btn-success" id="fullPaymentNewTestsBtn">
+                                            <button type="button" class="btn btn-success btn-sm" id="fullPaymentNewTestsBtn">
                                                 <i class="fas fa-money-check-alt me-2"></i>Pay Full Now
                                             </button>
-                                            <p class="small text-muted mt-2">Complete payment - no remaining balance</p>
+                                            <p class="small text-muted mt-2">100% of total amount</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-info h-100">
+                                        <div class="card-header bg-info text-white text-center">
+                                            <h6 class="mb-0"><i class="fas fa-edit me-2"></i>Custom Amount</h6>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <div class="input-group input-group-sm mb-3">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" class="form-control" id="customAmountInput" placeholder="0.00" min="0" step="0.01" max="999999">
+                                            </div>
+                                            <button type="button" class="btn btn-info btn-sm" id="customPaymentNewTestsBtn">
+                                                <i class="fas fa-rupee-sign me-2"></i>Pay Custom Amount
+                                            </button>
+                                            <p class="small text-muted mt-2">Enter any amount you want</p>
                                         </div>
                                     </div>
                                 </div>
@@ -559,6 +576,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('fullPaymentNewTestsBtn').addEventListener('click', function() {
         setNewTestsPaymentOption(totalNewTestsCost, 'full');
+    });
+
+    document.getElementById('customPaymentNewTestsBtn').addEventListener('click', function() {
+        const customAmount = parseFloat(document.getElementById('customAmountInput').value) || 0;
+        if (customAmount <= 0) {
+            alert('Please enter a valid amount greater than 0');
+            return;
+        }
+        if (customAmount > totalNewTestsCost) {
+            alert('Custom amount cannot be greater than total cost (₹' + totalNewTestsCost.toFixed(2) + ')');
+            return;
+        }
+        setNewTestsPaymentOption(customAmount, 'custom');
+    });
+
+    // Real-time validation for custom amount input
+    document.getElementById('customAmountInput').addEventListener('input', function() {
+        const customAmount = parseFloat(this.value) || 0;
+        const customBtn = document.getElementById('customPaymentNewTestsBtn');
+
+        if (customAmount <= 0) {
+            customBtn.disabled = true;
+            customBtn.innerHTML = '<i class="fas fa-rupee-sign me-2"></i>Enter Amount';
+        } else if (customAmount > totalNewTestsCost) {
+            customBtn.disabled = true;
+            customBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Amount Too High';
+        } else {
+            customBtn.disabled = false;
+            customBtn.innerHTML = '<i class="fas fa-rupee-sign me-2"></i>Pay ₹' + customAmount.toFixed(2);
+        }
     });
 
     function setNewTestsPaymentOption(amount, type) {
