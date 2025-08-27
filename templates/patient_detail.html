@@ -16,9 +16,14 @@
                 <a href="{{ url_for('patient_billing', patient_id=patient.id) }}" class="btn btn-warning">
                     <i class="fas fa-dollar-sign me-2"></i>Billing & Payments
                 </a>
-                <a href="{{ url_for('patient_report', patient_id=patient.id) }}" class="btn btn-success" target="_blank">
-                    <i class="fas fa-print me-2"></i>Print Report
-                </a>
+                <div class="btn-group">
+                    <a href="{{ url_for('patient_report', patient_id=patient.id) }}" class="btn btn-info" target="_blank">
+                        <i class="fas fa-print me-2"></i>Print Report
+                    </a>
+                    <a href="{{ url_for('print_patient_report', patient_id=patient.id) }}" class="btn btn-success" target="_blank">
+                        <i class="fas fa-file-medical me-2"></i>Print Test Results
+                    </a>
+                </div>
                 <a href="{{ url_for('patients') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Back to Patients
                 </a>

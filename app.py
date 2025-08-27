@@ -332,6 +332,134 @@ def update_bill(patient_id):
 
     return redirect(url_for('patient_billing', patient_id=patient_id))
 
+@app.route('/collect_final_payment/<int:test_id>', methods=['POST'])
+def collect_final_payment(test_id):
+    """Collect final payment for a completed test"""
+    try:
+        patient_test = PatientTest.query.get_or_404(test_id)
+        patient_id = patient_test.patient_id
+
+        # Get payment details from form
+        payment_amount = float(request.form.get('payment_amount', 0))
+        payment_method = request.form.get('payment_method')
+        reference_number = request.form.get('reference_number', '')
+
+        # Get patient bill
+        patient_bill = PatientBill.query.filter_by(patient_id=patient_id).first()
+        if not patient_bill:
+            flash('No billing information found for this patient.', 'error')
+            return redirect(url_for('edit_patient_test', id=test_id))
+
+        # Validate payment amount
+        if payment_amount <= 0:
+            flash('Payment amount must be greater than zero.', 'error')
+            return redirect(url_for('edit_patient_test', id=test_id))
+
+        if payment_amount > patient_bill.remaining_amount:
+            flash('Payment amount cannot exceed remaining balance.', 'error')
+            return redirect(url_for('edit_patient_test', id=test_id))
+
+        # Create payment record
+        payment = Payment(
+            patient_id=patient_id,
+            amount=payment_amount,
+            payment_type='final' if payment_amount >= patient_bill.remaining_amount else 'partial',
+            payment_method=payment_method,
+            reference_number=reference_number,
+            notes=f'Final payment for test: {patient_test.test.name}',
+            created_by='Admin'  # In real app, use current user
+        )
+        db.session.add(payment)
+
+        # Update patient bill
+        patient_bill.paid_amount += payment_amount
+        patient_bill.remaining_amount = max(0, patient_bill.final_amount - patient_bill.paid_amount)
+
+        # Update bill status
+        if patient_bill.remaining_amount <= 0:
+            patient_bill.bill_status = 'paid'
+            flash(f'Final payment of ${payment_amount:.2f} collected successfully! Test report is now ready for printing.', 'success')
+        else:
+            patient_bill.bill_status = 'partial'
+            flash(f'Payment of ${payment_amount:.2f} collected successfully! Remaining balance: ${patient_bill.remaining_amount:.2f}', 'success')
+
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while processing payment. Please try again.', 'error')
+        app.logger.error(f'Error collecting final payment: {str(e)}')
+
+    return redirect(url_for('edit_patient_test', id=test_id))
+
+@app.route('/print_test_report/<int:test_id>')
+def print_test_report(test_id):
+    """Print individual test report for a completed and paid test"""
+    patient_test = PatientTest.query.get_or_404(test_id)
+
+    # Check if test is completed
+    if patient_test.status != 'Completed':
+        flash('Test must be completed before printing report.', 'error')
+        return redirect(url_for('edit_patient_test', id=test_id))
+
+    # Check if payment is complete
+    patient_bill = PatientBill.query.filter_by(patient_id=patient_test.patient_id).first()
+    if patient_bill and patient_bill.remaining_amount > 0:
+        flash('Payment must be completed before printing report.', 'error')
+        return redirect(url_for('edit_patient_test', id=test_id))
+
+    # Get all completed tests for this patient (for comprehensive report)
+    from sqlalchemy.orm import joinedload
+    all_completed_tests = PatientTest.query.options(
+        joinedload(PatientTest.test)
+    ).filter_by(
+        patient_id=patient_test.patient_id,
+        status='Completed'
+    ).order_by(PatientTest.date_completed.desc()).all()
+
+    # Get payment history
+    payments = Payment.query.filter_by(patient_id=patient_test.patient_id).order_by(Payment.payment_date.desc()).all()
+
+    return render_template('reports/test_report.html',
+                         patient_test=patient_test,
+                         patient=patient_test.patient,
+                         all_completed_tests=all_completed_tests,
+                         patient_bill=patient_bill,
+                         payments=payments)
+
+@app.route('/print_patient_report/<int:patient_id>')
+def print_patient_report(patient_id):
+    """Print comprehensive report for all completed tests of a patient"""
+    patient = Patient.query.get_or_404(patient_id)
+
+    # Get all completed tests for this patient
+    from sqlalchemy.orm import joinedload
+    completed_tests = PatientTest.query.options(
+        joinedload(PatientTest.test)
+    ).filter_by(
+        patient_id=patient_id,
+        status='Completed'
+    ).order_by(PatientTest.date_completed.desc()).all()
+
+    if not completed_tests:
+        flash('No completed tests found for this patient.', 'error')
+        return redirect(url_for('patient_detail', id=patient_id))
+
+    # Check if all payments are complete
+    patient_bill = PatientBill.query.filter_by(patient_id=patient_id).first()
+    if patient_bill and patient_bill.remaining_amount > 0:
+        flash('All payments must be completed before printing comprehensive report.', 'warning')
+        return redirect(url_for('patient_billing', patient_id=patient_id))
+
+    # Get payment history
+    payments = Payment.query.filter_by(patient_id=patient_id).order_by(Payment.payment_date.desc()).all()
+
+    return render_template('reports/patient_comprehensive_report.html',
+                         patient=patient,
+                         completed_tests=completed_tests,
+                         patient_bill=patient_bill,
+                         payments=payments)
+
 # Bulk Update Routes
 @app.route('/bulk_update_tests', methods=['GET'])
 def bulk_update_tests():
@@ -712,6 +840,9 @@ def edit_patient_test(id):
     collectors = SampleCollector.query.all()
     form.sample_collector.choices = [('', 'Select Sample Collector')] + [(c.name, c.name) for c in collectors]
 
+    # Get patient billing information
+    patient_bill = PatientBill.query.filter_by(patient_id=patient_test.patient_id).first()
+
     if form.validate_on_submit():
         form.populate_obj(patient_test)
         if form.status.data == 'Completed' and not patient_test.date_completed:
@@ -719,7 +850,11 @@ def edit_patient_test(id):
         db.session.commit()
         flash('Test order updated successfully!', 'success')
         return redirect(url_for('patient_tests'))
-    return render_template('edit_patient_test.html', form=form, patient_test=patient_test)
+
+    return render_template('edit_patient_test.html',
+                         form=form,
+                         patient_test=patient_test,
+                         patient_bill=patient_bill)
 
 # Multiple Test Assignment Routes
 @app.route('/assign_multiple_tests', methods=['GET', 'POST'])
