@@ -4,12 +4,14 @@ Run this script to populate the database with sample data for testing
 """
 
 from app import app, db
-from models import Patient, Test, PatientTest, Hospital, SampleCollector
+from models import Patient, Test, PatientTest, Hospital, SampleCollector, Payment, PatientBill
 from datetime import datetime, timedelta
 
 def create_sample_data():
     with app.app_context():
         # Clear existing data
+        Payment.query.delete()
+        PatientBill.query.delete()
         PatientTest.query.delete()
         Patient.query.delete()
         Test.query.delete()
@@ -82,15 +84,51 @@ def create_sample_data():
         
         for order in test_orders:
             db.session.add(order)
-        
+
         db.session.commit()
-        
+
+        # Sample Payments and Bills
+        sample_payments = [
+            Payment(patient_id=1, amount=30.00, payment_type='advance', payment_method='cash',
+                   reference_number='CASH001', notes='Advance payment for CBC and Basic Metabolic Panel'),
+            Payment(patient_id=2, amount=20.00, payment_type='full', payment_method='card',
+                   reference_number='CARD002', notes='Full payment for Urinalysis'),
+            Payment(patient_id=3, amount=50.00, payment_type='partial', payment_method='upi',
+                   reference_number='UPI003', notes='Partial payment for Lipid Panel and Liver Function Test'),
+            Payment(patient_id=5, amount=40.00, payment_type='advance', payment_method='bank_transfer',
+                   reference_number='BANK005', notes='Advance payment for Chest X-Ray'),
+        ]
+
+        for payment in sample_payments:
+            db.session.add(payment)
+
+        # Sample Patient Bills
+        sample_bills = [
+            PatientBill(patient_id=1, total_amount=55.00, paid_amount=30.00, remaining_amount=25.00,
+                       bill_status='partial', discount_amount=0.00),
+            PatientBill(patient_id=2, total_amount=20.00, paid_amount=20.00, remaining_amount=0.00,
+                       bill_status='paid', discount_amount=0.00),
+            PatientBill(patient_id=3, total_amount=75.00, paid_amount=50.00, remaining_amount=25.00,
+                       bill_status='partial', discount_amount=0.00),
+            PatientBill(patient_id=4, total_amount=25.00, paid_amount=0.00, remaining_amount=25.00,
+                       bill_status='pending', discount_amount=0.00),
+            PatientBill(patient_id=5, total_amount=75.00, paid_amount=40.00, remaining_amount=35.00,
+                       bill_status='partial', discount_amount=0.00),
+        ]
+
+        for bill in sample_bills:
+            db.session.add(bill)
+
+        db.session.commit()
+
         print("Sample data created successfully!")
         print(f"Created {len(hospitals)} hospitals")
         print(f"Created {len(collectors)} sample collectors")
         print(f"Created {len(tests)} tests")
         print(f"Created {len(patients)} patients")
         print(f"Created {len(test_orders)} test orders")
+        print(f"Created {len(sample_payments)} payments")
+        print(f"Created {len(sample_bills)} patient bills")
 
 if __name__ == "__main__":
     create_sample_data()
