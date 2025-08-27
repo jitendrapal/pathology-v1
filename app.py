@@ -556,6 +556,7 @@ def add_payment():
     return render_template('add_payment.html', form=form)
 
 @app.route('/patient_billing/<int:patient_id>')
+@login_required
 def patient_billing(patient_id):
     patient = Patient.query.get_or_404(patient_id)
 

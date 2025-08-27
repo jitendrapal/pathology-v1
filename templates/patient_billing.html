@@ -337,13 +337,8 @@ document.addEventListener('DOMContentLoaded', function() {
             discountPercentage.value = percentage.toFixed(1);
         }
     });
-});
-</script>
-{% endblock %}
 
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+    // Custom payment amount functionality
     const customAmountInput = document.getElementById('customPaymentAmount');
     const customPaymentBtn = document.getElementById('customPaymentBtn');
     const maxAmount = {{ patient_bill.remaining_amount }};
