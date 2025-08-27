@@ -58,7 +58,9 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ test.normal_range or 'N/A' }}</td>
-                                    <td>${{ "%.2f"|format(test.cost) }}</td>
+                                    <td>
+                                        <span class="fw-bold text-success">₹{{ "%.2f"|format(test.cost) }}</span>
+                                    </td>
                                     <td>{{ test.date_created.strftime('%Y-%m-%d') }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
@@ -88,7 +90,7 @@
                                                         <p><strong>Test Name:</strong> {{ test.name }}</p>
                                                         <p><strong>Category:</strong> {{ test.category or 'N/A' }}</p>
                                                         <p><strong>Normal Range:</strong> {{ test.normal_range or 'N/A' }}</p>
-                                                        <p><strong>Cost:</strong> ${{ "%.2f"|format(test.cost) }}</p>
+                                                        <p><strong>Cost:</strong> <span class="fw-bold text-success">₹{{ "%.2f"|format(test.cost) }}</span></p>
                                                         <p><strong>Date Added:</strong> {{ test.date_created.strftime('%Y-%m-%d %H:%M') }}</p>
                                                     </div>
                                                     <div class="col-md-6">

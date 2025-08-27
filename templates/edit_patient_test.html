@@ -161,7 +161,7 @@
                 <div class="alert alert-info">
                     <h6><i class="fas fa-calculator me-2"></i>Test Cost</h6>
                     <p class="mb-1"><strong>Test:</strong> {{ patient_test.test.name }}</p>
-                    <p class="mb-0"><strong>Cost:</strong> ${{ "%.2f"|format(patient_test.test.cost) }}</p>
+                    <p class="mb-0"><strong>Cost:</strong> ₹{{ "%.2f"|format(patient_test.test.cost) }}</p>
                 </div>
 
                 <!-- Patient Bill Summary -->
@@ -170,15 +170,15 @@
                     <h6><i class="fas fa-receipt me-2"></i>Payment Status</h6>
                     <div class="row text-center">
                         <div class="col-12 mb-2">
-                            <h4 class="mb-1">Total: ${{ "%.2f"|format(patient_bill.total_amount) }}</h4>
+                            <h4 class="mb-1">Total: ₹{{ "%.2f"|format(patient_bill.total_amount) }}</h4>
                         </div>
                         <div class="col-6">
                             <p class="mb-1"><strong>Paid:</strong></p>
-                            <h5 class="text-success">${{ "%.2f"|format(patient_bill.paid_amount) }}</h5>
+                            <h5 class="text-success">₹{{ "%.2f"|format(patient_bill.paid_amount) }}</h5>
                         </div>
                         <div class="col-6">
                             <p class="mb-1"><strong>Pending:</strong></p>
-                            <h5 class="text-{{ 'success' if patient_bill.remaining_amount == 0 else 'danger' }}">${{ "%.2f"|format(patient_bill.remaining_amount) }}</h5>
+                            <h5 class="text-{{ 'success' if patient_bill.remaining_amount == 0 else 'danger' }}">₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</h5>
                         </div>
                     </div>
                     <div class="text-center mt-2">
@@ -197,7 +197,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Remaining Amount</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">₹</span>
                                     <input type="number" name="payment_amount" class="form-control"
                                            value="{{ "%.2f"|format(patient_bill.remaining_amount) }}"
                                            step="0.01" min="0" max="{{ patient_bill.remaining_amount }}" required>
@@ -247,7 +247,7 @@
                     <div class="alert alert-warning text-center">
                         <h6><i class="fas fa-exclamation-triangle me-2"></i>Payment Required</h6>
                         <p class="mb-2">Test completed but payment pending</p>
-                        <h5 class="text-danger">Pending: ${{ "%.2f"|format(patient_bill.remaining_amount) }}</h5>
+                        <h5 class="text-danger">Pending: ₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</h5>
                         <small class="text-muted">Collect payment to enable report printing</small>
                     </div>
                     {% else %}

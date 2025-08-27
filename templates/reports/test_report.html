@@ -185,7 +185,7 @@
                     </div>
                     <div class="col-md-4 text-end">
                         <span class="status-badge status-{{ test.status.lower() }}">{{ test.status }}</span>
-                        <small class="text-muted ms-2">Cost: ${{ "%.2f"|format(test.test.cost) }}</small>
+                        <small class="text-muted ms-2">Cost: ₹{{ "%.2f"|format(test.test.cost) }}</small>
                     </div>
                 </div>
             </div>
@@ -236,21 +236,21 @@
                 <table class="table table-sm">
                     <tr>
                         <td><strong>Total Amount:</strong></td>
-                        <td class="text-end">${{ "%.2f"|format(patient_bill.total_amount) }}</td>
+                        <td class="text-end">₹{{ "%.2f"|format(patient_bill.total_amount) }}</td>
                     </tr>
                     {% if patient_bill.discount_amount > 0 %}
                     <tr>
                         <td><strong>Discount:</strong></td>
-                        <td class="text-end text-success">-${{ "%.2f"|format(patient_bill.discount_amount) }}</td>
+                        <td class="text-end text-success">-₹{{ "%.2f"|format(patient_bill.discount_amount) }}</td>
                     </tr>
                     <tr>
                         <td><strong>Final Amount:</strong></td>
-                        <td class="text-end">${{ "%.2f"|format(patient_bill.final_amount) }}</td>
+                        <td class="text-end">₹{{ "%.2f"|format(patient_bill.final_amount) }}</td>
                     </tr>
                     {% endif %}
                     <tr>
                         <td><strong>Paid Amount:</strong></td>
-                        <td class="text-end text-success">${{ "%.2f"|format(patient_bill.paid_amount) }}</td>
+                        <td class="text-end text-success">₹{{ "%.2f"|format(patient_bill.paid_amount) }}</td>
                     </tr>
                     <tr class="table-active">
                         <td><strong>Payment Status:</strong></td>
@@ -269,7 +269,7 @@
                     {% for payment in payments %}
                     <div class="border-bottom pb-2 mb-2">
                         <div class="d-flex justify-content-between">
-                            <span><strong>${{ "%.2f"|format(payment.amount) }}</strong></span>
+                            <span><strong>₹{{ "%.2f"|format(payment.amount) }}</strong></span>
                             <small class="text-muted">{{ payment.payment_date.strftime('%d/%m/%Y') }}</small>
                         </div>
                         <div class="d-flex justify-content-between">

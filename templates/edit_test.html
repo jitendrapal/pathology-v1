@@ -55,9 +55,9 @@
                             {% endif %}
                         </div>
                         <div class="col-md-6">
-                            <label for="{{ form.cost.id }}" class="form-label">{{ form.cost.label.text }}</label>
+                            <label for="{{ form.cost.id }}" class="form-label">{{ form.cost.label.text }} (in ₹)</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">₹</span>
                                 {{ form.cost(class="form-control", placeholder="0.00") }}
                             </div>
                             {% if form.cost.errors %}

@@ -18,16 +18,16 @@ def create_sample_data():
         Hospital.query.delete()
         SampleCollector.query.delete()
         
-        # Sample Tests
+        # Sample Tests with Indian Rupee costs
         tests = [
-            Test(name="Complete Blood Count (CBC)", description="Measures different components of blood including red blood cells, white blood cells, and platelets", normal_range="RBC: 4.5-5.5 million/µL", cost=25.00, category="Blood"),
-            Test(name="Basic Metabolic Panel", description="Tests glucose, electrolytes, and kidney function", normal_range="Glucose: 70-100 mg/dL", cost=30.00, category="Blood"),
-            Test(name="Lipid Panel", description="Measures cholesterol and triglycerides", normal_range="Total Cholesterol: <200 mg/dL", cost=35.00, category="Blood"),
-            Test(name="Urinalysis", description="Examines urine for various substances and cells", normal_range="Protein: Negative", cost=20.00, category="Urine"),
-            Test(name="Thyroid Function Test", description="Measures TSH, T3, and T4 levels", normal_range="TSH: 0.4-4.0 mIU/L", cost=45.00, category="Blood"),
-            Test(name="Liver Function Test", description="Tests liver enzymes and function", normal_range="ALT: 7-56 U/L", cost=40.00, category="Blood"),
-            Test(name="Chest X-Ray", description="Imaging of chest and lungs", normal_range="No abnormalities", cost=75.00, category="Imaging"),
-            Test(name="Stool Culture", description="Tests for bacteria and parasites in stool", normal_range="No pathogens", cost=50.00, category="Stool"),
+            Test(name="Complete Blood Count (CBC)", description="Measures different components of blood including red blood cells, white blood cells, and platelets", normal_range="RBC: 4.5-5.5 million/µL", cost=300.00, category="Blood"),
+            Test(name="Basic Metabolic Panel", description="Tests glucose, electrolytes, and kidney function", normal_range="Glucose: 70-100 mg/dL", cost=450.00, category="Blood"),
+            Test(name="Lipid Panel", description="Measures cholesterol and triglycerides", normal_range="Total Cholesterol: <200 mg/dL", cost=500.00, category="Blood"),
+            Test(name="Urinalysis", description="Examines urine for various substances and cells", normal_range="Protein: Negative", cost=200.00, category="Urine"),
+            Test(name="Thyroid Function Test", description="Measures TSH, T3, and T4 levels", normal_range="TSH: 0.4-4.0 mIU/L", cost=800.00, category="Blood"),
+            Test(name="Liver Function Test", description="Tests liver enzymes and function", normal_range="ALT: 7-56 U/L", cost=600.00, category="Blood"),
+            Test(name="Chest X-Ray", description="Imaging of chest and lungs", normal_range="No abnormalities", cost=400.00, category="Imaging"),
+            Test(name="Stool Culture", description="Tests for bacteria and parasites in stool", normal_range="No pathogens", cost=350.00, category="Stool"),
         ]
         
         for test in tests:

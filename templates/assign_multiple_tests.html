@@ -137,7 +137,7 @@
                                                         <p class="card-text small text-muted mb-2">{{ test.description[:60] }}{% if test.description|length > 60 %}...{% endif %}</p>
                                                     {% endif %}
                                                     <div class="small">
-                                                        <strong class="text-success">${{ "%.2f"|format(test.cost) }}</strong>
+                                                        <strong class="text-success fs-6">₹{{ "%.2f"|format(test.cost) }}</strong>
                                                         {% if test.normal_range %}
                                                             <br><span class="text-muted">Range: {{ test.normal_range }}</span>
                                                         {% endif %}
@@ -168,7 +168,7 @@
                                 <tr>
                                     <th>Test Name</th>
                                     <th>Category</th>
-                                    <th>Cost</th>
+                                    <th>Cost (₹)</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -177,7 +177,7 @@
                             <tfoot>
                                 <tr class="table-active">
                                     <th colspan="2">Total Cost:</th>
-                                    <th id="totalCost">$0.00</th>
+                                    <th id="totalCost">₹0.00</th>
                                     <th></th>
                                 </tr>
                             </tfoot>
@@ -197,7 +197,7 @@
                     <!-- Total Cost Display -->
                     <div class="alert alert-info text-center mb-4">
                         <h4 class="mb-0">
-                            <i class="fas fa-calculator me-2"></i>Total Amount: <span id="billTotalCost" class="text-primary">$0.00</span>
+                            <i class="fas fa-calculator me-2"></i>Total Amount: <span id="billTotalCost" class="text-primary">₹0.00</span>
                         </h4>
                     </div>
 
@@ -209,7 +209,7 @@
                                     <h6 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i>Pay Half Amount</h6>
                                 </div>
                                 <div class="card-body text-center">
-                                    <h5 class="text-warning mb-3">$<span id="halfAmount">0.00</span></h5>
+                                    <h5 class="text-warning mb-3">₹<span id="halfAmount">0.00</span></h5>
                                     <button type="button" class="btn btn-warning btn-lg" id="payHalfBtn">
                                         <i class="fas fa-credit-card me-2"></i>Pay Half Now
                                     </button>
@@ -223,7 +223,7 @@
                                     <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Pay Full Amount</h6>
                                 </div>
                                 <div class="card-body text-center">
-                                    <h5 class="text-success mb-3">$<span id="fullAmount">0.00</span></h5>
+                                    <h5 class="text-success mb-3">₹<span id="fullAmount">0.00</span></h5>
                                     <button type="button" class="btn btn-success btn-lg" id="payFullBtn">
                                         <i class="fas fa-money-check-alt me-2"></i>Pay Full Now
                                     </button>
@@ -239,13 +239,13 @@
                             <h6><i class="fas fa-info-circle me-2"></i>Payment Details</h6>
                             <div class="row">
                                 <div class="col-md-4">
-                                    <p class="mb-1"><strong>Total Cost:</strong> $<span id="displayTotalCost">0.00</span></p>
+                                    <p class="mb-1"><strong>Total Cost:</strong> ₹<span id="displayTotalCost">0.00</span></p>
                                 </div>
                                 <div class="col-md-4">
-                                    <p class="mb-1"><strong>Paying Now:</strong> $<span id="payingNow">0.00</span></p>
+                                    <p class="mb-1"><strong>Paying Now:</strong> ₹<span id="payingNow">0.00</span></p>
                                 </div>
                                 <div class="col-md-4">
-                                    <p class="mb-0"><strong>Remaining:</strong> $<span id="remainingAmount">0.00</span></p>
+                                    <p class="mb-0"><strong>Remaining:</strong> ₹<span id="remainingAmount">0.00</span></p>
                                 </div>
                             </div>
                         </div>
@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
             row.innerHTML = `
                 <td>${test.name}</td>
                 <td><span class="badge bg-secondary">${test.category || 'N/A'}</span></td>
-                <td>$${test.cost.toFixed(2)}</td>
+                <td>₹${test.cost.toFixed(2)}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTest(${testId})">
                         <i class="fas fa-trash"></i>
@@ -392,13 +392,13 @@ document.addEventListener('DOMContentLoaded', function() {
             totalCost += test.cost;
         });
 
-        totalCostElement.textContent = `$${totalCost.toFixed(2)}`;
+        totalCostElement.textContent = `₹${totalCost.toFixed(2)}`;
         updatePaymentSummary();
     }
 
     // Update payment summary
     function updatePaymentSummary() {
-        document.getElementById('billTotalCost').textContent = `$${totalCost.toFixed(2)}`;
+        document.getElementById('billTotalCost').textContent = `₹${totalCost.toFixed(2)}`;
 
         // Update half and full amounts
         const halfAmount = totalCost / 2;
