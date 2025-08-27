@@ -17,6 +17,35 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
 from models import db, Patient, Test, PatientTest, Hospital, SampleCollector, Payment, PatientBill
 db.init_app(app)
 
+# Create tables automatically on app startup (for production deployment)
+def init_database():
+    """Initialize database tables on startup"""
+    try:
+        print("🔄 Initializing database...")
+        db.create_all()
+        print("✅ Database tables created successfully!")
+
+        # Check if tables exist
+        tables = db.engine.table_names()
+        print(f"📋 Available tables: {', '.join(tables)}")
+
+        # Check if we need to load sample data
+        patient_count = Patient.query.count()
+        if patient_count == 0:
+            print("📊 No data found, consider running sample_data.py")
+        else:
+            print(f"📊 Found {patient_count} patients in database")
+
+    except Exception as e:
+        print(f"❌ Error creating tables: {e}")
+        # Don't fail the app startup, just log the error
+        import traceback
+        traceback.print_exc()
+
+# Initialize database when app starts
+with app.app_context():
+    init_database()
+
 # Import forms
 from forms import PatientForm, TestForm, PatientTestForm, HospitalForm, SampleCollectorForm, PatientStep1Form, PatientStep2Form, PatientStep3Form, MultipleTestAssignmentForm, PaymentForm, BillForm
 
