@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Test Orders - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-clipboard-list me-2"></i>All Test Orders & Assignments
+            </h1>
+            <div class="btn-group">
+                <div class="dropdown me-2">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-plus me-2"></i>Assign Tests
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('assign_multiple_tests') }}">
+                            <i class="fas fa-th-large me-2"></i>Multiple Tests (Grid)
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('assign_test') }}">
+                            <i class="fas fa-file-alt me-2"></i>Single Test
+                        </a></li>
+                    </ul>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-print me-2"></i>Reports
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('patient_tests_report') }}{{ '?' + request.query_string.decode() if request.query_string else '' }}" target="_blank">
+                            <i class="fas fa-file-pdf me-2"></i>Print Current View
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Patient Reports</h6></li>
+                        {% for patient in patients[:5] %}
+                        <li><a class="dropdown-item" href="{{ url_for('patient_report', patient_id=patient.id) }}" target="_blank">
+                            <i class="fas fa-user me-2"></i>{{ patient.full_name }}
+                        </a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <a href="{{ url_for('bulk_update_tests') }}" class="btn btn-warning">
+                    <i class="fas fa-edit me-2"></i>Bulk Update Tests
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filters & Search
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('patient_tests') }}">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="Pending" {{ 'selected' if status_filter == 'Pending' }}>Pending</option>
+                                <option value="Completed" {{ 'selected' if status_filter == 'Completed' }}>Completed</option>
+                                <option value="Cancelled" {{ 'selected' if status_filter == 'Cancelled' }}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Patient</label>
+                            <select name="patient" class="form-select">
+                                <option value="">All Patients</option>
+                                {% for patient in patients %}
+                                <option value="{{ patient.id }}" {{ 'selected' if patient_filter == patient.id|string }}>{{ patient.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Date From</label>
+                            <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Date To</label>
+                            <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% if status_filter or patient_filter or date_from or date_to %}
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <a href="{{ url_for('patient_tests') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-times me-1"></i>Clear Filters
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h4>{{ patient_tests|length }}</h4>
+                <p class="mb-0">Total Orders</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h4>{{ patient_tests|selectattr("status", "equalto", "Pending")|list|length }}</h4>
+                <p class="mb-0">Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h4>{{ patient_tests|selectattr("status", "equalto", "Completed")|list|length }}</h4>
+                <p class="mb-0">Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h4>${{ "%.2f"|format(patient_tests|sum(attribute="test.cost")) }}</h4>
+                <p class="mb-0">Total Value</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Orders Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>All Test Orders ({{ patient_tests|length }})
+                    </h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-success" id="bulkUpdateBtn" style="display: none;">
+                            <i class="fas fa-save me-2"></i>Update Selected Tests
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="selectAllBtn">
+                            <i class="fas fa-check-square me-2"></i>Select All
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if patient_tests %}
+                <form id="bulkUpdateForm" method="POST" action="{{ url_for('bulk_update_tests') }}">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th width="3%">
+                                        <input type="checkbox" id="selectAllCheckbox" class="form-check-input">
+                                    </th>
+                                    <th>Patient</th>
+                                    <th>Test</th>
+                                    <th>Date Ordered</th>
+                                    <th>Status</th>
+                                    <th>Results</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pt in patient_tests %}
+                                <tr>
+                                    <td>{{ pt.id }}</td>
+                                    <td>
+                                        <strong>{{ pt.patient.full_name }}</strong><br>
+                                        <small class="text-muted">{{ pt.patient.phone }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ pt.test.name }}</strong><br>
+                                        <small class="text-muted">${{ "%.2f"|format(pt.test.cost) }}</small>
+                                    </td>
+                                    <td>{{ pt.date_ordered.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        {% if pt.date_completed %}
+                                            {{ pt.date_completed.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                            <span class="text-muted">Not completed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ pt.sample_collector or 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if pt.status == 'Completed' else 'warning' if pt.status == 'Pending' else 'secondary' }}">
+                                            {{ pt.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('edit_patient_test', id=pt.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                                    data-bs-toggle="modal" data-bs-target="#testOrderModal{{ pt.id }}" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Test Order Details Modal -->
+                                <div class="modal fade" id="testOrderModal{{ pt.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Test Order Details - #{{ pt.id }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h6>Patient Information</h6>
+                                                        <p><strong>Name:</strong> {{ pt.patient.full_name }}</p>
+                                                        <p><strong>Age:</strong> {{ pt.patient.age }}</p>
+                                                        <p><strong>Gender:</strong> {{ pt.patient.gender }}</p>
+                                                        <p><strong>Phone:</strong> {{ pt.patient.phone }}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6>Test Information</h6>
+                                                        <p><strong>Test:</strong> {{ pt.test.name }}</p>
+                                                        <p><strong>Category:</strong> {{ pt.test.category or 'N/A' }}</p>
+                                                        <p><strong>Cost:</strong> ${{ "%.2f"|format(pt.test.cost) }}</p>
+                                                        <p><strong>Normal Range:</strong> {{ pt.test.normal_range or 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <h6>Order Details</h6>
+                                                        <p><strong>Date Ordered:</strong> {{ pt.date_ordered.strftime('%Y-%m-%d %H:%M') }}</p>
+                                                        <p><strong>Status:</strong> 
+                                                            <span class="badge bg-{{ 'success' if pt.status == 'Completed' else 'warning' if pt.status == 'Pending' else 'secondary' }}">
+                                                                {{ pt.status }}
+                                                            </span>
+                                                        </p>
+                                                        {% if pt.date_completed %}
+                                                        <p><strong>Date Completed:</strong> {{ pt.date_completed.strftime('%Y-%m-%d %H:%M') }}</p>
+                                                        {% endif %}
+                                                        {% if pt.results %}
+                                                        <p><strong>Results:</strong><br>{{ pt.results }}</p>
+                                                        {% endif %}
+                                                        {% if pt.notes %}
+                                                        <p><strong>Notes:</strong><br>{{ pt.notes }}</p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                <a href="{{ url_for('edit_patient_test', id=pt.id) }}" class="btn btn-primary">Edit Order</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No test orders found</h5>
+                        <p class="text-muted">Start by assigning tests to patients.</p>
+                        <a href="{{ url_for('assign_test') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Assign Test to Patient
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

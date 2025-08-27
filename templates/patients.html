@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Patients - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-users me-2"></i>Patients
+            </h1>
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-user-plus me-2"></i>Register New Patient
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('register_patient_step1') }}">
+                        <i class="fas fa-list-ol me-2"></i>Multi-Step Registration
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('register_patient') }}">
+                        <i class="fas fa-file-alt me-2"></i>Single Page Registration
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="GET" action="{{ url_for('patients') }}">
+            <div class="input-group">
+                <input type="text" class="form-control" name="search" placeholder="Search by name or phone..." value="{{ search }}">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Patients Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Patient List
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if patients %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Hospital</th>
+                                    <th>Collected By</th>
+                                    <th>Registration Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in patients %}
+                                <tr>
+                                    <td>{{ patient.id }}</td>
+                                    <td>
+                                        <strong>{{ patient.full_name }}</strong>
+                                    </td>
+                                    <td>{{ patient.age }}</td>
+                                    <td>{{ patient.gender }}</td>
+                                    <td>{{ patient.phone }}</td>
+                                    <td>{{ patient.email or 'N/A' }}</td>
+                                    <td>{{ patient.hospital_name or 'N/A' }}</td>
+                                    <td>{{ patient.collected_by or 'N/A' }}</td>
+                                    <td>{{ patient.date_registered.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('edit_patient', id=patient.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('patient_detail', id=patient.id) }}"
+                                               class="btn btn-sm btn-primary" title="View Details & Manage Tests">
+                                                <i class="fas fa-eye me-1"></i>View & Manage Tests
+                                            </a>
+                                            <a href="{{ url_for('patient_report', patient_id=patient.id) }}"
+                                               class="btn btn-sm btn-outline-success" title="Print Report" target="_blank">
+                                                <i class="fas fa-print"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Patient Details Modal -->
+                                <div class="modal fade" id="patientModal{{ patient.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Patient Details - {{ patient.full_name }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p><strong>Name:</strong> {{ patient.full_name }}</p>
+                                                        <p><strong>Age:</strong> {{ patient.age }}</p>
+                                                        <p><strong>Gender:</strong> {{ patient.gender }}</p>
+                                                        <p><strong>Phone:</strong> {{ patient.phone }}</p>
+                                                        <p><strong>Email:</strong> {{ patient.email or 'N/A' }}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p><strong>Address:</strong><br>{{ patient.address }}</p>
+                                                        <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact or 'N/A' }}</p>
+                                                        <p><strong>Registration Date:</strong> {{ patient.date_registered.strftime('%Y-%m-%d %H:%M') }}</p>
+                                                    </div>
+                                                </div>
+                                                {% if patient.medical_history %}
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <p><strong>Medical History:</strong><br>{{ patient.medical_history }}</p>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                <a href="{{ url_for('edit_patient', id=patient.id) }}" class="btn btn-primary">Edit Patient</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No patients found</h5>
+                        <p class="text-muted">
+                            {% if search %}
+                                No patients match your search criteria.
+                            {% else %}
+                                Start by registering your first patient.
+                            {% endif %}
+                        </p>
+                        <a href="{{ url_for('register_patient') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Register New Patient
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

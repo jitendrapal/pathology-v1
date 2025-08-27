@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Patient - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-edit me-2"></i>Edit Patient - {{ patient.full_name }}
+            </h1>
+            <a href="{{ url_for('patients') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Patients
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-form me-2"></i>Patient Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Personal Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.first_name.id }}" class="form-label">{{ form.first_name.label.text }}</label>
+                            {{ form.first_name(class="form-control") }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.first_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.last_name.id }}" class="form-label">{{ form.last_name.label.text }}</label>
+                            {{ form.last_name(class="form-control") }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.last_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.age.id }}" class="form-label">{{ form.age.label.text }}</label>
+                            {{ form.age(class="form-control") }}
+                            {% if form.age.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.age.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.gender.id }}" class="form-label">{{ form.gender.label.text }}</label>
+                            {{ form.gender(class="form-select") }}
+                            {% if form.gender.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.gender.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.phone.id }}" class="form-label">{{ form.phone.label.text }}</label>
+                            {{ form.phone(class="form-control") }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.phone.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.email.id }}" class="form-label">{{ form.email.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.email(class="form-control") }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.emergency_contact.id }}" class="form-label">{{ form.emergency_contact.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.emergency_contact(class="form-control") }}
+                            {% if form.emergency_contact.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.emergency_contact.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.hospital_name.id }}" class="form-label">{{ form.hospital_name.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.hospital_name(class="form-select") }}
+                            {% if form.hospital_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.hospital_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <a href="{{ url_for('add_hospital') }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-plus me-1"></i>Add New Hospital
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sample Collection Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.collected_by.id }}" class="form-label">{{ form.collected_by.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.collected_by(class="form-select") }}
+                            {% if form.collected_by.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.collected_by.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <a href="{{ url_for('add_sample_collector') }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-plus me-1"></i>Add New Sample Collector
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Placeholder for future fields -->
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="mb-3">
+                        <label for="{{ form.address.id }}" class="form-label">{{ form.address.label.text }}</label>
+                        {{ form.address(class="form-control", rows="3") }}
+                        {% if form.address.errors %}
+                            <div class="text-danger">
+                                {% for error in form.address.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Medical History -->
+                    <div class="mb-3">
+                        <label for="{{ form.medical_history.id }}" class="form-label">{{ form.medical_history.label.text }} <small class="text-muted">(Optional)</small></label>
+                        {{ form.medical_history(class="form-control", rows="4", placeholder="Enter any relevant medical history, allergies, medications, etc.") }}
+                        {% if form.medical_history.errors %}
+                            <div class="text-danger">
+                                {% for error in form.medical_history.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('patients') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Patient
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

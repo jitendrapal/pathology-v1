@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}{{ patient.full_name }} - Billing & Payments - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-dollar-sign me-2"></i>{{ patient.full_name }} - Billing & Payments
+            </h1>
+            <div class="btn-group">
+                <a href="{{ url_for('patient_detail', id=patient.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-user me-2"></i>Patient Details
+                </a>
+                <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Record Payment
+                </a>
+                <a href="{{ url_for('patients') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Patients
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Information Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-circle me-2"></i>Patient Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Name:</strong> {{ patient.full_name }}</p>
+                        <p><strong>Phone:</strong> {{ patient.phone }}</p>
+                        {% if patient.email %}
+                        <p><strong>Email:</strong> {{ patient.email }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if patient.hospital_name %}
+                        <p><strong>Hospital:</strong> {{ patient.hospital_name }}</p>
+                        {% endif %}
+                        <p><strong>Registration Date:</strong> {{ patient.date_registered.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Billing Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white text-center">
+            <div class="card-body">
+                <h4>${{ "%.2f"|format(patient_bill.total_amount) }}</h4>
+                <p class="mb-0">Total Amount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white text-center">
+            <div class="card-body">
+                <h4>${{ "%.2f"|format(patient_bill.discount_amount) }}</h4>
+                <p class="mb-0">Discount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white text-center">
+            <div class="card-body">
+                <h4>${{ "%.2f"|format(patient_bill.paid_amount) }}</h4>
+                <p class="mb-0">Paid Amount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-{{ 'success' if patient_bill.remaining_amount <= 0 else 'danger' }} text-white text-center">
+            <div class="card-body">
+                <h4>${{ "%.2f"|format(patient_bill.remaining_amount) }}</h4>
+                <p class="mb-0">Remaining</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bill Details and Discount Management -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>Test Details & Billing
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Test Name</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Date Ordered</th>
+                                <th>Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pt in patient_tests %}
+                            <tr>
+                                <td><strong>{{ pt.test.name }}</strong></td>
+                                <td>{{ pt.test.category or 'N/A' }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if pt.status == 'Completed' else 'warning' if pt.status == 'Pending' else 'secondary' }}">
+                                        {{ pt.status }}
+                                    </span>
+                                </td>
+                                <td>{{ pt.date_ordered.strftime('%Y-%m-%d') }}</td>
+                                <td>${{ "%.2f"|format(pt.test.cost) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <th colspan="4">Subtotal</th>
+                                <th>${{ "%.2f"|format(patient_bill.total_amount) }}</th>
+                            </tr>
+                            {% if patient_bill.discount_amount > 0 %}
+                            <tr>
+                                <th colspan="4">Discount ({{ "%.1f"|format(patient_bill.discount_percentage) }}%)</th>
+                                <th class="text-danger">-${{ "%.2f"|format(patient_bill.discount_amount) }}</th>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-primary">
+                                <th colspan="4">Final Amount</th>
+                                <th>${{ "%.2f"|format(patient_bill.final_amount) }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Discount Management -->
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-percentage me-2"></i>Apply Discount
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_bill', patient_id=patient.id) }}">
+                    <div class="mb-3">
+                        <label class="form-label">Discount Percentage</label>
+                        <input type="number" name="discount_percentage" class="form-control" 
+                               value="{{ patient_bill.discount_percentage }}" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Or Discount Amount</label>
+                        <input type="number" name="discount_amount" class="form-control" 
+                               value="{{ patient_bill.discount_amount }}" min="0" step="0.01">
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="fas fa-save me-2"></i>Apply Discount
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Payment Status -->
+        <div class="card">
+            <div class="card-header bg-{{ 'success' if patient_bill.bill_status == 'paid' else 'warning' if patient_bill.bill_status == 'partial' else 'danger' }} text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-credit-card me-2"></i>Payment Status
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <h5 class="text-{{ 'success' if patient_bill.bill_status == 'paid' else 'warning' if patient_bill.bill_status == 'partial' else 'danger' }}">
+                    {{ patient_bill.payment_status }}
+                </h5>
+                {% if patient_bill.remaining_amount > 0 %}
+                <p class="text-muted">Amount Due: <strong>${{ "%.2f"|format(patient_bill.remaining_amount) }}</strong></p>
+                <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&amount={{ patient_bill.remaining_amount }}" 
+                   class="btn btn-success">
+                    <i class="fas fa-dollar-sign me-2"></i>Pay Remaining
+                </a>
+                {% else %}
+                <p class="text-success"><i class="fas fa-check-circle me-2"></i>Fully Paid</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Payment History ({{ payments|length }} payments)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th>Notes</th>
+                                <th>Recorded By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td><strong class="text-success">${{ "%.2f"|format(payment.amount) }}</strong></td>
+                                <td>
+                                    <span class="badge bg-info">{{ payment.payment_type.title() }}</span>
+                                </td>
+                                <td>{{ payment.payment_method.replace('_', ' ').title() }}</td>
+                                <td>{{ payment.reference_number or 'N/A' }}</td>
+                                <td>{{ payment.notes or 'N/A' }}</td>
+                                <td>{{ payment.created_by or 'System' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-secondary">
+                            <tr>
+                                <th>Total Paid</th>
+                                <th><strong>${{ "%.2f"|format(payments|sum(attribute="amount")) }}</strong></th>
+                                <th colspan="5"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <h6 class="text-muted">No payments recorded yet</h6>
+                    <p class="text-muted">Record the first payment to start tracking billing.</p>
+                    <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Record First Payment
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="btn-group w-100" role="group">
+                    {% if patient_bill.remaining_amount > 0 %}
+                    <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&type=advance&amount={{ (patient_bill.remaining_amount * 0.5)|round(2) }}" 
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-hand-holding-usd me-2"></i>50% Advance
+                    </a>
+                    <a href="{{ url_for('add_payment') }}?patient={{ patient.id }}&type=remaining&amount={{ patient_bill.remaining_amount }}" 
+                       class="btn btn-outline-success">
+                        <i class="fas fa-check-circle me-2"></i>Pay Full Remaining
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('patient_report', patient_id=patient.id) }}" 
+                       class="btn btn-outline-info" target="_blank">
+                        <i class="fas fa-print me-2"></i>Print Bill & Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-calculate discount
+    const discountPercentage = document.querySelector('input[name="discount_percentage"]');
+    const discountAmount = document.querySelector('input[name="discount_amount"]');
+    const totalAmount = {{ patient_bill.total_amount }};
+
+    discountPercentage.addEventListener('input', function() {
+        if (this.value) {
+            const amount = (totalAmount * this.value) / 100;
+            discountAmount.value = amount.toFixed(2);
+        }
+    });
+
+    discountAmount.addEventListener('input', function() {
+        if (this.value && totalAmount > 0) {
+            const percentage = (this.value / totalAmount) * 100;
+            discountPercentage.value = percentage.toFixed(1);
+        }
+    });
+});
+</script>
+{% endblock %}

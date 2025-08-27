@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Add Sample Collector - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-plus me-2"></i>Add New Sample Collector
+            </h1>
+            <a href="{{ url_for('sample_collectors') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Sample Collectors
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-md me-2"></i>Sample Collector Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Name and Employee ID -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.name.id }}" class="form-label">{{ form.name.label.text }}</label>
+                            {{ form.name(class="form-control", placeholder="e.g., John Smith") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.employee_id.id }}" class="form-label">{{ form.employee_id.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.employee_id(class="form-control", placeholder="e.g., EMP001") }}
+                            {% if form.employee_id.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.employee_id.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Department -->
+                    <div class="mb-3">
+                        <label for="{{ form.department.id }}" class="form-label">{{ form.department.label.text }} <small class="text-muted">(Optional)</small></label>
+                        {{ form.department(class="form-control", placeholder="e.g., Laboratory, Phlebotomy") }}
+                        {% if form.department.errors %}
+                            <div class="text-danger">
+                                {% for error in form.department.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.phone.id }}" class="form-label">{{ form.phone.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.phone(class="form-control", placeholder="e.g., +1-555-0123") }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.phone.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id }}" class="form-label">{{ form.email.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.email(class="form-control", placeholder="e.g., john.smith@lab.com") }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('sample_collectors') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

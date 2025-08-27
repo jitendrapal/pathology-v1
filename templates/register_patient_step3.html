@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Register Patient - Step 3 - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user-plus me-2"></i>Register New Patient
+            </h1>
+            <a href="{{ url_for('patients') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Patients
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="progress mb-3" style="height: 25px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 100%">
+                        Step 3 of 3
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="fas fa-user fa-2x text-success"></i>
+                        <p class="mb-0 mt-2 text-success"><strong>Personal Info</strong></p>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-phone fa-2x text-success"></i>
+                        <p class="mb-0 mt-2 text-success"><strong>Contact Info</strong></p>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-hospital fa-2x text-primary"></i>
+                        <p class="mb-0 mt-2"><strong>Medical & Hospital</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-hospital me-2"></i>Step 3: Medical Information & Sample Collection
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Medical History -->
+                    <div class="mb-3">
+                        <label for="{{ form.medical_history.id }}" class="form-label">{{ form.medical_history.label.text }} <small class="text-muted">(Optional)</small></label>
+                        {{ form.medical_history(class="form-control", rows="4", placeholder="Enter any relevant medical history, allergies, medications, etc.") }}
+                        {% if form.medical_history.errors %}
+                            <div class="text-danger">
+                                {% for error in form.medical_history.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Hospital and Sample Collection -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.hospital_name.id }}" class="form-label">{{ form.hospital_name.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.hospital_name(class="form-select") }}
+                            {% if form.hospital_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.hospital_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <a href="{{ url_for('add_hospital') }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-plus me-1"></i>Add New Hospital
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.collected_by.id }}" class="form-label">{{ form.collected_by.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.collected_by(class="form-select") }}
+                            {% if form.collected_by.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.collected_by.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <a href="{{ url_for('add_sample_collector') }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-plus me-1"></i>Add New Sample Collector
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                        <a href="{{ url_for('register_patient_step2') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Previous
+                        </a>
+                        <div>
+                            <a href="{{ url_for('patients') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                            {{ form.submit(class="btn btn-success") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

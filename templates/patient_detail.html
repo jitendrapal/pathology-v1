@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}{{ patient.full_name }} - Patient Details - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-user me-2"></i>{{ patient.full_name }} - Patient Details
+            </h1>
+            <div class="btn-group">
+                <a href="{{ url_for('edit_patient', id=patient.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit me-2"></i>Edit Patient
+                </a>
+                <a href="{{ url_for('patient_billing', patient_id=patient.id) }}" class="btn btn-warning">
+                    <i class="fas fa-dollar-sign me-2"></i>Billing & Payments
+                </a>
+                <a href="{{ url_for('patient_report', patient_id=patient.id) }}" class="btn btn-success" target="_blank">
+                    <i class="fas fa-print me-2"></i>Print Report
+                </a>
+                <a href="{{ url_for('patients') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Patients
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Patient Information Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-circle me-2"></i>Patient Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Name:</strong> {{ patient.full_name }}</p>
+                        <p><strong>Age:</strong> {{ patient.age }} years</p>
+                        <p><strong>Gender:</strong> {{ patient.gender }}</p>
+                        <p><strong>Phone:</strong> {{ patient.phone }}</p>
+                        {% if patient.email %}
+                        <p><strong>Email:</strong> {{ patient.email }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Address:</strong><br>{{ patient.address }}</p>
+                        {% if patient.hospital_name %}
+                        <p><strong>Hospital:</strong> {{ patient.hospital_name }}</p>
+                        {% endif %}
+                        {% if patient.collected_by %}
+                        <p><strong>Sample Collected By:</strong> {{ patient.collected_by }}</p>
+                        {% endif %}
+                        <p><strong>Registration Date:</strong> {{ patient.date_registered.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                </div>
+                {% if patient.medical_history %}
+                <div class="row">
+                    <div class="col-12">
+                        <p><strong>Medical History:</strong><br>{{ patient.medical_history }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white text-center">
+            <div class="card-body">
+                <h4>{{ patient_tests|length }}</h4>
+                <p class="mb-0">Total Tests</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white text-center">
+            <div class="card-body">
+                <h4>{{ patient_tests|selectattr("status", "equalto", "Pending")|list|length }}</h4>
+                <p class="mb-0">Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white text-center">
+            <div class="card-body">
+                <h4>{{ patient_tests|selectattr("status", "equalto", "Completed")|list|length }}</h4>
+                <p class="mb-0">Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white text-center">
+            <div class="card-body">
+                <h4>${{ "%.2f"|format(patient_tests|sum(attribute="test.cost")) }}</h4>
+                <p class="mb-0">Total Cost</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Patient Tests - Update in One Place -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-flask me-2"></i>All Assigned Tests - Update Status & Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_patient_tests', patient_id=patient.id) }}" id="updateTestsForm">
+                    
+                    {% if patient_tests %}
+                    <!-- Existing Tests -->
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-list me-2"></i>Current Tests ({{ patient_tests|length }})
+                    </h6>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 20%;">Test Name</th>
+                                    <th style="width: 10%;">Category</th>
+                                    <th style="width: 12%;">Date Ordered</th>
+                                    <th style="width: 12%;">Status</th>
+                                    <th style="width: 25%;">Results</th>
+                                    <th style="width: 15%;">Notes</th>
+                                    <th style="width: 6%;">Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pt in patient_tests %}
+                                <tr class="test-row" data-status="{{ pt.status }}">
+                                    <td>
+                                        <strong>{{ pt.test.name }}</strong>
+                                        {% if pt.test.normal_range %}
+                                        <br><small class="text-muted">Normal: {{ pt.test.normal_range }}</small>
+                                        {% endif %}
+                                        <input type="hidden" name="test_ids[]" value="{{ pt.id }}">
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ pt.test.category or 'N/A' }}</span>
+                                    </td>
+                                    <td>
+                                        <small>{{ pt.date_ordered.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        {% if pt.date_completed %}
+                                        <br><small class="text-success">Completed: {{ pt.date_completed.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <select name="statuses[]" class="form-select form-select-sm status-select">
+                                            <option value="Pending" {{ 'selected' if pt.status == 'Pending' }}>Pending</option>
+                                            <option value="Completed" {{ 'selected' if pt.status == 'Completed' }}>Completed</option>
+                                            <option value="Cancelled" {{ 'selected' if pt.status == 'Cancelled' }}>Cancelled</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <textarea name="results[]" class="form-control form-control-sm" rows="2" 
+                                                placeholder="Enter test results...">{{ pt.results or '' }}</textarea>
+                                    </td>
+                                    <td>
+                                        <textarea name="notes[]" class="form-control form-control-sm" rows="2" 
+                                                placeholder="Additional notes...">{{ pt.notes or '' }}</textarea>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">${{ "%.2f"|format(pt.test.cost) }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <h6>No tests assigned yet</h6>
+                        <p class="mb-0">Use the section below to assign new tests to this patient.</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Add New Tests Section -->
+                    <hr class="my-4">
+                    <h6 class="text-success mb-3">
+                        <i class="fas fa-plus me-2"></i>Assign New Tests
+                    </h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Sample Collector (for new tests)</label>
+                            <select name="sample_collector" class="form-select">
+                                <option value="">Select Sample Collector</option>
+                                {% for collector in collectors %}
+                                <option value="{{ collector.name }}">{{ collector.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quick Actions</label>
+                            <div class="btn-group w-100">
+                                <button type="button" class="btn btn-outline-primary" id="selectCommonTests">
+                                    <i class="fas fa-check-double me-1"></i>Select Common Tests
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="clearSelection">
+                                    <i class="fas fa-times me-1"></i>Clear Selection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Tests Grid -->
+                    <div class="row" id="newTestsGrid">
+                        {% for test in all_tests %}
+                        {% set is_assigned = patient_tests|selectattr("test.id", "equalto", test.id)|list|length > 0 %}
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <div class="card h-100 {{ 'border-secondary bg-light' if is_assigned else '' }}">
+                                <div class="card-body p-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input new-test-checkbox" type="checkbox" 
+                                               value="{{ test.id }}" id="newTest{{ test.id }}"
+                                               name="new_test_ids[]" {{ 'disabled' if is_assigned else '' }}>
+                                        <label class="form-check-label w-100" for="newTest{{ test.id }}">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="card-title mb-1 {{ 'text-muted' if is_assigned else '' }}">
+                                                        {{ test.name }}
+                                                        {% if is_assigned %}<small class="text-success">(Already Assigned)</small>{% endif %}
+                                                    </h6>
+                                                    {% if test.category %}
+                                                    <span class="badge bg-secondary mb-1">{{ test.category }}</span>
+                                                    {% endif %}
+                                                    <div class="small">
+                                                        <strong class="text-success">${{ "%.2f"|format(test.cost) }}</strong>
+                                                        {% if test.normal_range %}
+                                                        <br><span class="text-muted">{{ test.normal_range }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('patients') }}" class="btn btn-secondary me-md-2">Back to Patients</a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-save me-2"></i>Update All Tests & Assign New
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Color-code rows based on status
+    const statusRows = document.querySelectorAll('.test-row');
+    statusRows.forEach(row => {
+        const status = row.dataset.status;
+        if (status === 'Completed') {
+            row.classList.add('table-success');
+        } else if (status === 'Pending') {
+            row.classList.add('table-warning');
+        } else if (status === 'Cancelled') {
+            row.classList.add('table-secondary');
+        }
+    });
+
+    // Update row colors when status changes
+    const statusSelects = document.querySelectorAll('.status-select');
+    statusSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            const row = this.closest('.test-row');
+            row.classList.remove('table-success', 'table-warning', 'table-secondary');
+            
+            if (this.value === 'Completed') {
+                row.classList.add('table-success');
+            } else if (this.value === 'Pending') {
+                row.classList.add('table-warning');
+            } else if (this.value === 'Cancelled') {
+                row.classList.add('table-secondary');
+            }
+        });
+    });
+
+    // Quick select common tests
+    document.getElementById('selectCommonTests').addEventListener('click', function() {
+        const commonTests = ['Blood Test', 'Urine Test', 'Complete Blood Count'];
+        const checkboxes = document.querySelectorAll('.new-test-checkbox:not(:disabled)');
+        
+        checkboxes.forEach(checkbox => {
+            const label = checkbox.nextElementSibling.textContent;
+            if (commonTests.some(test => label.includes(test))) {
+                checkbox.checked = true;
+            }
+        });
+    });
+
+    // Clear all selections
+    document.getElementById('clearSelection').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.new-test-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    });
+
+    // Form validation
+    document.getElementById('updateTestsForm').addEventListener('submit', function(e) {
+        const hasChanges = document.querySelectorAll('.new-test-checkbox:checked').length > 0 ||
+                          document.querySelectorAll('textarea, select').length > 0;
+        
+        if (!hasChanges) {
+            if (!confirm('No changes detected. Are you sure you want to submit?')) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

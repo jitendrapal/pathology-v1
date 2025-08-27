@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Add Test - Pathology Lab{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-plus me-2"></i>Add New Test
+            </h1>
+            <a href="{{ url_for('tests') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Tests
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-form me-2"></i>Test Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Test Name -->
+                    <div class="mb-3">
+                        <label for="{{ form.name.id }}" class="form-label">{{ form.name.label.text }}</label>
+                        {{ form.name(class="form-control", placeholder="e.g., Complete Blood Count (CBC)") }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Category and Cost -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.category.id }}" class="form-label">{{ form.category.label.text }}</label>
+                            {{ form.category(class="form-select") }}
+                            {% if form.category.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.category.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.cost.id }}" class="form-label">{{ form.cost.label.text }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.cost(class="form-control", placeholder="0.00") }}
+                            </div>
+                            {% if form.cost.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.cost.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Normal Range -->
+                    <div class="mb-3">
+                        <label for="{{ form.normal_range.id }}" class="form-label">{{ form.normal_range.label.text }} <small class="text-muted">(Optional)</small></label>
+                        {{ form.normal_range(class="form-control", placeholder="e.g., 4.5-11.0 x10³/µL") }}
+                        {% if form.normal_range.errors %}
+                            <div class="text-danger">
+                                {% for error in form.normal_range.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Enter the normal range for this test (e.g., numerical ranges, positive/negative, etc.)</div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id }}" class="form-label">{{ form.description.label.text }} <small class="text-muted">(Optional)</small></label>
+                        {{ form.description(class="form-control", rows="4", placeholder="Enter a detailed description of the test, what it measures, preparation instructions, etc.") }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">
+                                {% for error in form.description.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('tests') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
