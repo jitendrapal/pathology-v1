@@ -3,8 +3,16 @@ from datetime import datetime, date
 import os
 import random
 import sqlite3
-import pandas as pd
 import io
+import csv
+
+# Optional pandas import with fallback
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    print("⚠️ Pandas not available - CSV export will use basic CSV module")
 
 app = Flask(__name__)
 
@@ -1998,18 +2006,49 @@ def api_export_table(table_name):
         if not cursor.fetchone():
             return jsonify({"error": "Table not found"})
 
-        # Get data
-        df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
-        conn.close()
+        if PANDAS_AVAILABLE:
+            # Use pandas for better CSV export
+            df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+            conn.close()
 
-        # Create CSV
-        output = io.StringIO()
-        df.to_csv(output, index=False)
-        output.seek(0)
+            # Create CSV with pandas
+            output = io.StringIO()
+            df.to_csv(output, index=False)
+            output.seek(0)
 
-        csv_data = io.BytesIO()
-        csv_data.write(output.getvalue().encode('utf-8'))
-        csv_data.seek(0)
+            csv_data = io.BytesIO()
+            csv_data.write(output.getvalue().encode('utf-8'))
+            csv_data.seek(0)
+        else:
+            # Fallback: Use basic CSV module
+            # Get column names
+            cursor.execute(f"PRAGMA table_info({table_name});")
+            columns_info = cursor.fetchall()
+            columns = [col[1] for col in columns_info]
+
+            # Get all data
+            cursor.execute(f"SELECT * FROM {table_name};")
+            rows = cursor.fetchall()
+            conn.close()
+
+            # Create CSV manually
+            output = io.StringIO()
+            writer = csv.writer(output)
+
+            # Write header
+            writer.writerow(columns)
+
+            # Write data rows
+            for row in rows:
+                # Convert None to empty string and ensure all values are strings
+                clean_row = [str(value) if value is not None else '' for value in row]
+                writer.writerow(clean_row)
+
+            output.seek(0)
+
+            csv_data = io.BytesIO()
+            csv_data.write(output.getvalue().encode('utf-8'))
+            csv_data.seek(0)
 
         return send_file(
             csv_data,
