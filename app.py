@@ -892,10 +892,20 @@ def process_bulk_update():
 # Multi-step Patient Registration Routes
 @app.route('/register_patient_step1', methods=['GET', 'POST'])
 def register_patient_step1():
+    from flask import session
     form = PatientStep1Form()
+
+    # Pre-populate form with session data if available
+    if request.method == 'GET' and 'patient_step1' in session:
+        step1_data = session['patient_step1']
+        form.title.data = step1_data.get('title')
+        form.first_name.data = step1_data.get('first_name')
+        form.last_name.data = step1_data.get('last_name')
+        form.age.data = step1_data.get('age')
+        form.gender.data = step1_data.get('gender')
+
     if form.validate_on_submit():
         # Store step 1 data in session
-        from flask import session
         session['patient_step1'] = {
             'title': form.title.data,
             'first_name': form.first_name.data,
@@ -914,6 +924,15 @@ def register_patient_step2():
         return redirect(url_for('register_patient_step1'))
 
     form = PatientStep2Form()
+
+    # Pre-populate form with session data if available
+    if request.method == 'GET' and 'patient_step2' in session:
+        step2_data = session['patient_step2']
+        form.phone.data = step2_data.get('phone')
+        form.email.data = step2_data.get('email')
+        form.address.data = step2_data.get('address')
+        form.emergency_contact.data = step2_data.get('emergency_contact')
+
     if form.validate_on_submit():
         # Store step 2 data in session
         session['patient_step2'] = {
@@ -939,8 +958,22 @@ def register_patient_step3():
     collectors = SampleCollector.query.all()
     form.collected_by.choices = [('', 'Select Collector')] + [(c.name, c.name) for c in collectors]
 
+    # Pre-populate form with session data if available
+    if request.method == 'GET' and 'patient_step3' in session:
+        step3_data = session['patient_step3']
+        form.medical_history.data = step3_data.get('medical_history')
+        form.hospital_name.data = step3_data.get('hospital_name')
+        form.collected_by.data = step3_data.get('collected_by')
+
     if form.validate_on_submit():
         try:
+            # Store step 3 data in session for back navigation
+            session['patient_step3'] = {
+                'medical_history': form.medical_history.data,
+                'hospital_name': form.hospital_name.data,
+                'collected_by': form.collected_by.data
+            }
+
             # Combine all data and create patient
             step1_data = session['patient_step1']
             step2_data = session['patient_step2']
@@ -971,6 +1004,7 @@ def register_patient_step3():
             # Clear session data
             session.pop('patient_step1', None)
             session.pop('patient_step2', None)
+            session.pop('patient_step3', None)
 
             flash(f'Patient {patient.full_name} registered successfully!', 'success')
             return redirect(url_for('patients'))
