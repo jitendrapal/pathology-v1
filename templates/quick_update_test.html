@@ -42,11 +42,54 @@
                         <p><strong>Category:</strong> {{ patient_test.test.category }}</p>
                         <p><strong>Cost:</strong> ₹{{ "%.2f"|format(patient_test.test.cost) }}</p>
                         <p><strong>Date Ordered:</strong> {{ patient_test.date_ordered.strftime('%d/%m/%Y') if patient_test.date_ordered else 'N/A' }}</p>
-                        <p><strong>Current Status:</strong> 
+                        <p><strong>Current Status:</strong>
                             <span class="badge {% if patient_test.status == 'Pending' %}bg-warning{% elif patient_test.status == 'Completed' %}bg-success{% else %}bg-info{% endif %}">
                                 {{ patient_test.status }}
                             </span>
                         </p>
+                    </div>
+                </div>
+
+                <!-- Payment Information -->
+                {% if patient_bill %}
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h6><i class="fas fa-rupee-sign me-2"></i>Payment Information:</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6>₹{{ "%.2f"|format(patient_bill.total_amount) }}</h6>
+                                        <small>Total Amount</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6>₹{{ "%.2f"|format(patient_bill.paid_amount) }}</h6>
+                                        <small>Paid Amount</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card {% if patient_bill.remaining_amount > 0 %}bg-danger{% else %}bg-success{% endif %} text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6>₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</h6>
+                                        <small>Remaining</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card {% if patient_bill.bill_status == 'paid' %}bg-success{% elif patient_bill.bill_status == 'partial' %}bg-warning{% else %}bg-secondary{% endif %} text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6>{{ patient_bill.bill_status.title() }}</h6>
+                                        <small>Status</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,64 +97,7 @@
     </div>
 </div>
 
-<!-- Payment Status Check -->
-{% set patient_bill = patient_test.patient.bills|first %}
-{% if patient_bill %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card {% if patient_bill.remaining_amount > 0 %}border-warning{% else %}border-success{% endif %}">
-            <div class="card-header {% if patient_bill.remaining_amount > 0 %}bg-warning text-dark{% else %}bg-success text-white{% endif %}">
-                <h5 class="mb-0">
-                    <i class="fas fa-rupee-sign me-2"></i>Payment Status
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <p><strong>Total Amount:</strong> ₹{{ "%.2f"|format(patient_bill.total_amount) }}</p>
-                    </div>
-                    <div class="col-md-3">
-                        <p><strong>Paid Amount:</strong> <span class="text-success">₹{{ "%.2f"|format(patient_bill.paid_amount) }}</span></p>
-                    </div>
-                    <div class="col-md-3">
-                        <p><strong>Remaining:</strong> 
-                            {% if patient_bill.remaining_amount > 0 %}
-                            <span class="text-danger">₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</span>
-                            {% else %}
-                            <span class="text-success">₹0.00</span>
-                            {% endif %}
-                        </p>
-                    </div>
-                    <div class="col-md-3">
-                        <p><strong>Status:</strong> 
-                            <span class="badge {% if patient_bill.payment_status == 'Fully Paid' %}bg-success{% elif patient_bill.payment_status == 'Partially Paid' %}bg-warning{% else %}bg-danger{% endif %}">
-                                {{ patient_bill.payment_status }}
-                            </span>
-                        </p>
-                    </div>
-                </div>
-                {% if patient_bill.remaining_amount > 0 %}
-                <div class="alert alert-warning mt-3">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Payment Pending:</strong> Collect ₹{{ "%.2f"|format(patient_bill.remaining_amount) }} before printing final report.
-                    <a href="{{ url_for('patient_billing', patient_id=patient_test.patient.id) }}" class="btn btn-warning btn-sm ms-2">
-                        <i class="fas fa-credit-card me-1"></i>Collect Payment
-                    </a>
-                </div>
-                {% else %}
-                <div class="alert alert-success mt-3">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <strong>Payment Complete:</strong> Ready to print final report.
-                    <a href="{{ url_for('patient_report', patient_id=patient_test.patient.id) }}" class="btn btn-success btn-sm ms-2" target="_blank">
-                        <i class="fas fa-print me-1"></i>Print Report
-                    </a>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
+
 
 <!-- Update Test Results Form -->
 <div class="row">
@@ -150,13 +136,71 @@
                         <label class="form-label">Additional Notes</label>
                         <textarea name="notes" class="form-control" rows="3" placeholder="Any additional notes or observations...">{{ patient_test.notes or '' }}</textarea>
                     </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+
+                    <!-- Payment Collection Section -->
+                    {% if patient_bill and patient_bill.remaining_amount > 0 %}
+                    <hr class="my-4">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">
+                                <i class="fas fa-rupee-sign me-2"></i>Collect Payment (Optional)
+                                <span class="badge bg-danger ms-2">₹{{ "%.2f"|format(patient_bill.remaining_amount) }} Pending</span>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="collectPaymentCheck" name="collect_payment" value="1">
+                                <label class="form-check-label" for="collectPaymentCheck">
+                                    <strong>Collect payment along with test update</strong>
+                                </label>
+                            </div>
+
+                            <div id="paymentDetails" style="display: none;">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Payment Amount</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" name="payment_amount" class="form-control"
+                                                   step="0.01" min="0" max="{{ patient_bill.remaining_amount }}"
+                                                   value="{{ patient_bill.remaining_amount }}"
+                                                   placeholder="0.00">
+                                        </div>
+                                        <div class="form-text">Maximum: ₹{{ "%.2f"|format(patient_bill.remaining_amount) }}</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Payment Method</label>
+                                        <select name="payment_method" class="form-select">
+                                            <option value="">Select Method</option>
+                                            <option value="cash">Cash</option>
+                                            <option value="card">Card</option>
+                                            <option value="upi">UPI</option>
+                                            <option value="bank_transfer">Bank Transfer</option>
+                                            <option value="cheque">Cheque</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Reference Number</label>
+                                        <input type="text" name="payment_reference" class="form-control"
+                                               placeholder="Transaction ID, Receipt #">
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Payment Summary:</strong> Collecting payment will update the patient's bill and allow report printing if fully paid.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                         <a href="{{ url_for('test_results_dashboard') }}" class="btn btn-secondary me-md-2">
                             <i class="fas fa-times me-2"></i>Cancel
                         </a>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save me-2"></i>Update Test Results
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-save me-2"></i><span id="submitBtnText">Update Test Results</span>
                         </button>
                     </div>
                 </form>
@@ -205,12 +249,71 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resultsTextarea) {
         resultsTextarea.focus();
     }
-    
+
     // Auto-set status to Completed when results are entered
     const statusSelect = document.querySelector('select[name="status"]');
-    resultsTextarea.addEventListener('input', function() {
-        if (this.value.trim() && statusSelect.value === 'Pending') {
-            statusSelect.value = 'Completed';
+    if (resultsTextarea && statusSelect) {
+        resultsTextarea.addEventListener('input', function() {
+            if (this.value.trim() && statusSelect.value === 'Pending') {
+                statusSelect.value = 'Completed';
+            }
+        });
+    }
+
+    // Payment collection functionality
+    const collectPaymentCheck = document.getElementById('collectPaymentCheck');
+    const paymentDetails = document.getElementById('paymentDetails');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitBtnText = document.getElementById('submitBtnText');
+    const paymentAmountInput = document.querySelector('input[name="payment_amount"]');
+
+    if (collectPaymentCheck && paymentDetails) {
+        collectPaymentCheck.addEventListener('change', function() {
+            if (this.checked) {
+                paymentDetails.style.display = 'block';
+                submitBtnText.textContent = 'Update Test & Collect Payment';
+                submitBtn.className = 'btn btn-success btn-lg';
+            } else {
+                paymentDetails.style.display = 'none';
+                submitBtnText.textContent = 'Update Test Results';
+                submitBtn.className = 'btn btn-primary btn-lg';
+            }
+        });
+    }
+
+    // Payment amount validation
+    if (paymentAmountInput) {
+        paymentAmountInput.addEventListener('input', function() {
+            const maxAmount = parseFloat(this.getAttribute('max'));
+            const currentAmount = parseFloat(this.value);
+
+            if (currentAmount > maxAmount) {
+                this.value = maxAmount.toFixed(2);
+            }
+
+            if (currentAmount < 0) {
+                this.value = '0.00';
+            }
+        });
+    }
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (collectPaymentCheck && collectPaymentCheck.checked) {
+            const paymentMethod = document.querySelector('select[name="payment_method"]').value;
+            const paymentAmount = parseFloat(paymentAmountInput.value) || 0;
+
+            if (paymentAmount > 0 && !paymentMethod) {
+                e.preventDefault();
+                alert('Please select a payment method when collecting payment.');
+                return false;
+            }
+
+            if (paymentAmount <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid payment amount greater than ₹0.');
+                return false;
+            }
         }
     });
 });

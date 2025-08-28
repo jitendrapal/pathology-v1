@@ -458,8 +458,26 @@ def test_results_dashboard():
 
 @app.route('/quick_update_test/<int:test_id>', methods=['GET', 'POST'])
 def quick_update_test(test_id):
-    """Quick update test results from dashboard"""
+    """Quick update test results and collect payment from dashboard"""
     patient_test = PatientTest.query.get_or_404(test_id)
+
+    # Get or create patient bill
+    patient_bill = PatientBill.query.filter_by(patient_id=patient_test.patient_id).first()
+    if not patient_bill:
+        # Calculate total from all patient tests
+        from sqlalchemy.orm import joinedload
+        all_patient_tests = PatientTest.query.filter_by(patient_id=patient_test.patient_id).all()
+        total_amount = sum([pt.test.cost for pt in all_patient_tests])
+
+        patient_bill = PatientBill(
+            patient_id=patient_test.patient_id,
+            total_amount=total_amount,
+            paid_amount=0,
+            remaining_amount=total_amount,
+            bill_status='pending'
+        )
+        db.session.add(patient_bill)
+        db.session.commit()
 
     if request.method == 'POST':
         try:
@@ -471,13 +489,66 @@ def quick_update_test(test_id):
             if patient_test.status == 'Completed' and not patient_test.date_completed:
                 patient_test.date_completed = datetime.now()
 
-            db.session.commit()
-            flash(f'Test results updated successfully for {patient_test.patient.full_name}!', 'success')
+            # Handle payment collection
+            collect_payment = request.form.get('collect_payment') == '1'
+            if collect_payment:
+                # Safely convert payment amount to float
+                try:
+                    payment_amount_str = request.form.get('payment_amount', '0').strip()
+                    if not payment_amount_str or payment_amount_str == '':
+                        payment_amount = 0
+                    else:
+                        payment_amount = float(payment_amount_str)
+                except (ValueError, TypeError) as e:
+                    payment_amount = 0
+                    app.logger.warning(f'Invalid payment amount "{request.form.get("payment_amount")}": {str(e)}')
 
-            # Check if there are pending payments
-            patient_bill = PatientBill.query.filter_by(patient_id=patient_test.patient_id).first()
-            if patient_bill and patient_bill.remaining_amount > 0:
-                flash(f'Pending payment: ₹{patient_bill.remaining_amount:.2f} - Collect before printing report', 'warning')
+                # Validate payment amount
+                if payment_amount > patient_bill.remaining_amount:
+                    payment_amount = patient_bill.remaining_amount
+                    app.logger.warning(f'Payment amount adjusted to remaining balance: ₹{payment_amount:.2f}')
+
+                if payment_amount > 0:
+                    payment_method = request.form.get('payment_method', '')
+                    payment_reference = request.form.get('payment_reference', '')
+
+                    if not payment_method:
+                        flash('Payment method is required when collecting payment.', 'error')
+                        return render_template('quick_update_test.html', patient_test=patient_test, patient_bill=patient_bill)
+
+                    # Create payment record
+                    payment = Payment(
+                        patient_id=patient_test.patient_id,
+                        amount=payment_amount,
+                        payment_method=payment_method,
+                        payment_type='partial' if payment_amount < patient_bill.remaining_amount else 'full',
+                        reference_number=payment_reference,
+                        payment_date=datetime.now()
+                    )
+                    db.session.add(payment)
+
+                    # Update patient bill
+                    patient_bill.paid_amount += payment_amount
+                    patient_bill.remaining_amount -= payment_amount
+
+                    if patient_bill.remaining_amount <= 0:
+                        patient_bill.bill_status = 'paid'
+                    else:
+                        patient_bill.bill_status = 'partial'
+
+            db.session.commit()
+
+            # Success messages
+            if collect_payment and payment_amount > 0:
+                flash(f'Test results updated and ₹{payment_amount:.2f} payment collected successfully for {patient_test.patient.full_name}!', 'success')
+                if patient_bill.remaining_amount > 0:
+                    flash(f'Remaining balance: ₹{patient_bill.remaining_amount:.2f}', 'info')
+                else:
+                    flash('Payment completed! Report can now be printed.', 'success')
+            else:
+                flash(f'Test results updated successfully for {patient_test.patient.full_name}!', 'success')
+                if patient_bill.remaining_amount > 0:
+                    flash(f'Pending payment: ₹{patient_bill.remaining_amount:.2f} - Collect before printing report', 'warning')
 
             return redirect(url_for('test_results_dashboard'))
 
@@ -486,7 +557,7 @@ def quick_update_test(test_id):
             flash('An error occurred while updating test results. Please try again.', 'error')
             app.logger.error(f'Error updating test results: {str(e)}')
 
-    return render_template('quick_update_test.html', patient_test=patient_test)
+    return render_template('quick_update_test.html', patient_test=patient_test, patient_bill=patient_bill)
 
 @app.route('/payment_overview')
 def payment_overview():
