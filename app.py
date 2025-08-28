@@ -242,6 +242,7 @@ def edit_patient(id):
     return render_template('edit_patient.html', form=form, patient=patient)
 
 @app.route('/patient_detail/<int:id>')
+@login_required
 def patient_detail(id):
     patient = Patient.query.get_or_404(id)
     # Get all tests for this patient with eager loading
@@ -263,6 +264,7 @@ def patient_detail(id):
                          collectors=collectors)
 
 @app.route('/update_patient_tests/<int:patient_id>', methods=['POST'])
+@login_required
 def update_patient_tests(patient_id):
     patient = Patient.query.get_or_404(patient_id)
 

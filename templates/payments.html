@@ -31,7 +31,7 @@
     <div class="col-md-3">
         <div class="card bg-success text-white text-center">
             <div class="card-body">
-                <h4>${{ "%.2f"|format(payments|sum(attribute="amount")) }}</h4>
+                <h4>₹{{ "%.2f"|format(payments|sum(attribute="amount")) }}</h4>
                 <p class="mb-0">Total Collected</p>
             </div>
         </div>
@@ -47,7 +47,7 @@
     <div class="col-md-3">
         <div class="card bg-warning text-white text-center">
             <div class="card-body">
-                <h4>${{ "%.2f"|format(payments|selectattr("payment_method", "equalto", "cash")|sum(attribute="amount")) }}</h4>
+                <h4>₹{{ "%.2f"|format(payments|selectattr("payment_method", "equalto", "cash")|sum(attribute="amount")) }}</h4>
                 <p class="mb-0">Cash Payments</p>
             </div>
         </div>
@@ -93,7 +93,7 @@
                                     <small class="text-muted">{{ payment.patient.phone }}</small>
                                 </td>
                                 <td>
-                                    <strong class="text-success">${{ "%.2f"|format(payment.amount) }}</strong>
+                                    <strong class="text-success">₹{{ "%.2f"|format(payment.amount) }}</strong>
                                 </td>
                                 <td>
                                     <span class="badge bg-{{ 'primary' if payment.payment_type == 'advance' else 'success' if payment.payment_type == 'full' else 'info' }}">
@@ -132,7 +132,7 @@
                         <tfoot class="table-secondary">
                             <tr>
                                 <th colspan="3">Total Payments</th>
-                                <th><strong>${{ "%.2f"|format(payments|sum(attribute="amount")) }}</strong></th>
+                                <th><strong>₹{{ "%.2f"|format(payments|sum(attribute="amount")) }}</strong></th>
                                 <th colspan="5">{{ payments|length }} transactions</th>
                             </tr>
                         </tfoot>
@@ -169,7 +169,7 @@
                             <tr>
                                 <td>{{ method.replace('_', ' ').title() }}</td>
                                 <td class="text-end">{{ method_payments|list|length }} payments</td>
-                                <td class="text-end"><strong>${{ "%.2f"|format(method_payments|sum(attribute="amount")) }}</strong></td>
+                                <td class="text-end"><strong>₹{{ "%.2f"|format(method_payments|sum(attribute="amount")) }}</strong></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -193,7 +193,7 @@
                             <tr>
                                 <td>{{ type.title() }}</td>
                                 <td class="text-end">{{ type_payments|list|length }} payments</td>
-                                <td class="text-end"><strong>${{ "%.2f"|format(type_payments|sum(attribute="amount")) }}</strong></td>
+                                <td class="text-end"><strong>₹{{ "%.2f"|format(type_payments|sum(attribute="amount")) }}</strong></td>
                             </tr>
                             {% endfor %}
                         </tbody>
