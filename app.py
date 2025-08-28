@@ -1741,22 +1741,33 @@ class DatabaseViewer:
     def get_database_info(self):
         """Get database information"""
         try:
+            print(f"🔍 DatabaseViewer: Checking database at {self.db_path}")
+
             if not os.path.exists(self.db_path):
-                return {"error": "Database file not found"}
+                print(f"❌ Database file not found: {self.db_path}")
+                return {"error": f"Database file not found: {self.db_path}"}
+
+            print(f"✅ Database file exists: {self.db_path}")
 
             conn = self.get_connection()
             if not conn:
+                print(f"❌ Database connection failed")
                 return {"error": "Database connection failed"}
 
+            print(f"✅ Database connection successful")
             cursor = conn.cursor()
 
             # Get file info
             file_size = os.path.getsize(self.db_path)
             file_time = datetime.fromtimestamp(os.path.getmtime(self.db_path))
 
+            print(f"📊 Database size: {file_size} bytes")
+
             # Get tables
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
             tables = cursor.fetchall()
+
+            print(f"📋 Found {len(tables)} tables: {[t[0] for t in tables]}")
 
             table_info = {}
             for table in tables:
@@ -1765,21 +1776,30 @@ class DatabaseViewer:
                     cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
                     count = cursor.fetchone()[0]
                     table_info[table_name] = count
+                    print(f"📊 Table {table_name}: {count} records")
                 except Exception as e:
                     table_info[table_name] = f"Error: {str(e)}"
+                    print(f"❌ Error counting {table_name}: {str(e)}")
 
             conn.close()
 
-            return {
+            result = {
                 "path": os.path.basename(self.db_path),
+                "full_path": self.db_path,
                 "size_mb": round(file_size / (1024 * 1024), 2),
                 "last_modified": file_time.strftime('%Y-%m-%d %H:%M:%S'),
                 "tables": table_info,
                 "total_tables": len(tables),
                 "server_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
+
+            print(f"✅ Database info compiled successfully: {result}")
+            return result
+
         except Exception as e:
-            return {"error": str(e)}
+            error_msg = f"Database info error: {str(e)}"
+            print(f"❌ {error_msg}")
+            return {"error": error_msg}
 
     def get_table_data(self, table_name, limit=100, offset=0):
         """Get data from specific table"""
@@ -1920,7 +1940,16 @@ def database_viewer():
 @app.route('/db-viewer/api/database-info')
 def api_database_info():
     """API endpoint for database information"""
-    return jsonify(db_viewer.get_database_info())
+    try:
+        print(f"🔍 Database info request - Database path: {database_path}")
+        print(f"📊 Database exists: {os.path.exists(database_path)}")
+
+        result = db_viewer.get_database_info()
+        print(f"✅ Database info result: {result}")
+        return jsonify(result)
+    except Exception as e:
+        print(f"❌ Database info error: {str(e)}")
+        return jsonify({"error": f"Database info failed: {str(e)}"})
 
 @app.route('/db-viewer/api/table-data/<table_name>')
 def api_table_data(table_name):
@@ -2070,7 +2099,5 @@ if __name__ == '__main__':
     print(f"📊 Main Application: http://localhost:{port}")
     print(f"🔍 Database Viewer: http://localhost:{port}/db-viewer/")
     print(f"📁 Database: {database_path}")
-
-    app.run(host='0.0.0.0', port=port, debug=debug)
 
     app.run(host='0.0.0.0', port=port, debug=debug)

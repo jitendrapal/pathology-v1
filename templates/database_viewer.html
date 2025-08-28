@@ -164,7 +164,7 @@
         });
 
         function loadDatabaseInfo() {
-            fetch('/api/database-info')
+            fetch('/db-viewer/api/database-info')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -222,7 +222,7 @@
         }
 
         function loadRealTimeStats() {
-            fetch('/api/real-time-stats')
+            fetch('/db-viewer/api/real-time-stats')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -336,7 +336,7 @@
             document.getElementById('export-btn').disabled = false;
             document.getElementById('search-section').style.display = 'block';
             
-            fetch(`/api/table-data/${tableName}?limit=100&offset=${offset}`)
+            fetch(`/db-viewer/api/table-data/${tableName}?limit=100&offset=${offset}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -468,7 +468,7 @@
                 </div>
             `;
             
-            fetch(`/api/search/${currentTable}?q=${encodeURIComponent(searchTerm)}`)
+            fetch(`/db-viewer/api/search/${currentTable}?q=${encodeURIComponent(searchTerm)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -543,7 +543,7 @@
             if (!currentTable) return;
             
             const link = document.createElement('a');
-            link.href = `/api/export/${currentTable}`;
+            link.href = `/db-viewer/api/export/${currentTable}`;
             link.download = `${currentTable}_export.csv`;
             document.body.appendChild(link);
             link.click();
