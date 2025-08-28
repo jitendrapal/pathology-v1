@@ -2088,6 +2088,36 @@ def api_export_table(table_name):
     except Exception as e:
         return jsonify({"error": str(e)})
 
+# ================================
+# BACKWARD COMPATIBILITY ROUTES
+# ================================
+# These routes provide backward compatibility for old API paths
+
+@app.route('/api/database-info')
+def api_database_info_compat():
+    """Backward compatibility route"""
+    return api_database_info()
+
+@app.route('/api/real-time-stats')
+def api_real_time_stats_compat():
+    """Backward compatibility route"""
+    return api_real_time_stats()
+
+@app.route('/api/table-data/<table_name>')
+def api_table_data_compat(table_name):
+    """Backward compatibility route"""
+    return api_table_data(table_name)
+
+@app.route('/api/search/<table_name>')
+def api_search_table_compat(table_name):
+    """Backward compatibility route"""
+    return api_search_table(table_name)
+
+@app.route('/api/export/<table_name>')
+def api_export_table_compat(table_name):
+    """Backward compatibility route"""
+    return api_export_table(table_name)
+
 if __name__ == '__main__':
     create_tables()
 
