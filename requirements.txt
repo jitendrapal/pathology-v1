@@ -22,7 +22,10 @@ psycopg2-binary==2.9.7
 email-validator==2.0.0
 
 # Data Processing (Optional - for enhanced CSV export)
-pandas==2.1.1
+# Compatible versions to avoid binary incompatibility
+numpy==1.24.3
+pandas==2.0.3
 
 # Note: pandas is optional - the application will work without it
 # If pandas is not available, CSV export will use Python's built-in csv module
+# NumPy and Pandas versions are pinned for binary compatibility

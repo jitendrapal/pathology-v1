@@ -9,10 +9,19 @@ import sqlite3
 import os
 import json
 from datetime import datetime
-import pandas as pd
 import io
+import csv
 import logging
 from logging.handlers import RotatingFileHandler
+
+# Optional pandas import with fallback to avoid binary compatibility errors
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+    print("✅ Pandas available - enhanced CSV export enabled")
+except ImportError:
+    PANDAS_AVAILABLE = False
+    print("⚠️ Pandas not available - using basic CSV export (this is fine for production)")
 
 # Create production Flask app
 prod_db_viewer_app = Flask(__name__, template_folder='templates')
