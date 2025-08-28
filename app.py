@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from datetime import datetime, date
 import os
 import random
+import sqlite3
+import pandas as pd
+import io
 
 app = Flask(__name__)
 
@@ -445,7 +448,7 @@ def test_results_dashboard():
         PatientTest.date_completed.desc()
     ).limit(50).all()
 
-    # Get patient bills with pending amounts
+    # Get patient bills with pending amounts1
     pending_bills = PatientBill.query.options(
         joinedload(PatientBill.patient)
     ).filter(PatientBill.remaining_amount > 0).order_by(
@@ -1709,11 +1712,326 @@ def create_tables():
             print(f"❌ Error creating tables: {e}")
             raise
 
+# ================================
+# DATABASE VIEWER ROUTES
+# ================================
+
+class DatabaseViewer:
+    """Database viewer utility class"""
+
+    def __init__(self):
+        self.db_path = database_path
+
+    def get_connection(self):
+        """Get database connection"""
+        if os.path.exists(self.db_path):
+            conn = sqlite3.connect(self.db_path, timeout=30.0)
+            conn.execute('PRAGMA journal_mode=WAL;')
+            return conn
+        return None
+
+    def get_database_info(self):
+        """Get database information"""
+        try:
+            if not os.path.exists(self.db_path):
+                return {"error": "Database file not found"}
+
+            conn = self.get_connection()
+            if not conn:
+                return {"error": "Database connection failed"}
+
+            cursor = conn.cursor()
+
+            # Get file info
+            file_size = os.path.getsize(self.db_path)
+            file_time = datetime.fromtimestamp(os.path.getmtime(self.db_path))
+
+            # Get tables
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+            tables = cursor.fetchall()
+
+            table_info = {}
+            for table in tables:
+                table_name = table[0]
+                try:
+                    cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
+                    count = cursor.fetchone()[0]
+                    table_info[table_name] = count
+                except Exception as e:
+                    table_info[table_name] = f"Error: {str(e)}"
+
+            conn.close()
+
+            return {
+                "path": os.path.basename(self.db_path),
+                "size_mb": round(file_size / (1024 * 1024), 2),
+                "last_modified": file_time.strftime('%Y-%m-%d %H:%M:%S'),
+                "tables": table_info,
+                "total_tables": len(tables),
+                "server_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    def get_table_data(self, table_name, limit=100, offset=0):
+        """Get data from specific table"""
+        try:
+            conn = self.get_connection()
+            if not conn:
+                return {"error": "Database connection failed"}
+
+            cursor = conn.cursor()
+
+            # Validate table name (security)
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", (table_name,))
+            if not cursor.fetchone():
+                return {"error": "Table not found"}
+
+            # Get column info
+            cursor.execute(f"PRAGMA table_info({table_name});")
+            columns_info = cursor.fetchall()
+            columns = [col[1] for col in columns_info]
+
+            # Get total count
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
+            total_count = cursor.fetchone()[0]
+
+            # Get data with pagination
+            cursor.execute(f"SELECT * FROM {table_name} LIMIT ? OFFSET ?;", (limit, offset))
+            rows = cursor.fetchall()
+
+            # Format data
+            formatted_rows = []
+            for row in rows:
+                formatted_row = {}
+                for i, col in enumerate(columns):
+                    value = row[i]
+                    if value is None:
+                        formatted_row[col] = ""
+                    else:
+                        formatted_row[col] = str(value)
+                formatted_rows.append(formatted_row)
+
+            conn.close()
+
+            return {
+                "table_name": table_name,
+                "columns": columns,
+                "data": formatted_rows,
+                "total_count": total_count,
+                "current_page": (offset // limit) + 1,
+                "total_pages": (total_count + limit - 1) // limit,
+                "limit": limit,
+                "offset": offset
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    def get_real_time_stats(self):
+        """Get real-time database statistics"""
+        try:
+            conn = self.get_connection()
+            if not conn:
+                return {"error": "Database connection failed"}
+
+            cursor = conn.cursor()
+            stats = {}
+
+            # Safe queries with error handling
+            try:
+                cursor.execute("SELECT COUNT(*) FROM patient;")
+                stats['total_patients'] = cursor.fetchone()[0]
+            except:
+                stats['total_patients'] = 0
+
+            try:
+                cursor.execute("SELECT COUNT(*) FROM patient WHERE date_registered >= date('now', '-7 days');")
+                stats['new_patients_week'] = cursor.fetchone()[0]
+            except:
+                stats['new_patients_week'] = 0
+
+            try:
+                cursor.execute("SELECT COUNT(*) FROM patient_test;")
+                stats['total_tests'] = cursor.fetchone()[0]
+            except:
+                stats['total_tests'] = 0
+
+            try:
+                cursor.execute("SELECT COUNT(*) FROM patient_test WHERE status = 'Pending';")
+                stats['pending_tests'] = cursor.fetchone()[0]
+            except:
+                stats['pending_tests'] = 0
+
+            try:
+                cursor.execute("SELECT COALESCE(SUM(amount), 0) FROM payment;")
+                stats['total_revenue'] = cursor.fetchone()[0]
+            except:
+                stats['total_revenue'] = 0
+
+            try:
+                cursor.execute("SELECT COALESCE(SUM(remaining_amount), 0) FROM patient_bill WHERE remaining_amount > 0;")
+                stats['pending_payments'] = cursor.fetchone()[0]
+            except:
+                stats['pending_payments'] = 0
+
+            # Recent activity
+            try:
+                cursor.execute("""
+                    SELECT 'Patient Registered' as activity, first_name || ' ' || last_name as details, date_registered as timestamp
+                    FROM patient
+                    ORDER BY date_registered DESC
+                    LIMIT 5
+                """)
+                recent_activity = []
+                for row in cursor.fetchall():
+                    recent_activity.append({
+                        "activity": row[0],
+                        "details": row[1],
+                        "timestamp": row[2]
+                    })
+                stats['recent_activity'] = recent_activity
+            except:
+                stats['recent_activity'] = []
+
+            stats['last_updated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            stats['server_status'] = 'online'
+
+            conn.close()
+            return stats
+        except Exception as e:
+            return {"error": str(e)}
+
+# Initialize database viewer
+db_viewer = DatabaseViewer()
+
+@app.route('/db-viewer/')
+def database_viewer():
+    """Database viewer main page"""
+    return render_template('database_viewer.html')
+
+@app.route('/db-viewer/api/database-info')
+def api_database_info():
+    """API endpoint for database information"""
+    return jsonify(db_viewer.get_database_info())
+
+@app.route('/db-viewer/api/table-data/<table_name>')
+def api_table_data(table_name):
+    """API endpoint for table data"""
+    limit = min(int(request.args.get('limit', 100)), 1000)  # Max 1000 records
+    offset = int(request.args.get('offset', 0))
+    return jsonify(db_viewer.get_table_data(table_name, limit, offset))
+
+@app.route('/db-viewer/api/real-time-stats')
+def api_real_time_stats():
+    """API endpoint for real-time database statistics"""
+    return jsonify(db_viewer.get_real_time_stats())
+
+@app.route('/db-viewer/api/search/<table_name>')
+def api_search_table(table_name):
+    """API endpoint for searching table"""
+    search_term = request.args.get('q', '')
+    limit = min(int(request.args.get('limit', 100)), 1000)
+
+    try:
+        conn = db_viewer.get_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"})
+
+        cursor = conn.cursor()
+
+        # Validate table name
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", (table_name,))
+        if not cursor.fetchone():
+            return jsonify({"error": "Table not found"})
+
+        # Get column info
+        cursor.execute(f"PRAGMA table_info({table_name});")
+        columns_info = cursor.fetchall()
+        columns = [col[1] for col in columns_info]
+
+        # Build search query
+        search_conditions = []
+        for col in columns:
+            search_conditions.append(f"{col} LIKE ?")
+
+        search_query = f"SELECT * FROM {table_name} WHERE {' OR '.join(search_conditions)} LIMIT ?;"
+        search_params = [f"%{search_term}%"] * len(columns) + [limit]
+
+        cursor.execute(search_query, search_params)
+        rows = cursor.fetchall()
+
+        # Format data
+        formatted_rows = []
+        for row in rows:
+            formatted_row = {}
+            for i, col in enumerate(columns):
+                value = row[i]
+                if value is None:
+                    formatted_row[col] = ""
+                else:
+                    formatted_row[col] = str(value)
+            formatted_rows.append(formatted_row)
+
+        conn.close()
+
+        return jsonify({
+            "table_name": table_name,
+            "columns": columns,
+            "data": formatted_rows,
+            "search_term": search_term,
+            "result_count": len(formatted_rows)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/db-viewer/api/export/<table_name>')
+def api_export_table(table_name):
+    """API endpoint for exporting table data"""
+    try:
+        conn = db_viewer.get_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"})
+
+        # Validate table name
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", (table_name,))
+        if not cursor.fetchone():
+            return jsonify({"error": "Table not found"})
+
+        # Get data
+        df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+        conn.close()
+
+        # Create CSV
+        output = io.StringIO()
+        df.to_csv(output, index=False)
+        output.seek(0)
+
+        csv_data = io.BytesIO()
+        csv_data.write(output.getvalue().encode('utf-8'))
+        csv_data.seek(0)
+
+        return send_file(
+            csv_data,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'{table_name}_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 if __name__ == '__main__':
     create_tables()
 
     # Get port from environment variable for deployment
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_ENV') != 'production'
+
+    print(f"🌐 Starting Pathology Lab Management System...")
+    print(f"📊 Main Application: http://localhost:{port}")
+    print(f"🔍 Database Viewer: http://localhost:{port}/db-viewer/")
+    print(f"📁 Database: {database_path}")
+
+    app.run(host='0.0.0.0', port=port, debug=debug)
 
     app.run(host='0.0.0.0', port=port, debug=debug)
