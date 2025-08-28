@@ -37,12 +37,27 @@
     </nav>
 
     <div class="container-fluid mt-4">
+        <!-- Manual Refresh Notice -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Manual Refresh Mode:</strong> Data is not automatically refreshed to save server resources.
+                    Use the <strong>Refresh</strong> buttons to update data when needed.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
         <!-- Database Info -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5><i class="fas fa-info-circle me-2"></i>Database Information</h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="loadDatabaseInfo()">
+                            <i class="fas fa-sync-alt"></i> Refresh Info
+                        </button>
                     </div>
                     <div class="card-body" id="database-info">
                         <div class="text-center">
@@ -61,9 +76,9 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5><i class="fas fa-chart-line me-2"></i>Real-time Statistics</h5>
-                        <button class="btn btn-sm btn-outline-primary" onclick="refreshStats()">
-                            <i class="fas fa-sync-alt"></i> Refresh
+                        <h5><i class="fas fa-chart-line me-2"></i>Database Statistics</h5>
+                        <button class="btn btn-sm btn-primary" onclick="refreshStats()">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
                         </button>
                     </div>
                     <div class="card-body" id="real-time-stats">
@@ -158,9 +173,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadDatabaseInfo();
             loadRealTimeStats();
-            
-            // Auto-refresh stats every 30 seconds
-            setInterval(loadRealTimeStats, 30000);
+
+            // Auto-refresh removed to save server resources
+            // Use manual refresh buttons instead
         });
 
         function loadDatabaseInfo() {
@@ -304,7 +319,7 @@
                             <div class="col-12">
                                 <h6><i class="fas fa-clock me-2"></i>Recent Activity:</h6>
                                 ${recentActivityHtml}
-                                <small class="text-muted float-end mt-2">Last updated: ${data.last_updated}</small>
+                                <small class="text-muted float-end mt-2">Data as of: ${data.last_updated} - <a href="#" onclick="refreshStats(); return false;">Refresh</a></small>
                                 <div class="clearfix"></div>
                             </div>
                         </div>
