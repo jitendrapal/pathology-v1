@@ -266,6 +266,9 @@ def patient_detail(id):
 def update_patient_tests(patient_id):
     patient = Patient.query.get_or_404(patient_id)
 
+    # Debug: Log form data for troubleshooting
+    app.logger.info(f'Update patient tests form data: {dict(request.form)}')
+
     try:
         # Get all the test updates from the form
         test_ids = request.form.getlist('test_ids[]')
@@ -323,7 +326,24 @@ def update_patient_tests(patient_id):
         # Handle payment for new tests
         if new_test_ids and new_tests_total_cost > 0:
             collect_payment = request.form.get('collect_new_tests_payment') == '1'
-            advance_amount = float(request.form.get('new_tests_advance_amount', 0))
+
+            # Safely convert advance amount to float
+            try:
+                advance_amount_str = request.form.get('new_tests_advance_amount', '0').strip()
+                # Handle empty string or None
+                if not advance_amount_str or advance_amount_str == '':
+                    advance_amount = 0
+                else:
+                    advance_amount = float(advance_amount_str)
+            except (ValueError, TypeError) as e:
+                advance_amount = 0
+                app.logger.warning(f'Invalid advance amount "{request.form.get("new_tests_advance_amount")}": {str(e)}')
+
+            # Validate payment amount
+            if advance_amount > new_tests_total_cost:
+                advance_amount = new_tests_total_cost
+                app.logger.warning(f'Payment amount {advance_amount} exceeded total cost {new_tests_total_cost}, adjusted to total cost')
+
             payment_type = request.form.get('new_tests_payment_type', 'none')
             payment_method = request.form.get('new_tests_payment_method')
             payment_reference = request.form.get('new_tests_payment_reference', '')
@@ -345,6 +365,11 @@ def update_patient_tests(patient_id):
 
             # Handle payment if collected
             if collect_payment and advance_amount > 0:
+                # Validate payment method is provided
+                if not payment_method:
+                    flash('Payment method is required when collecting payment.', 'error')
+                    return redirect(url_for('patient_detail', id=patient_id))
+
                 payment = Payment(
                     patient_id=patient_id,
                     amount=advance_amount,
