@@ -408,7 +408,7 @@ def update_patient_tests(patient_id):
         app.logger.error(f'Error updating patient tests: {str(e)}')
 
     # Debug: Log the redirect URL
-    redirect_url = url_for('patient_detail', id=patient_id)
+    redirect_url = url_for('index')  # Redirect to main dashboard
     app.logger.info(f'Redirecting to: {redirect_url}')
     return redirect(redirect_url)
 
