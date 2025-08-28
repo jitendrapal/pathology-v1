@@ -4,6 +4,12 @@ from wtforms.validators import DataRequired, Email, Optional, NumberRange, Lengt
 import re
 
 class PatientForm(FlaskForm):
+    title = SelectField('Title', choices=[
+        ('Mr.', 'Mr.'),
+        ('Mrs.', 'Mrs.'),
+        ('Miss', 'Miss'),
+        ('Dr.', 'Dr.')
+    ], validators=[DataRequired()])
     first_name = StringField('First Name', validators=[
         DataRequired(),
         Length(min=2, max=50),
@@ -124,6 +130,12 @@ class SampleCollectorForm(FlaskForm):
 
 # Multi-step Patient Registration Forms
 class PatientStep1Form(FlaskForm):
+    title = SelectField('Title', choices=[
+        ('Mr.', 'Mr.'),
+        ('Mrs.', 'Mrs.'),
+        ('Miss', 'Miss'),
+        ('Dr.', 'Dr.')
+    ], validators=[DataRequired()])
     first_name = StringField('First Name', validators=[
         DataRequired(),
         Length(min=2, max=50),

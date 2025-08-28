@@ -200,6 +200,7 @@ def register_patient():
                 return render_template('register_patient.html', form=form)
 
             patient = Patient(
+                title=form.title.data,
                 first_name=form.first_name.data.strip().title(),
                 last_name=form.last_name.data.strip().title(),
                 age=form.age.data,
@@ -896,6 +897,7 @@ def register_patient_step1():
         # Store step 1 data in session
         from flask import session
         session['patient_step1'] = {
+            'title': form.title.data,
             'first_name': form.first_name.data,
             'last_name': form.last_name.data,
             'age': form.age.data,
@@ -950,6 +952,7 @@ def register_patient_step3():
                 return render_template('register_patient_step3.html', form=form)
 
             patient = Patient(
+                title=step1_data['title'],
                 first_name=step1_data['first_name'].strip().title(),
                 last_name=step1_data['last_name'].strip().title(),
                 age=step1_data['age'],

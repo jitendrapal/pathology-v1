@@ -5,6 +5,7 @@ db = SQLAlchemy()
 
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(10), nullable=False, default='Mr.')
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     age = db.Column(db.Integer, nullable=False)
@@ -26,7 +27,7 @@ class Patient(db.Model):
     
     @property
     def full_name(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.title} {self.first_name} {self.last_name}"
 
 class Test(db.Model):
     id = db.Column(db.Integer, primary_key=True)

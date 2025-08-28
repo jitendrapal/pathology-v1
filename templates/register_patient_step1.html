@@ -59,7 +59,18 @@
                     
                     <!-- Personal Information -->
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <label for="{{ form.title.id }}" class="form-label">{{ form.title.label.text }}</label>
+                            {{ form.title(class="form-select") }}
+                            {% if form.title.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.title.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
                             <label for="{{ form.first_name.id }}" class="form-label">{{ form.first_name.label.text }}</label>
                             {{ form.first_name(class="form-control") }}
                             {% if form.first_name.errors %}
@@ -70,7 +81,7 @@
                                 </div>
                             {% endif %}
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <label for="{{ form.last_name.id }}" class="form-label">{{ form.last_name.label.text }}</label>
                             {{ form.last_name(class="form-control") }}
                             {% if form.last_name.errors %}
