@@ -7,8 +7,20 @@ app = Flask(__name__)
 
 # Configuration for production and development
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///pathology.db')
+
+# Create data directory if it doesn't exist
+import os
+data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
+
+# Database configuration with persistent file location
+database_path = os.path.join(data_dir, 'pathology.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{database_path}')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+print(f"📁 Database location: {database_path}")
+print(f"📊 Database exists: {os.path.exists(database_path)}")
 
 # Handle PostgreSQL URL format for DigitalOcean
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
