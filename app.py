@@ -176,9 +176,9 @@ def patients():
             (Patient.first_name.contains(search)) |
             (Patient.last_name.contains(search)) |
             (Patient.phone.contains(search))
-        ).all()
+        ).order_by(Patient.date_registered.desc()).all()
     else:
-        patients = Patient.query.all()
+        patients = Patient.query.order_by(Patient.date_registered.desc()).all()
     return render_template('patients.html', patients=patients, search=search)
 
 @app.route('/register_patient', methods=['GET', 'POST'])
@@ -407,7 +407,10 @@ def update_patient_tests(patient_id):
         flash('An error occurred while updating tests. Please try again.', 'error')
         app.logger.error(f'Error updating patient tests: {str(e)}')
 
-    return redirect(url_for('patient_detail', id=patient_id))
+    # Debug: Log the redirect URL
+    redirect_url = url_for('patient_detail', id=patient_id)
+    app.logger.info(f'Redirecting to: {redirect_url}')
+    return redirect(redirect_url)
 
 @app.route('/test_results_dashboard')
 def test_results_dashboard():
