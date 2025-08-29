@@ -34,6 +34,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 print(f"📁 Database location: {database_path}")
 print(f"📊 Database exists: {os.path.exists(database_path)}")
 
+# Database connection helper function
+def get_db_connection():
+    """Get a direct SQLite connection for raw SQL operations"""
+    conn = sqlite3.connect(database_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 # Handle PostgreSQL URL format for DigitalOcean
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
