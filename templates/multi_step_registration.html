@@ -863,34 +863,51 @@ function initializeTestSearch() {
         return;
     }
 
-    console.log('Initializing test search...');
+    console.log('Test search initialized successfully');
 
-    searchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
+    // Remove any existing event listeners
+    searchInput.removeEventListener('input', handleSearchInput);
 
-        if (query.length < 1) {
-            suggestionsDiv.classList.add('d-none');
-            return;
+    // Add fresh event listener
+    searchInput.addEventListener('input', handleSearchInput);
+
+    // Add other event listeners
+    setupSearchEventListeners(searchInput, suggestionsDiv);
+}
+
+// Separate function to handle search input
+function handleSearchInput() {
+    const searchInput = document.getElementById('test-search');
+    const suggestionsDiv = document.getElementById('test-suggestions');
+    const query = this.value.toLowerCase().trim();
+
+    console.log('Search query:', query);
+
+    if (query.length < 1) {
+        suggestionsDiv.classList.add('d-none');
+        return;
+    }
+
+    // Enhanced Google-like search algorithm
+    const filteredTests = availableTests.filter(test => {
+        const testName = test.name.toLowerCase();
+        const testCategory = test.category.toLowerCase();
+
+        // Exact match gets highest priority
+        if (testName.includes(query) || testCategory.includes(query)) {
+            return true;
         }
 
-        // Enhanced Google-like search algorithm
-        const filteredTests = availableTests.filter(test => {
-            const testName = test.name.toLowerCase();
-            const testCategory = test.category.toLowerCase();
+        // Word-based matching
+        const queryWords = query.split(' ');
+        const testWords = testName.split(' ');
 
-            // Exact match gets highest priority
-            if (testName.includes(query) || testCategory.includes(query)) {
-                return true;
-            }
+        return queryWords.some(queryWord =>
+            testWords.some(testWord => testWord.startsWith(queryWord))
+        );
+    });
 
-            // Word-based matching
-            const queryWords = query.split(' ');
-            const testWords = testName.split(' ');
-
-            return queryWords.some(queryWord =>
-                testWords.some(testWord => testWord.startsWith(queryWord))
-            );
-        });
+    console.log('Filtered tests count:', filteredTests.length);
 
         // Sort by relevance (exact matches first, then partial matches)
         filteredTests.sort((a, b) => {
@@ -927,12 +944,14 @@ function initializeTestSearch() {
 
             suggestionsDiv.innerHTML = suggestionsHTML;
             suggestionsDiv.classList.remove('d-none');
-        } else {
-            suggestionsDiv.innerHTML = '<div class="p-2 text-muted"><i class="fas fa-search me-2"></i>No tests found for "' + query + '"</div>';
-            suggestionsDiv.classList.remove('d-none');
-        }
-    });
+    } else {
+        suggestionsDiv.innerHTML = '<div class="p-2 text-muted"><i class="fas fa-search me-2"></i>No tests found for "' + query + '"</div>';
+        suggestionsDiv.classList.remove('d-none');
+    }
+}
 
+// Setup additional event listeners for search
+function setupSearchEventListeners(searchInput, suggestionsDiv) {
     // Hide suggestions when clicking outside
     document.addEventListener('click', function(e) {
         if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
@@ -1128,6 +1147,13 @@ function nextStep() {
         // Initialize test search when entering step 2
         setTimeout(() => {
             initializeTestSearch();
+
+            // Test if search is working
+            const testInput = document.getElementById('test-search');
+            if (testInput) {
+                console.log('Test search input found, adding test event');
+                testInput.focus();
+            }
         }, 100);
     }
 }
