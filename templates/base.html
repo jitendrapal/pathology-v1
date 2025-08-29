@@ -82,10 +82,31 @@
                             <i class="fas fa-home me-1"></i>Dashboard
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('multi_step_registration') }}">
-                            <i class="fas fa-user-plus me-1"></i>Quick Registration
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="registrationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-plus me-1"></i>Registration
                         </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('multi_step_registration') }}">
+                                    <i class="fas fa-clipboard-list me-2"></i>Quick Registration
+                                    <small class="text-muted d-block">Patient + Tests + Billing</small>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('register_patient') }}">
+                                    <i class="fas fa-user me-2"></i>Patient Only
+                                    <small class="text-muted d-block">Basic patient registration</small>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('assign_test') }}">
+                                    <i class="fas fa-vial me-2"></i>Assign Tests
+                                    <small class="text-muted d-block">Add tests to existing patient</small>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('patients') }}">
