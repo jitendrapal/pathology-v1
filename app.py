@@ -2231,22 +2231,44 @@ def multi_step_registration():
                 conn.commit()
                 conn.close()
 
-                # Success message
-                flash(f'Patient {patient_data["first_name"]} {patient_data["last_name"]} registered successfully! '
-                      f'{len(selected_tests)} test(s) assigned. Amount paid: ₹{amount_paid}', 'success')
-
-                # Redirect to patient details or dashboard
-                return redirect(url_for('dashboard'))
+                # Return JSON response for AJAX
+                return jsonify({
+                    'success': True,
+                    'message': f'Patient {patient_data["first_name"]} {patient_data["last_name"]} registered successfully!',
+                    'registration_data': {
+                        'patient_id': patient_id,
+                        'bill_id': bill_id,
+                        'title': patient_data['title'],
+                        'first_name': patient_data['first_name'],
+                        'last_name': patient_data['last_name'],
+                        'phone': patient_data['phone'],
+                        'date_of_birth': patient_data['date_of_birth'],
+                        'gender': patient_data['gender'],
+                        'barcode': patient_data.get('barcode', ''),
+                        'referring_doctor': patient_data.get('referring_doctor', ''),
+                        'collected_by': request.form.get('collected_by', ''),
+                        'collected_at': request.form.get('collected_at', ''),
+                        'collection_datetime': request.form.get('collection_datetime', ''),
+                        'total_amount': total_amount,
+                        'amount_paid': amount_paid,
+                        'remaining_amount': remaining_amount,
+                        'tests_count': len(selected_tests)
+                    }
+                })
 
             except Exception as e:
                 conn.rollback()
                 conn.close()
-                flash(f'Error during registration: {str(e)}', 'error')
-                return render_template('multi_step_registration.html')
+                return jsonify({
+                    'success': False,
+                    'error': f'Database error: {str(e)}'
+                })
 
         except Exception as e:
-            flash(f'Registration failed: {str(e)}', 'error')
-            return render_template('multi_step_registration.html')
+            return jsonify({
+                'success': False,
+                'error': f'Registration failed: {str(e)}'
+            })
 
     # GET request - show the form
     return render_template('multi_step_registration.html')

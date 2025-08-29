@@ -6,37 +6,12 @@
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <!-- Progress Indicator -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h3 class="text-center mb-4">
-                                <i class="fas fa-user-plus me-2"></i>Patient Registration & Test Assignment
-                            </h3>
-                            
-                            <!-- Progress Steps -->
-                            <div class="progress-steps mb-4">
-                                <div class="row text-center">
-                                    <div class="col-6">
-                                        <div class="step active" id="step1-indicator">
-                                            <div class="step-number">1</div>
-                                            <div class="step-title">Patient Information</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="step" id="step2-indicator">
-                                            <div class="step-number">2</div>
-                                            <div class="step-title">Test Selection & Billing</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="progress mt-3">
-                                    <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Simple Header -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h3 class="text-center">
+                        <i class="fas fa-user-plus me-2"></i>Patient Registration & Test Assignment
+                    </h3>
                 </div>
             </div>
 
@@ -46,7 +21,7 @@
                 <div class="step-content" id="step1">
                     <div class="card">
                         <div class="card-header bg-primary text-white">
-                            <h5><i class="fas fa-user me-2"></i>Step 1: Patient Information</h5>
+                            <h5><i class="fas fa-user me-2"></i>Patient Information & Collection Details</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -171,45 +146,25 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Navigation Buttons -->
-                            <div class="row mt-4">
-                                <div class="col-12 text-end">
-                                    <button type="button" class="btn btn-primary btn-lg" onclick="nextStep()">
-                                        Next: Test Selection <i class="fas fa-arrow-right ms-2"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Step 2: Test Selection & Billing -->
-                <div class="step-content d-none" id="step2">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h5><i class="fas fa-vial me-2"></i>Step 2: Test Selection & Billing</h5>
-                        </div>
-                        <div class="card-body">
                             <!-- Collection Information -->
-                            <div class="row mb-4">
+                            <hr class="my-4">
+                            <div class="row">
                                 <div class="col-12">
-                                    <h6 class="text-success mb-3">Collection Information</h6>
+                                    <h6 class="text-primary mb-3">Collection Information</h6>
                                     <div class="row">
                                         <div class="col-md-4">
                                             <div class="mb-3">
                                                 <label class="form-label">Collected By</label>
-                                                <div class="position-relative">
-                                                    <select class="form-select" name="collected_by" id="collected-by-select">
-                                                        <option value="">Select Collector</option>
-                                                        <option value="Lab Technician 1">Lab Technician 1</option>
-                                                        <option value="Lab Technician 2">Lab Technician 2</option>
-                                                        <option value="Phlebotomist 1">Phlebotomist 1</option>
-                                                        <option value="Phlebotomist 2">Phlebotomist 2</option>
-                                                        <option value="Home Collection Team">Home Collection Team</option>
-                                                        <option value="Other">Other (Specify)</option>
-                                                    </select>
-                                                </div>
+                                                <select class="form-select" name="collected_by" id="collected-by-select">
+                                                    <option value="">Select Collector</option>
+                                                    <option value="Lab Technician 1">Lab Technician 1</option>
+                                                    <option value="Lab Technician 2">Lab Technician 2</option>
+                                                    <option value="Phlebotomist 1">Phlebotomist 1</option>
+                                                    <option value="Phlebotomist 2">Phlebotomist 2</option>
+                                                    <option value="Home Collection Team">Home Collection Team</option>
+                                                    <option value="Other">Other (Specify)</option>
+                                                </select>
                                                 <input type="text" class="form-control mt-2 d-none" id="other-collector" name="other_collector" placeholder="Specify collector name">
                                             </div>
                                         </div>
@@ -238,8 +193,25 @@
                                 </div>
                             </div>
 
-                            <hr class="mb-4">
+                            <!-- Navigation Buttons -->
+                            <div class="row mt-4">
+                                <div class="col-12 text-end">
+                                    <button type="button" class="btn btn-primary btn-lg" onclick="nextStep()">
+                                        Next: Test Selection <i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Step 2: Test Selection & Billing -->
+                <div class="step-content d-none" id="step2">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5><i class="fas fa-vial me-2"></i>Test Selection & Billing</h5>
+                        </div>
+                        <div class="card-body">
                             <div class="row">
                                 <!-- Test Selection -->
                                 <div class="col-md-8">
@@ -510,45 +482,88 @@
     </div>
 </div>
 
+<!-- Print Invoice Modal -->
+<div class="modal fade" id="printInvoiceModal" tabindex="-1" aria-labelledby="printInvoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="printInvoiceModalLabel">
+                    <i class="fas fa-check-circle text-success me-2"></i>Registration Successful
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                    <h4 class="text-success mt-2">Registration Completed Successfully!</h4>
+                    <p class="text-muted">Patient has been registered and tests have been assigned.</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-invoice fa-2x text-primary mb-3"></i>
+                                <h6>Print Invoice</h6>
+                                <p class="text-muted small">Print billing invoice for patient records</p>
+                                <button type="button" class="btn btn-primary" onclick="printInvoice()">
+                                    <i class="fas fa-print me-1"></i>Print Invoice
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-medical fa-2x text-success mb-3"></i>
+                                <h6>Print Report Template</h6>
+                                <p class="text-muted small">Print test report template for lab use</p>
+                                <button type="button" class="btn btn-success" onclick="printReport()">
+                                    <i class="fas fa-print me-1"></i>Print Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Next Steps:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Collect sample from patient</li>
+                            <li>Process tests in laboratory</li>
+                            <li>Update test results when ready</li>
+                            <li>Generate final report for patient</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('index') }}'">
+                    <i class="fas fa-home me-1"></i>Go to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-.progress-steps .step {
-    position: relative;
-    text-align: center;
-}
-
-.step-number {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #e9ecef;
-    color: #6c757d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 10px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.step.active .step-number {
-    background-color: #007bff;
-    color: white;
-}
-
-.step.completed .step-number {
-    background-color: #28a745;
-    color: white;
-}
-
-.step-title {
-    font-size: 14px;
-    color: #6c757d;
-    font-weight: 500;
-}
-
-.step.active .step-title {
-    color: #007bff;
-    font-weight: bold;
+/* Print styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .print-content, .print-content * {
+        visibility: visible;
+    }
+    .print-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
 }
 
 .test-category .form-check {
@@ -938,9 +953,6 @@ function nextStep() {
 
         // Initialize test search when entering step 2
         initializeTestSearch();
-
-        // Initialize collection fields
-        initializeCollectionFields();
     }
 }
 
@@ -1012,6 +1024,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize doctor search
     initializeDoctorSearch();
+
+    // Initialize collection fields
+    initializeCollectionFields();
 });
 
 function updateBilling() {
@@ -1094,25 +1109,255 @@ function addCustomTest() {
 
 // Form Submission
 document.getElementById('multiStepForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Prevent default form submission
+
     if (selectedTests.length === 0) {
-        e.preventDefault();
         alert('Please select at least one test');
         return;
     }
-    
-    // Add selected tests to form data
-    const testsInput = document.createElement('input');
-    testsInput.type = 'hidden';
-    testsInput.name = 'selected_tests';
-    testsInput.value = JSON.stringify(selectedTests);
-    this.appendChild(testsInput);
-    
-    // Add total amount
-    const totalInput = document.createElement('input');
-    totalInput.type = 'hidden';
-    totalInput.name = 'total_amount';
-    totalInput.value = totalAmount;
-    this.appendChild(totalInput);
+
+    // Collect form data
+    const formData = new FormData(this);
+
+    // Add selected tests and total amount
+    formData.append('selected_tests', JSON.stringify(selectedTests));
+    formData.append('total_amount', totalAmount);
+
+    // Show loading state
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+    submitBtn.disabled = true;
+
+    // Submit form via AJAX
+    fetch('{{ url_for("multi_step_registration") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Store registration data for printing
+            window.registrationData = data.registration_data;
+
+            // Show success modal
+            const modal = new bootstrap.Modal(document.getElementById('printInvoiceModal'));
+            modal.show();
+        } else {
+            alert('Registration failed: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Registration failed: Network error');
+    })
+    .finally(() => {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
 });
+
+// Print Functions
+function printInvoice() {
+    if (!window.registrationData) {
+        alert('No registration data available');
+        return;
+    }
+
+    const data = window.registrationData;
+
+    // Create invoice content
+    const invoiceContent = `
+        <div class="print-content">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2>Pathology Lab</h2>
+                <p>Complete Healthcare Solutions</p>
+                <hr>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <div>
+                    <h5>Patient Information</h5>
+                    <p><strong>Name:</strong> ${data.title} ${data.first_name} ${data.last_name}</p>
+                    <p><strong>Phone:</strong> ${data.phone}</p>
+                    <p><strong>Date of Birth:</strong> ${data.date_of_birth}</p>
+                    <p><strong>Gender:</strong> ${data.gender}</p>
+                    ${data.barcode ? `<p><strong>Barcode:</strong> ${data.barcode}</p>` : ''}
+                </div>
+                <div>
+                    <h5>Invoice Details</h5>
+                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    <p><strong>Patient ID:</strong> ${data.patient_id}</p>
+                    <p><strong>Bill ID:</strong> ${data.bill_id}</p>
+                </div>
+            </div>
+
+            <h5>Tests & Services</h5>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Test Name</th>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${selectedTests.map(test => `
+                        <tr>
+                            <td style="border: 1px solid #dee2e6; padding: 8px;">${test.name}</td>
+                            <td style="border: 1px solid #dee2e6; padding: 8px;">₹${test.price}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Total Amount</th>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">₹${data.total_amount}</th>
+                    </tr>
+                    <tr>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Amount Paid</th>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">₹${data.amount_paid}</th>
+                    </tr>
+                    <tr>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Remaining</th>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">₹${data.remaining_amount}</th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div style="margin-top: 30px;">
+                <p><strong>Collection Information:</strong></p>
+                <p>Collected By: ${data.collected_by || 'Not specified'}</p>
+                <p>Collected At: ${data.collected_at || 'Not specified'}</p>
+                <p>Collection Date: ${data.collection_datetime || 'Not specified'}</p>
+                ${data.referring_doctor ? `<p>Referring Doctor: ${data.referring_doctor}</p>` : ''}
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <p>Thank you for choosing our services!</p>
+                <small>This is a computer generated invoice.</small>
+            </div>
+        </div>
+    `;
+
+    // Open print window
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Invoice - ${data.first_name} ${data.last_name}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                </style>
+            </head>
+            <body>
+                ${invoiceContent}
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function printReport() {
+    if (!window.registrationData) {
+        alert('No registration data available');
+        return;
+    }
+
+    const data = window.registrationData;
+
+    // Create report content
+    const reportContent = `
+        <div class="print-content">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2>Pathology Lab</h2>
+                <h4>Test Report Template</h4>
+                <hr>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <div>
+                    <h5>Patient Information</h5>
+                    <p><strong>Name:</strong> ${data.title} ${data.first_name} ${data.last_name}</p>
+                    <p><strong>Age/Gender:</strong> ${data.gender}</p>
+                    <p><strong>Phone:</strong> ${data.phone}</p>
+                    ${data.barcode ? `<p><strong>Sample ID:</strong> ${data.barcode}</p>` : ''}
+                </div>
+                <div>
+                    <h5>Report Details</h5>
+                    <p><strong>Report Date:</strong> _______________</p>
+                    <p><strong>Patient ID:</strong> ${data.patient_id}</p>
+                    <p><strong>Lab No:</strong> _______________</p>
+                </div>
+            </div>
+
+            <h5>Test Results</h5>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Test Name</th>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Result</th>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Normal Range</th>
+                        <th style="border: 1px solid #dee2e6; padding: 8px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${selectedTests.map(test => `
+                        <tr>
+                            <td style="border: 1px solid #dee2e6; padding: 8px;">${test.name}</td>
+                            <td style="border: 1px solid #dee2e6; padding: 8px;">___________</td>
+                            <td style="border: 1px solid #dee2e6; padding: 8px;">___________</td>
+                            <td style="border: 1px solid #dee2e6; padding: 8px;">___________</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
+            <div style="margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <p><strong>Referring Doctor:</strong> ${data.referring_doctor || '_______________'}</p>
+                        <p><strong>Collection Date:</strong> ${data.collection_datetime || '_______________'}</p>
+                        <p><strong>Collected By:</strong> ${data.collected_by || '_______________'}</p>
+                    </div>
+                    <div>
+                        <p><strong>Verified By:</strong> _______________</p>
+                        <p><strong>Signature:</strong> _______________</p>
+                        <p><strong>Date:</strong> _______________</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <p>This report is generated electronically and is valid without signature.</p>
+            </div>
+        </div>
+    `;
+
+    // Open print window
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Test Report - ${data.first_name} ${data.last_name}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                </style>
+            </head>
+            <body>
+                ${reportContent}
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
 </script>
 {% endblock %}
