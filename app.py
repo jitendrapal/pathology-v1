@@ -2161,7 +2161,6 @@ def multi_step_registration():
 
             # Get test and billing data
             selected_tests = json.loads(request.form.get('selected_tests', '[]'))
-            custom_amounts = json.loads(request.form.get('custom_amounts', '[]'))
             total_amount = float(request.form.get('total_amount', 0))
             payment_option = request.form.get('payment_option')
             payment_method = request.form.get('payment_method')
@@ -2283,8 +2282,7 @@ def multi_step_registration():
                         'total_amount': total_amount,
                         'amount_paid': amount_paid,
                         'remaining_amount': remaining_amount,
-                        'tests_count': len(selected_tests),
-                        'custom_amounts_count': len(custom_amounts)
+                        'tests_count': len(selected_tests)
                     }
                 })
 
