@@ -624,17 +624,34 @@
 }
 
 .suggestion-item:hover {
-    background-color: #f8f9fa;
+    background-color: #e3f2fd !important;
+    cursor: pointer;
 }
 
 .suggestion-item:last-child {
     border-bottom: none !important;
 }
 
+.suggestion-item.highlighted {
+    background-color: #e3f2fd !important;
+}
+
 #test-suggestions {
     border-top: none;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#test-search:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.border-success {
+    border-color: #28a745 !important;
+    transition: border-color 0.3s ease;
 }
 
 .form-check-input.is-invalid {
@@ -836,34 +853,71 @@ function initializeCollectionFields() {
 
 <script>
 
-// Test Search Functionality
+// Enhanced Test Search Functionality (Google-like)
 function initializeTestSearch() {
     const searchInput = document.getElementById('test-search');
     const suggestionsDiv = document.getElementById('test-suggestions');
 
+    if (!searchInput || !suggestionsDiv) {
+        console.log('Test search elements not found');
+        return;
+    }
+
+    console.log('Initializing test search...');
+
     searchInput.addEventListener('input', function() {
         const query = this.value.toLowerCase().trim();
 
-        if (query.length < 2) {
+        if (query.length < 1) {
             suggestionsDiv.classList.add('d-none');
             return;
         }
 
-        const filteredTests = availableTests.filter(test =>
-            test.name.toLowerCase().includes(query) ||
-            test.category.toLowerCase().includes(query)
-        );
+        // Enhanced Google-like search algorithm
+        const filteredTests = availableTests.filter(test => {
+            const testName = test.name.toLowerCase();
+            const testCategory = test.category.toLowerCase();
+
+            // Exact match gets highest priority
+            if (testName.includes(query) || testCategory.includes(query)) {
+                return true;
+            }
+
+            // Word-based matching
+            const queryWords = query.split(' ');
+            const testWords = testName.split(' ');
+
+            return queryWords.some(queryWord =>
+                testWords.some(testWord => testWord.startsWith(queryWord))
+            );
+        });
+
+        // Sort by relevance (exact matches first, then partial matches)
+        filteredTests.sort((a, b) => {
+            const aName = a.name.toLowerCase();
+            const bName = b.name.toLowerCase();
+
+            // Exact start matches first
+            if (aName.startsWith(query) && !bName.startsWith(query)) return -1;
+            if (!aName.startsWith(query) && bName.startsWith(query)) return 1;
+
+            // Then by name length (shorter names first for common tests)
+            return aName.length - bName.length;
+        });
 
         if (filteredTests.length > 0) {
             let suggestionsHTML = '';
             filteredTests.slice(0, 8).forEach(test => {
+                // Highlight matching text
+                const highlightedName = highlightMatch(test.name, query);
+
                 suggestionsHTML += `
                     <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
-                         onclick="selectTestFromSuggestion('${test.name}', ${test.price})">
+                         onclick="selectTestFromSuggestion('${escapeHtml(test.name)}', ${test.price})">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>${test.name}</strong>
-                                <small class="text-muted d-block">${test.category}</small>
+                                <div>${highlightedName}</div>
+                                <small class="text-muted">${test.category}</small>
                             </div>
                             <span class="badge bg-primary">₹${test.price}</span>
                         </div>
@@ -874,7 +928,7 @@ function initializeTestSearch() {
             suggestionsDiv.innerHTML = suggestionsHTML;
             suggestionsDiv.classList.remove('d-none');
         } else {
-            suggestionsDiv.innerHTML = '<div class="p-2 text-muted">No tests found</div>';
+            suggestionsDiv.innerHTML = '<div class="p-2 text-muted"><i class="fas fa-search me-2"></i>No tests found for "' + query + '"</div>';
             suggestionsDiv.classList.remove('d-none');
         }
     });
@@ -885,9 +939,81 @@ function initializeTestSearch() {
             suggestionsDiv.classList.add('d-none');
         }
     });
+
+    // Show suggestions on focus if there's text
+    searchInput.addEventListener('focus', function() {
+        if (this.value.trim().length > 0) {
+            this.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // Handle keyboard navigation
+    searchInput.addEventListener('keydown', function(e) {
+        const suggestions = suggestionsDiv.querySelectorAll('.suggestion-item');
+        let currentIndex = -1;
+
+        // Find currently highlighted suggestion
+        suggestions.forEach((item, index) => {
+            if (item.classList.contains('highlighted')) {
+                currentIndex = index;
+            }
+        });
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            currentIndex = Math.min(currentIndex + 1, suggestions.length - 1);
+            highlightSuggestion(suggestions, currentIndex);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentIndex = Math.max(currentIndex - 1, 0);
+            highlightSuggestion(suggestions, currentIndex);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentIndex >= 0 && suggestions[currentIndex]) {
+                suggestions[currentIndex].click();
+            }
+        } else if (e.key === 'Escape') {
+            suggestionsDiv.classList.add('d-none');
+        }
+    });
+}
+
+// Helper function to highlight matching text
+function highlightMatch(text, query) {
+    if (!query) return text;
+
+    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+    return text.replace(regex, '<strong class="text-primary">$1</strong>');
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Helper function to escape regex special characters
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Helper function to highlight suggestion with keyboard navigation
+function highlightSuggestion(suggestions, index) {
+    suggestions.forEach((item, i) => {
+        if (i === index) {
+            item.classList.add('highlighted');
+            item.style.backgroundColor = '#e3f2fd';
+        } else {
+            item.classList.remove('highlighted');
+            item.style.backgroundColor = '';
+        }
+    });
 }
 
 function selectTestFromSuggestion(testName, testPrice) {
+    console.log('Selecting test:', testName, 'Price:', testPrice);
+
     // Check if test is already selected
     const existingTest = selectedTests.find(test => test.name === testName);
     if (existingTest) {
@@ -899,16 +1025,31 @@ function selectTestFromSuggestion(testName, testPrice) {
     selectedTests.push({name: testName, price: testPrice});
     totalAmount += testPrice;
 
-    // Clear search input
-    document.getElementById('test-search').value = '';
-    document.getElementById('test-suggestions').classList.add('d-none');
+    // Clear search input and hide suggestions
+    const searchInput = document.getElementById('test-search');
+    const suggestionsDiv = document.getElementById('test-suggestions');
+
+    if (searchInput) searchInput.value = '';
+    if (suggestionsDiv) suggestionsDiv.classList.add('d-none');
 
     // Update displays
     updateSelectedTestsDisplay();
     updateBilling();
 
     // Enable submit button
-    document.getElementById('submit-btn').disabled = false;
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = selectedTests.length === 0 && customAmounts.length === 0;
+    }
+
+    // Show success feedback
+    const searchContainer = searchInput?.parentElement;
+    if (searchContainer) {
+        searchContainer.classList.add('border-success');
+        setTimeout(() => {
+            searchContainer.classList.remove('border-success');
+        }, 1000);
+    }
 }
 
 function addQuickTest(testName, testPrice) {

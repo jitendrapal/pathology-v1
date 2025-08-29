@@ -5,6 +5,7 @@ import random
 import sqlite3
 import io
 import csv
+import json
 
 # Optional pandas import with fallback
 try:
