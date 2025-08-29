@@ -770,7 +770,7 @@ function initializeCollectionFields() {
 
 <script>
 
-// Enhanced Test Search Functionality (Google-like)
+// Simple and reliable test search
 function initializeTestSearch() {
     const searchInput = document.getElementById('test-search');
     const suggestionsDiv = document.getElementById('test-suggestions');
@@ -780,78 +780,36 @@ function initializeTestSearch() {
         return;
     }
 
-    console.log('Test search initialized successfully');
+    console.log('Initializing test search...');
+    console.log('Available tests:', availableTests.length);
 
-    // Remove any existing event listeners
-    searchInput.removeEventListener('input', handleSearchInput);
+    // Simple input event listener
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase().trim();
+        console.log('Searching for:', query);
 
-    // Add fresh event listener
-    searchInput.addEventListener('input', handleSearchInput);
-
-    // Add other event listeners
-    setupSearchEventListeners(searchInput, suggestionsDiv);
-}
-
-// Separate function to handle search input
-function handleSearchInput() {
-    const searchInput = document.getElementById('test-search');
-    const suggestionsDiv = document.getElementById('test-suggestions');
-    const query = this.value.toLowerCase().trim();
-
-    console.log('Search query:', query);
-
-    if (query.length < 1) {
-        suggestionsDiv.classList.add('d-none');
-        return;
-    }
-
-    // Enhanced Google-like search algorithm
-    const filteredTests = availableTests.filter(test => {
-        const testName = test.name.toLowerCase();
-        const testCategory = test.category.toLowerCase();
-
-        // Exact match gets highest priority
-        if (testName.includes(query) || testCategory.includes(query)) {
-            return true;
+        if (query.length < 1) {
+            suggestionsDiv.classList.add('d-none');
+            return;
         }
 
-        // Word-based matching
-        const queryWords = query.split(' ');
-        const testWords = testName.split(' ');
-
-        return queryWords.some(queryWord =>
-            testWords.some(testWord => testWord.startsWith(queryWord))
+        // Simple search - just check if test name contains the query
+        const filteredTests = availableTests.filter(test =>
+            test.name.toLowerCase().includes(query)
         );
-    });
 
-    console.log('Filtered tests count:', filteredTests.length);
-
-        // Sort by relevance (exact matches first, then partial matches)
-        filteredTests.sort((a, b) => {
-            const aName = a.name.toLowerCase();
-            const bName = b.name.toLowerCase();
-
-            // Exact start matches first
-            if (aName.startsWith(query) && !bName.startsWith(query)) return -1;
-            if (!aName.startsWith(query) && bName.startsWith(query)) return 1;
-
-            // Then by name length (shorter names first for common tests)
-            return aName.length - bName.length;
-        });
+        console.log('Found tests:', filteredTests.length);
 
         if (filteredTests.length > 0) {
-            let suggestionsHTML = '';
+            let html = '';
             filteredTests.slice(0, 8).forEach(test => {
-                // Highlight matching text
-                const highlightedName = highlightMatch(test.name, query);
-
-                suggestionsHTML += `
+                html += `
                     <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
-                         onclick="selectTestFromSuggestion('${escapeHtml(test.name)}', ${test.price})">
+                         onclick="selectTestFromSuggestion('${test.name}', ${test.price})">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <div>${highlightedName}</div>
-                                <small class="text-muted">${test.category}</small>
+                                <strong>${test.name}</strong>
+                                <small class="text-muted d-block">${test.category}</small>
                             </div>
                             <span class="badge bg-primary">₹${test.price}</span>
                         </div>
@@ -859,16 +817,14 @@ function handleSearchInput() {
                 `;
             });
 
-            suggestionsDiv.innerHTML = suggestionsHTML;
+            suggestionsDiv.innerHTML = html;
             suggestionsDiv.classList.remove('d-none');
-    } else {
-        suggestionsDiv.innerHTML = '<div class="p-2 text-muted"><i class="fas fa-search me-2"></i>No tests found for "' + query + '"</div>';
-        suggestionsDiv.classList.remove('d-none');
-    }
-}
+        } else {
+            suggestionsDiv.innerHTML = '<div class="p-2 text-muted">No tests found</div>';
+            suggestionsDiv.classList.remove('d-none');
+        }
+    });
 
-// Setup additional event listeners for search
-function setupSearchEventListeners(searchInput, suggestionsDiv) {
     // Hide suggestions when clicking outside
     document.addEventListener('click', function(e) {
         if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
@@ -876,76 +832,12 @@ function setupSearchEventListeners(searchInput, suggestionsDiv) {
         }
     });
 
-    // Show suggestions on focus if there's text
-    searchInput.addEventListener('focus', function() {
-        if (this.value.trim().length > 0) {
-            this.dispatchEvent(new Event('input'));
-        }
-    });
-
-    // Handle keyboard navigation
-    searchInput.addEventListener('keydown', function(e) {
-        const suggestions = suggestionsDiv.querySelectorAll('.suggestion-item');
-        let currentIndex = -1;
-
-        // Find currently highlighted suggestion
-        suggestions.forEach((item, index) => {
-            if (item.classList.contains('highlighted')) {
-                currentIndex = index;
-            }
-        });
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            currentIndex = Math.min(currentIndex + 1, suggestions.length - 1);
-            highlightSuggestion(suggestions, currentIndex);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            currentIndex = Math.max(currentIndex - 1, 0);
-            highlightSuggestion(suggestions, currentIndex);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (currentIndex >= 0 && suggestions[currentIndex]) {
-                suggestions[currentIndex].click();
-            }
-        } else if (e.key === 'Escape') {
-            suggestionsDiv.classList.add('d-none');
-        }
-    });
+    console.log('Test search initialized successfully');
 }
 
-// Helper function to highlight matching text
-function highlightMatch(text, query) {
-    if (!query) return text;
 
-    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-    return text.replace(regex, '<strong class="text-primary">$1</strong>');
-}
 
-// Helper function to escape HTML
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
 
-// Helper function to escape regex special characters
-function escapeRegex(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-// Helper function to highlight suggestion with keyboard navigation
-function highlightSuggestion(suggestions, index) {
-    suggestions.forEach((item, i) => {
-        if (i === index) {
-            item.classList.add('highlighted');
-            item.style.backgroundColor = '#e3f2fd';
-        } else {
-            item.classList.remove('highlighted');
-            item.style.backgroundColor = '';
-        }
-    });
-}
 
 function selectTestFromSuggestion(testName, testPrice) {
     console.log('Selecting test:', testName, 'Price:', testPrice);
