@@ -2229,7 +2229,7 @@ def multi_step_registration():
                         patient_id=patient_id,
                         test_id=test_obj.id,
                         status='Pending',
-                        date_assigned=datetime.now()
+                        date_ordered=datetime.now()
                     )
                     db.session.add(patient_test)
                     test_ids.append(test_obj.id)
