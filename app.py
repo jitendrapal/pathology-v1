@@ -2129,6 +2129,7 @@ def multi_step_registration():
         try:
             # Get form data
             patient_data = {
+                'title': request.form.get('title'),
                 'first_name': request.form.get('first_name'),
                 'last_name': request.form.get('last_name'),
                 'date_of_birth': request.form.get('date_of_birth'),
@@ -2138,11 +2139,21 @@ def multi_step_registration():
                 'address': request.form.get('address'),
                 'emergency_contact': request.form.get('emergency_contact'),
                 'medical_history': request.form.get('medical_history'),
-                'referring_doctor': request.form.get('referring_doctor')
+                'referring_doctor': request.form.get('referring_doctor'),
+                'barcode': request.form.get('barcode')
+            }
+
+            # Get collection data
+            collection_data = {
+                'collected_by': request.form.get('collected_by'),
+                'collected_at': request.form.get('collected_at'),
+                'collection_datetime': request.form.get('collection_datetime'),
+                'other_collector': request.form.get('other_collector')
             }
 
             # Get test and billing data
             selected_tests = json.loads(request.form.get('selected_tests', '[]'))
+            custom_amounts = json.loads(request.form.get('custom_amounts', '[]'))
             total_amount = float(request.form.get('total_amount', 0))
             payment_option = request.form.get('payment_option')
             payment_method = request.form.get('payment_method')
@@ -2238,7 +2249,7 @@ def multi_step_registration():
                     'registration_data': {
                         'patient_id': patient_id,
                         'bill_id': bill_id,
-                        'title': patient_data['title'],
+                        'title': patient_data.get('title', ''),
                         'first_name': patient_data['first_name'],
                         'last_name': patient_data['last_name'],
                         'phone': patient_data['phone'],
@@ -2246,13 +2257,14 @@ def multi_step_registration():
                         'gender': patient_data['gender'],
                         'barcode': patient_data.get('barcode', ''),
                         'referring_doctor': patient_data.get('referring_doctor', ''),
-                        'collected_by': request.form.get('collected_by', ''),
-                        'collected_at': request.form.get('collected_at', ''),
-                        'collection_datetime': request.form.get('collection_datetime', ''),
+                        'collected_by': collection_data.get('collected_by', ''),
+                        'collected_at': collection_data.get('collected_at', ''),
+                        'collection_datetime': collection_data.get('collection_datetime', ''),
                         'total_amount': total_amount,
                         'amount_paid': amount_paid,
                         'remaining_amount': remaining_amount,
-                        'tests_count': len(selected_tests)
+                        'tests_count': len(selected_tests),
+                        'custom_amounts_count': len(custom_amounts)
                     }
                 })
 
