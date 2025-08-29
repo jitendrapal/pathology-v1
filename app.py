@@ -2118,6 +2118,139 @@ def api_export_table_compat(table_name):
     """Backward compatibility route"""
     return api_export_table(table_name)
 
+# ================================
+# MULTI-STEP REGISTRATION ROUTES
+# ================================
+
+@app.route('/multi-step-registration', methods=['GET', 'POST'])
+def multi_step_registration():
+    """Multi-step patient registration with test assignment and billing"""
+    if request.method == 'POST':
+        try:
+            # Get form data
+            patient_data = {
+                'first_name': request.form.get('first_name'),
+                'last_name': request.form.get('last_name'),
+                'date_of_birth': request.form.get('date_of_birth'),
+                'gender': request.form.get('gender'),
+                'phone': request.form.get('phone'),
+                'email': request.form.get('email'),
+                'address': request.form.get('address'),
+                'emergency_contact': request.form.get('emergency_contact'),
+                'medical_history': request.form.get('medical_history'),
+                'referring_doctor': request.form.get('referring_doctor')
+            }
+
+            # Get test and billing data
+            selected_tests = json.loads(request.form.get('selected_tests', '[]'))
+            total_amount = float(request.form.get('total_amount', 0))
+            payment_option = request.form.get('payment_option')
+            payment_method = request.form.get('payment_method')
+
+            # Calculate payment amounts
+            if payment_option == 'half':
+                amount_paid = round(total_amount / 2)
+                remaining_amount = total_amount - amount_paid
+            else:
+                amount_paid = total_amount
+                remaining_amount = 0
+
+            # Start database transaction
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            try:
+                # 1. Insert patient
+                cursor.execute('''
+                    INSERT INTO patient (
+                        first_name, last_name, date_of_birth, gender, phone, email,
+                        address, emergency_contact, medical_history, referring_doctor, date_registered
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    patient_data['first_name'], patient_data['last_name'],
+                    patient_data['date_of_birth'], patient_data['gender'],
+                    patient_data['phone'], patient_data['email'], patient_data['address'],
+                    patient_data['emergency_contact'], patient_data['medical_history'],
+                    patient_data['referring_doctor'], datetime.now().strftime('%Y-%m-%d')
+                ))
+
+                patient_id = cursor.lastrowid
+
+                # 2. Insert tests
+                test_ids = []
+                for test in selected_tests:
+                    # Check if test exists, if not create it
+                    cursor.execute('SELECT test_id FROM test WHERE test_name = ?', (test['name'],))
+                    test_row = cursor.fetchone()
+
+                    if test_row:
+                        test_id = test_row[0]
+                    else:
+                        # Create new test
+                        cursor.execute('''
+                            INSERT INTO test (test_name, test_price, test_description)
+                            VALUES (?, ?, ?)
+                        ''', (test['name'], test['price'], f"Test: {test['name']}"))
+                        test_id = cursor.lastrowid
+
+                    # Assign test to patient
+                    cursor.execute('''
+                        INSERT INTO patient_test (patient_id, test_id, status, date_assigned)
+                        VALUES (?, ?, ?, ?)
+                    ''', (patient_id, test_id, 'Pending', datetime.now().strftime('%Y-%m-%d')))
+
+                    test_ids.append(test_id)
+
+                # 3. Create bill
+                cursor.execute('''
+                    INSERT INTO patient_bill (
+                        patient_id, total_amount, paid_amount, remaining_amount,
+                        bill_date, payment_status
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                ''', (
+                    patient_id, total_amount, amount_paid, remaining_amount,
+                    datetime.now().strftime('%Y-%m-%d'),
+                    'Paid' if remaining_amount == 0 else 'Partial'
+                ))
+
+                bill_id = cursor.lastrowid
+
+                # 4. Record payment if amount paid > 0
+                if amount_paid > 0:
+                    cursor.execute('''
+                        INSERT INTO payment (
+                            patient_id, bill_id, amount, payment_method,
+                            payment_date, payment_status
+                        ) VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (
+                        patient_id, bill_id, amount_paid, payment_method,
+                        datetime.now().strftime('%Y-%m-%d'), 'Completed'
+                    ))
+
+                # Commit transaction
+                conn.commit()
+                conn.close()
+
+                # Success message
+                flash(f'Patient {patient_data["first_name"]} {patient_data["last_name"]} registered successfully! '
+                      f'{len(selected_tests)} test(s) assigned. Amount paid: ₹{amount_paid}', 'success')
+
+                # Redirect to patient details or dashboard
+                return redirect(url_for('dashboard'))
+
+            except Exception as e:
+                conn.rollback()
+                conn.close()
+                flash(f'Error during registration: {str(e)}', 'error')
+                return render_template('multi_step_registration.html')
+
+        except Exception as e:
+            flash(f'Registration failed: {str(e)}', 'error')
+            return render_template('multi_step_registration.html')
+
+    # GET request - show the form
+    return render_template('multi_step_registration.html')
+
 if __name__ == '__main__':
     create_tables()
 
