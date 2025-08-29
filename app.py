@@ -2241,7 +2241,7 @@ def multi_step_registration():
                     paid_amount=amount_paid,
                     remaining_amount=remaining_amount,
                     bill_date=datetime.now(),
-                    payment_status='Paid' if remaining_amount == 0 else 'Partial'
+                    bill_status='paid' if remaining_amount == 0 else 'partial'
                 )
                 db.session.add(patient_bill)
                 db.session.flush()  # Get the bill ID
@@ -2251,11 +2251,11 @@ def multi_step_registration():
                 if amount_paid > 0:
                     payment = Payment(
                         patient_id=patient_id,
-                        bill_id=bill_id,
                         amount=amount_paid,
-                        payment_method=payment_method,
+                        payment_type='partial' if remaining_amount > 0 else 'full',
+                        payment_method=payment_method.lower(),
                         payment_date=datetime.now(),
-                        payment_status='Completed'
+                        notes=f'Payment for bill #{bill_id}'
                     )
                     db.session.add(payment)
 
