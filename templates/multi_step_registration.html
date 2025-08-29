@@ -53,32 +53,64 @@
                                 <!-- Personal Information -->
                                 <div class="col-md-6">
                                     <h6 class="text-primary mb-3">Personal Details</h6>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">First Name *</label>
-                                        <input type="text" class="form-control" name="first_name" required>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">Title *</label>
+                                                <select class="form-select" name="title" id="title" required onchange="updateGenderFromTitle()">
+                                                    <option value="">Select Title</option>
+                                                    <option value="Mr." data-gender="Male">Mr.</option>
+                                                    <option value="Mrs." data-gender="Female">Mrs.</option>
+                                                    <option value="Miss" data-gender="Female">Miss</option>
+                                                    <option value="Dr." data-gender="">Dr.</option>
+                                                    <option value="Prof." data-gender="">Prof.</option>
+                                                    <option value="Master" data-gender="Male">Master</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="mb-3">
+                                                <label class="form-label">First Name *</label>
+                                                <input type="text" class="form-control" name="first_name" required>
+                                            </div>
+                                        </div>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label">Last Name *</label>
                                         <input type="text" class="form-control" name="last_name" required>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label">Date of Birth *</label>
                                         <input type="date" class="form-control" name="date_of_birth" required>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label">Gender *</label>
-                                        <select class="form-select" name="gender" required>
-                                            <option value="">Select Gender</option>
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
-                                            <option value="Other">Other</option>
-                                        </select>
+                                        <div class="mt-2">
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="gender" id="gender-male" value="Male" required>
+                                                <label class="form-check-label" for="gender-male">
+                                                    <i class="fas fa-mars text-primary me-1"></i>Male
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="gender" id="gender-female" value="Female" required>
+                                                <label class="form-check-label" for="gender-female">
+                                                    <i class="fas fa-venus text-danger me-1"></i>Female
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="gender" id="gender-other" value="Other" required>
+                                                <label class="form-check-label" for="gender-other">
+                                                    <i class="fas fa-genderless text-secondary me-1"></i>Other
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label">Phone Number *</label>
                                         <input type="tel" class="form-control" name="phone" required>
@@ -139,84 +171,78 @@
                                 <!-- Test Selection -->
                                 <div class="col-md-8">
                                     <h6 class="text-success mb-3">Select Tests</h6>
-                                    
-                                    <!-- Test Categories -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6 class="text-muted">Blood Tests</h6>
-                                            <div class="test-category mb-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input test-checkbox" type="checkbox" name="tests" value="CBC" data-price="300">
-                                                    <label class="form-check-label">
-                                                        Complete Blood Count (CBC) - ₹300
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input test-checkbox" type="checkbox" name="tests" value="Blood Sugar" data-price="150">
-                                                    <label class="form-check-label">
-                                                        Blood Sugar (Fasting) - ₹150
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input test-checkbox" type="checkbox" name="tests" value="Lipid Profile" data-price="500">
-                                                    <label class="form-check-label">
-                                                        Lipid Profile - ₹500
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input test-checkbox" type="checkbox" name="tests" value="Liver Function" data-price="400">
-                                                    <label class="form-check-label">
-                                                        Liver Function Test - ₹400
-                                                    </label>
-                                                </div>
+
+                                    <!-- Search Test Input -->
+                                    <div class="mb-4">
+                                        <label class="form-label">Search & Add Tests</label>
+                                        <div class="position-relative">
+                                            <input type="text" class="form-control" id="test-search" placeholder="Type test name to search..." autocomplete="off">
+                                            <div id="test-suggestions" class="position-absolute w-100 bg-white border rounded shadow-sm d-none" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                                <!-- Suggestions will be populated here -->
                                             </div>
                                         </div>
-                                        
-                                        <div class="col-md-6">
-                                            <h6 class="text-muted">Other Tests</h6>
-                                            <div class="test-category mb-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input test-checkbox" type="checkbox" name="tests" value="Urine Analysis" data-price="200">
-                                                    <label class="form-check-label">
-                                                        Urine Analysis - ₹200
-                                                    </label>
+                                        <small class="text-muted">Start typing to see test suggestions with prices</small>
+                                    </div>
+
+                                    <!-- Selected Tests Display -->
+                                    <div class="mb-3">
+                                        <h6 class="text-muted">Selected Tests</h6>
+                                        <div id="selected-tests-display" class="border rounded p-3 bg-light">
+                                            <p class="text-muted mb-0">No tests selected. Use the search box above to add tests.</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Test Categories (Optional) -->
+                                    <div class="mb-3">
+                                        <h6 class="text-muted">Quick Add - Common Tests</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="d-grid gap-2">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Complete Blood Count (CBC)', 300)">
+                                                        <i class="fas fa-plus me-1"></i>CBC - ₹300
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Blood Sugar (Fasting)', 150)">
+                                                        <i class="fas fa-plus me-1"></i>Blood Sugar - ₹150
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Lipid Profile', 500)">
+                                                        <i class="fas fa-plus me-1"></i>Lipid Profile - ₹500
+                                                    </button>
                                                 </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input test-checkbox" name="tests" type="checkbox" value="Thyroid Profile" data-price="600">
-                                                    <label class="form-check-label">
-                                                        Thyroid Profile - ₹600
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input test-checkbox" type="checkbox" name="tests" value="X-Ray Chest" data-price="250">
-                                                    <label class="form-check-label">
-                                                        X-Ray Chest - ₹250
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input test-checkbox" type="checkbox" name="tests" value="ECG" data-price="200">
-                                                    <label class="form-check-label">
-                                                        ECG - ₹200
-                                                    </label>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-grid gap-2">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Thyroid Profile', 600)">
+                                                        <i class="fas fa-plus me-1"></i>Thyroid - ₹600
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Urine Analysis', 200)">
+                                                        <i class="fas fa-plus me-1"></i>Urine Analysis - ₹200
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('X-Ray Chest', 250)">
+                                                        <i class="fas fa-plus me-1"></i>X-Ray - ₹250
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Custom Test -->
                                     <div class="row mt-3">
                                         <div class="col-12">
-                                            <h6 class="text-muted">Custom Test</h6>
+                                            <h6 class="text-muted">Add Custom Test</h6>
                                             <div class="row">
-                                                <div class="col-md-8">
+                                                <div class="col-md-6">
                                                     <input type="text" class="form-control" id="custom-test-name" placeholder="Enter custom test name">
                                                 </div>
                                                 <div class="col-md-4">
                                                     <div class="input-group">
                                                         <span class="input-group-text">₹</span>
                                                         <input type="number" class="form-control" id="custom-test-price" placeholder="Price">
-                                                        <button type="button" class="btn btn-outline-primary" onclick="addCustomTest()">Add</button>
                                                     </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button type="button" class="btn btn-success w-100" onclick="addCustomTest()">
+                                                        <i class="fas fa-plus"></i> Add
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -371,6 +397,29 @@
 .selected-test-item:last-child {
     border-bottom: none;
 }
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none !important;
+}
+
+#test-suggestions {
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.form-check-input.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-check-input.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
 </style>
 
 <script>
@@ -378,18 +427,212 @@ let currentStep = 1;
 let totalAmount = 0;
 let selectedTests = [];
 
+// Available tests database for search suggestions
+const availableTests = [
+    {name: "Complete Blood Count (CBC)", price: 300, category: "Blood Test"},
+    {name: "Blood Sugar (Fasting)", price: 150, category: "Blood Test"},
+    {name: "Blood Sugar (Random)", price: 120, category: "Blood Test"},
+    {name: "Blood Sugar (Post Prandial)", price: 140, category: "Blood Test"},
+    {name: "HbA1c (Glycated Hemoglobin)", price: 400, category: "Blood Test"},
+    {name: "Lipid Profile", price: 500, category: "Blood Test"},
+    {name: "Liver Function Test (LFT)", price: 400, category: "Blood Test"},
+    {name: "Kidney Function Test (KFT)", price: 350, category: "Blood Test"},
+    {name: "Thyroid Profile (T3, T4, TSH)", price: 600, category: "Hormone Test"},
+    {name: "Thyroid TSH", price: 200, category: "Hormone Test"},
+    {name: "Vitamin D", price: 800, category: "Vitamin Test"},
+    {name: "Vitamin B12", price: 600, category: "Vitamin Test"},
+    {name: "Iron Studies", price: 450, category: "Blood Test"},
+    {name: "Urine Analysis (Routine)", price: 200, category: "Urine Test"},
+    {name: "Urine Culture", price: 300, category: "Urine Test"},
+    {name: "Stool Analysis", price: 150, category: "Stool Test"},
+    {name: "X-Ray Chest", price: 250, category: "Radiology"},
+    {name: "X-Ray Abdomen", price: 300, category: "Radiology"},
+    {name: "ECG (Electrocardiogram)", price: 200, category: "Cardiology"},
+    {name: "Echo Cardiogram", price: 800, category: "Cardiology"},
+    {name: "Ultrasound Abdomen", price: 600, category: "Radiology"},
+    {name: "Ultrasound Pelvis", price: 650, category: "Radiology"},
+    {name: "CT Scan Head", price: 2500, category: "Radiology"},
+    {name: "MRI Brain", price: 5000, category: "Radiology"},
+    {name: "Hepatitis B Surface Antigen", price: 300, category: "Infection Test"},
+    {name: "HIV Test", price: 400, category: "Infection Test"},
+    {name: "Malaria Test", price: 150, category: "Infection Test"},
+    {name: "Dengue Test", price: 500, category: "Infection Test"},
+    {name: "COVID-19 RT-PCR", price: 800, category: "Infection Test"},
+    {name: "COVID-19 Antigen", price: 300, category: "Infection Test"}
+];
+
+// Title to Gender mapping function
+function updateGenderFromTitle() {
+    const titleSelect = document.getElementById('title');
+    const selectedOption = titleSelect.options[titleSelect.selectedIndex];
+    const gender = selectedOption.getAttribute('data-gender');
+
+    if (gender) {
+        // Clear all radio buttons first
+        document.querySelectorAll('input[name="gender"]').forEach(radio => {
+            radio.checked = false;
+        });
+
+        // Select the appropriate gender
+        const genderRadio = document.querySelector(`input[name="gender"][value="${gender}"]`);
+        if (genderRadio) {
+            genderRadio.checked = true;
+        }
+    }
+}</script>
+
+<script>
+
+// Test Search Functionality
+function initializeTestSearch() {
+    const searchInput = document.getElementById('test-search');
+    const suggestionsDiv = document.getElementById('test-suggestions');
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+
+        if (query.length < 2) {
+            suggestionsDiv.classList.add('d-none');
+            return;
+        }
+
+        const filteredTests = availableTests.filter(test =>
+            test.name.toLowerCase().includes(query) ||
+            test.category.toLowerCase().includes(query)
+        );
+
+        if (filteredTests.length > 0) {
+            let suggestionsHTML = '';
+            filteredTests.slice(0, 8).forEach(test => {
+                suggestionsHTML += `
+                    <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
+                         onclick="selectTestFromSuggestion('${test.name}', ${test.price})">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${test.name}</strong>
+                                <small class="text-muted d-block">${test.category}</small>
+                            </div>
+                            <span class="badge bg-primary">₹${test.price}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            suggestionsDiv.innerHTML = suggestionsHTML;
+            suggestionsDiv.classList.remove('d-none');
+        } else {
+            suggestionsDiv.innerHTML = '<div class="p-2 text-muted">No tests found</div>';
+            suggestionsDiv.classList.remove('d-none');
+        }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            suggestionsDiv.classList.add('d-none');
+        }
+    });
+}
+
+function selectTestFromSuggestion(testName, testPrice) {
+    // Check if test is already selected
+    const existingTest = selectedTests.find(test => test.name === testName);
+    if (existingTest) {
+        alert('This test is already selected!');
+        return;
+    }
+
+    // Add test to selected tests
+    selectedTests.push({name: testName, price: testPrice});
+    totalAmount += testPrice;
+
+    // Clear search input
+    document.getElementById('test-search').value = '';
+    document.getElementById('test-suggestions').classList.add('d-none');
+
+    // Update displays
+    updateSelectedTestsDisplay();
+    updateBilling();
+
+    // Enable submit button
+    document.getElementById('submit-btn').disabled = false;
+}
+
+function addQuickTest(testName, testPrice) {
+    // Check if test is already selected
+    const existingTest = selectedTests.find(test => test.name === testName);
+    if (existingTest) {
+        alert('This test is already selected!');
+        return;
+    }
+
+    // Add test to selected tests
+    selectedTests.push({name: testName, price: testPrice});
+    totalAmount += testPrice;
+
+    // Update displays
+    updateSelectedTestsDisplay();
+    updateBilling();
+
+    // Enable submit button
+    document.getElementById('submit-btn').disabled = false;
+}
+
+function removeTest(testName) {
+    const testIndex = selectedTests.findIndex(test => test.name === testName);
+    if (testIndex > -1) {
+        totalAmount -= selectedTests[testIndex].price;
+        selectedTests.splice(testIndex, 1);
+
+        updateSelectedTestsDisplay();
+        updateBilling();
+
+        // Disable submit button if no tests
+        document.getElementById('submit-btn').disabled = selectedTests.length === 0;
+    }
+}
+
+function updateSelectedTestsDisplay() {
+    const displayDiv = document.getElementById('selected-tests-display');
+
+    if (selectedTests.length === 0) {
+        displayDiv.innerHTML = '<p class="text-muted mb-0">No tests selected. Use the search box above to add tests.</p>';
+        return;
+    }
+
+    let html = '';
+    selectedTests.forEach(test => {
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border">
+                <div>
+                    <strong>${test.name}</strong>
+                    <span class="badge bg-success ms-2">₹${test.price}</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTest('${test.name}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    });
+
+    displayDiv.innerHTML = html;
+}
+
 // Step Navigation
 function nextStep() {
     if (validateStep1()) {
         document.getElementById('step1').classList.add('d-none');
         document.getElementById('step2').classList.remove('d-none');
-        
+
         document.getElementById('step1-indicator').classList.remove('active');
         document.getElementById('step1-indicator').classList.add('completed');
         document.getElementById('step2-indicator').classList.add('active');
-        
+
         document.getElementById('progress-bar').style.width = '100%';
         currentStep = 2;
+
+        // Initialize test search when entering step 2
+        initializeTestSearch();
     }
 }
 
@@ -407,9 +650,10 @@ function previousStep() {
 
 // Validation
 function validateStep1() {
-    const requiredFields = ['first_name', 'last_name', 'date_of_birth', 'gender', 'phone'];
+    const requiredFields = ['title', 'first_name', 'last_name', 'date_of_birth', 'phone'];
     let isValid = true;
-    
+
+    // Validate text and select fields
     requiredFields.forEach(field => {
         const input = document.querySelector(`[name="${field}"]`);
         if (!input.value.trim()) {
@@ -419,43 +663,40 @@ function validateStep1() {
             input.classList.remove('is-invalid');
         }
     });
-    
-    if (!isValid) {
-        alert('Please fill in all required fields marked with *');
+
+    // Validate gender radio buttons
+    const genderSelected = document.querySelector('input[name="gender"]:checked');
+    if (!genderSelected) {
+        document.querySelectorAll('input[name="gender"]').forEach(radio => {
+            radio.classList.add('is-invalid');
+        });
+        isValid = false;
+    } else {
+        document.querySelectorAll('input[name="gender"]').forEach(radio => {
+            radio.classList.remove('is-invalid');
+        });
     }
-    
+
+    if (!isValid) {
+        alert('Please fill in all required fields marked with * and select gender');
+    }
+
     return isValid;
 }
 
 // Test Selection
 document.addEventListener('DOMContentLoaded', function() {
-    const testCheckboxes = document.querySelectorAll('.test-checkbox');
     const paymentOptions = document.querySelectorAll('input[name="payment_option"]');
-    
-    testCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateBilling);
-    });
-    
+
     paymentOptions.forEach(option => {
         option.addEventListener('change', updatePaymentAmount);
     });
 });
 
 function updateBilling() {
-    const checkedTests = document.querySelectorAll('.test-checkbox:checked');
-    selectedTests = [];
-    totalAmount = 0;
-    
-    checkedTests.forEach(test => {
-        const testName = test.value;
-        const testPrice = parseInt(test.dataset.price);
-        selectedTests.push({name: testName, price: testPrice});
-        totalAmount += testPrice;
-    });
-    
     displaySelectedTests();
     updatePaymentAmount();
-    
+
     // Enable/disable submit button
     const submitBtn = document.getElementById('submit-btn');
     submitBtn.disabled = selectedTests.length === 0;
@@ -463,13 +704,13 @@ function updateBilling() {
 
 function displaySelectedTests() {
     const container = document.getElementById('selected-tests');
-    
+
     if (selectedTests.length === 0) {
         container.innerHTML = '<p class="text-muted">No tests selected</p>';
         document.getElementById('total-amount').textContent = '₹0';
         return;
     }
-    
+
     let html = '';
     selectedTests.forEach(test => {
         html += `
@@ -479,7 +720,7 @@ function displaySelectedTests() {
             </div>
         `;
     });
-    
+
     container.innerHTML = html;
     document.getElementById('total-amount').textContent = `₹${totalAmount}`;
 }
@@ -501,23 +742,31 @@ function updatePaymentAmount() {
 function addCustomTest() {
     const testName = document.getElementById('custom-test-name').value.trim();
     const testPrice = parseInt(document.getElementById('custom-test-price').value);
-    
+
     if (!testName || !testPrice || testPrice <= 0) {
         alert('Please enter valid test name and price');
         return;
     }
-    
+
+    // Check if test is already selected
+    const existingTest = selectedTests.find(test => test.name === testName);
+    if (existingTest) {
+        alert('This test is already selected!');
+        return;
+    }
+
     // Add to selected tests
     selectedTests.push({name: testName, price: testPrice});
     totalAmount += testPrice;
-    
+
     // Clear inputs
     document.getElementById('custom-test-name').value = '';
     document.getElementById('custom-test-price').value = '';
-    
-    displaySelectedTests();
-    updatePaymentAmount();
-    
+
+    // Update displays
+    updateSelectedTestsDisplay();
+    updateBilling();
+
     // Enable submit button
     document.getElementById('submit-btn').disabled = false;
 }
