@@ -573,6 +573,24 @@
     transition: border-color 0.3s ease;
 }
 
+/* Enhanced search highlighting */
+.suggestion-item mark {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+    padding: 1px 2px;
+    border-radius: 2px;
+}
+
+.suggestion-item.keyboard-highlighted {
+    background-color: #e3f2fd !important;
+    border-left: 3px solid #2196f3;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa !important;
+    transition: background-color 0.2s ease;
+}
+
 .form-check-input.is-invalid {
     border-color: #dc3545;
 }
@@ -770,7 +788,7 @@ function initializeCollectionFields() {
 
 <script>
 
-// Simple and reliable test search
+// Enhanced Google-like Test Search Functionality
 function initializeTestSearch() {
     const searchInput = document.getElementById('test-search');
     const suggestionsDiv = document.getElementById('test-suggestions');
@@ -780,59 +798,231 @@ function initializeTestSearch() {
         return;
     }
 
-    console.log('Initializing test search...');
+    console.log('Initializing enhanced test search...');
     console.log('Available tests:', availableTests.length);
 
-    // Simple input event listener
-    searchInput.addEventListener('input', function(e) {
-        const query = e.target.value.toLowerCase().trim();
-        console.log('Searching for:', query);
+    // Clear any existing event listeners by cloning the element
+    const newSearchInput = searchInput.cloneNode(true);
+    searchInput.parentNode.replaceChild(newSearchInput, searchInput);
 
-        if (query.length < 1) {
-            suggestionsDiv.classList.add('d-none');
-            return;
+    // Add enhanced search event listener
+    newSearchInput.addEventListener('input', function(e) {
+        performTestSearch(e.target.value);
+    });
+
+    // Add focus event to show suggestions if there's existing text
+    newSearchInput.addEventListener('focus', function(e) {
+        if (e.target.value.trim().length > 0) {
+            performTestSearch(e.target.value);
         }
+    });
 
-        // Simple search - just check if test name contains the query
-        const filteredTests = availableTests.filter(test =>
-            test.name.toLowerCase().includes(query)
-        );
-
-        console.log('Found tests:', filteredTests.length);
-
-        if (filteredTests.length > 0) {
-            let html = '';
-            filteredTests.slice(0, 8).forEach(test => {
-                html += `
-                    <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
-                         onclick="selectTestFromSuggestion('${test.name}', ${test.price})">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>${test.name}</strong>
-                                <small class="text-muted d-block">${test.category}</small>
-                            </div>
-                            <span class="badge bg-primary">₹${test.price}</span>
-                        </div>
-                    </div>
-                `;
-            });
-
-            suggestionsDiv.innerHTML = html;
-            suggestionsDiv.classList.remove('d-none');
-        } else {
-            suggestionsDiv.innerHTML = '<div class="p-2 text-muted">No tests found</div>';
-            suggestionsDiv.classList.remove('d-none');
-        }
+    // Add keyboard navigation
+    newSearchInput.addEventListener('keydown', function(e) {
+        handleKeyboardNavigation(e, suggestionsDiv);
     });
 
     // Hide suggestions when clicking outside
     document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-            suggestionsDiv.classList.add('d-none');
+        const currentSearchInput = document.getElementById('test-search');
+        const currentSuggestionsDiv = document.getElementById('test-suggestions');
+        if (currentSearchInput && currentSuggestionsDiv) {
+            if (!currentSearchInput.contains(e.target) && !currentSuggestionsDiv.contains(e.target)) {
+                currentSuggestionsDiv.classList.add('d-none');
+            }
         }
     });
 
-    console.log('Test search initialized successfully');
+    console.log('Enhanced test search initialized successfully');
+}
+
+// Perform the actual search with advanced logic
+function performTestSearch(inputValue) {
+    const suggestionsDiv = document.getElementById('test-suggestions');
+    const query = inputValue.toLowerCase().trim();
+
+    console.log('Searching for:', query);
+
+    if (query.length < 1) {
+        suggestionsDiv.classList.add('d-none');
+        return;
+    }
+
+    // Enhanced search algorithm with multiple strategies
+    const filteredTests = availableTests.filter(test => {
+        const testName = test.name.toLowerCase();
+        const testCategory = test.category.toLowerCase();
+
+        // Strategy 1: Exact matches (highest priority)
+        if (testName === query || testCategory === query) {
+            test.searchScore = 100;
+            return true;
+        }
+
+        // Strategy 2: Starts with query (high priority)
+        if (testName.startsWith(query)) {
+            test.searchScore = 90;
+            return true;
+        }
+
+        // Strategy 3: Contains query (medium priority)
+        if (testName.includes(query) || testCategory.includes(query)) {
+            test.searchScore = 70;
+            return true;
+        }
+
+        // Strategy 4: Word-based matching (lower priority)
+        const queryWords = query.split(' ');
+        const testWords = testName.split(' ');
+
+        const wordMatches = queryWords.some(queryWord =>
+            testWords.some(testWord => testWord.startsWith(queryWord))
+        );
+
+        if (wordMatches) {
+            test.searchScore = 50;
+            return true;
+        }
+
+        // Strategy 5: Abbreviation matching (e.g., "cbc" for "Complete Blood Count")
+        const abbreviation = testName.split(' ').map(word => word.charAt(0)).join('').toLowerCase();
+        if (abbreviation.includes(query)) {
+            test.searchScore = 60;
+            return true;
+        }
+
+        return false;
+    });
+
+    // Sort by search score (highest first), then by name length (shorter first)
+    filteredTests.sort((a, b) => {
+        if (b.searchScore !== a.searchScore) {
+            return b.searchScore - a.searchScore;
+        }
+        return a.name.length - b.name.length;
+    });
+
+    console.log('Found tests:', filteredTests.length);
+
+    if (filteredTests.length > 0) {
+        let html = '';
+        filteredTests.slice(0, 8).forEach(test => {
+            // Highlight matching text
+            const highlightedName = highlightSearchText(test.name, query);
+
+            html += `
+                <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
+                     onclick="selectTestFromSuggestion('${escapeForHtml(test.name)}', ${test.price})"
+                     onmouseover="highlightSuggestion(this)" onmouseout="unhighlightSuggestion(this)">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div>${highlightedName}</div>
+                            <small class="text-muted">${test.category}</small>
+                        </div>
+                        <span class="badge bg-primary">₹${test.price}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        suggestionsDiv.innerHTML = html;
+        suggestionsDiv.classList.remove('d-none');
+    } else {
+        suggestionsDiv.innerHTML = '<div class="p-2 text-muted"><i class="fas fa-search me-2"></i>No tests found for "' + query + '"</div>';
+        suggestionsDiv.classList.remove('d-none');
+    }
+}
+
+// Helper function to highlight search text in results
+function highlightSearchText(text, query) {
+    if (!query || query.length < 1) return text;
+
+    try {
+        const regex = new RegExp(`(${escapeRegexChars(query)})`, 'gi');
+        return text.replace(regex, '<mark class="bg-warning">$1</mark>');
+    } catch (e) {
+        return text; // Return original text if regex fails
+    }
+}
+
+// Helper function to escape HTML characters
+function escapeForHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Helper function to escape regex special characters
+function escapeRegexChars(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Handle keyboard navigation in search suggestions
+function handleKeyboardNavigation(e, suggestionsDiv) {
+    const suggestions = suggestionsDiv.querySelectorAll('.suggestion-item');
+    if (suggestions.length === 0) return;
+
+    let currentIndex = -1;
+
+    // Find currently highlighted suggestion
+    suggestions.forEach((item, index) => {
+        if (item.classList.contains('keyboard-highlighted')) {
+            currentIndex = index;
+        }
+    });
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        currentIndex = Math.min(currentIndex + 1, suggestions.length - 1);
+        updateKeyboardHighlight(suggestions, currentIndex);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        currentIndex = Math.max(currentIndex - 1, 0);
+        updateKeyboardHighlight(suggestions, currentIndex);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentIndex >= 0 && suggestions[currentIndex]) {
+            suggestions[currentIndex].click();
+        }
+    } else if (e.key === 'Escape') {
+        suggestionsDiv.classList.add('d-none');
+        clearKeyboardHighlight(suggestions);
+    }
+}
+
+// Update keyboard navigation highlighting
+function updateKeyboardHighlight(suggestions, activeIndex) {
+    suggestions.forEach((item, index) => {
+        if (index === activeIndex) {
+            item.classList.add('keyboard-highlighted');
+            item.style.backgroundColor = '#e3f2fd';
+        } else {
+            item.classList.remove('keyboard-highlighted');
+            item.style.backgroundColor = '';
+        }
+    });
+}
+
+// Clear keyboard navigation highlighting
+function clearKeyboardHighlight(suggestions) {
+    suggestions.forEach(item => {
+        item.classList.remove('keyboard-highlighted');
+        item.style.backgroundColor = '';
+    });
+}
+
+// Mouse hover highlighting
+function highlightSuggestion(element) {
+    if (!element.classList.contains('keyboard-highlighted')) {
+        element.style.backgroundColor = '#f8f9fa';
+    }
+}
+
+// Mouse leave unhighlighting
+function unhighlightSuggestion(element) {
+    if (!element.classList.contains('keyboard-highlighted')) {
+        element.style.backgroundColor = '';
+    }
 }
 
 
