@@ -60,7 +60,36 @@
 
                                     <div class="mb-3">
                                         <label class="form-label">Date of Birth *</label>
-                                        <input type="date" class="form-control" name="date_of_birth" required>
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <select class="form-select" name="birth_day" required>
+                                                    <option value="">Day</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <select class="form-select" name="birth_month" required>
+                                                    <option value="">Month</option>
+                                                    <option value="01">January</option>
+                                                    <option value="02">February</option>
+                                                    <option value="03">March</option>
+                                                    <option value="04">April</option>
+                                                    <option value="05">May</option>
+                                                    <option value="06">June</option>
+                                                    <option value="07">July</option>
+                                                    <option value="08">August</option>
+                                                    <option value="09">September</option>
+                                                    <option value="10">October</option>
+                                                    <option value="11">November</option>
+                                                    <option value="12">December</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <select class="form-select" name="birth_year" required>
+                                                    <option value="">Year</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="date_of_birth" id="combined_date_of_birth">
                                     </div>
 
                                     <div class="mb-3">
@@ -788,241 +817,99 @@ function initializeCollectionFields() {
 
 <script>
 
-// Enhanced Google-like Test Search Functionality
+// Simple Google-like Test Search - Rebuilt from scratch
 function initializeTestSearch() {
+    console.log('=== INITIALIZING NEW SEARCH ===');
+
     const searchInput = document.getElementById('test-search');
     const suggestionsDiv = document.getElementById('test-suggestions');
 
     if (!searchInput || !suggestionsDiv) {
-        console.log('Test search elements not found');
+        console.error('Search elements not found!');
         return;
     }
 
-    console.log('Initializing enhanced test search...');
+    console.log('Search elements found successfully');
     console.log('Available tests:', availableTests.length);
 
-    // Add enhanced search event listener directly
-    searchInput.addEventListener('input', function(e) {
-        console.log('Input event triggered:', e.target.value);
-        performTestSearch(e.target.value);
-    });
+    // Clear any existing content
+    suggestionsDiv.innerHTML = '';
+    suggestionsDiv.classList.add('d-none');
 
-    // Add focus event to show suggestions if there's existing text
-    searchInput.addEventListener('focus', function(e) {
-        console.log('Focus event triggered');
-        if (e.target.value.trim().length > 0) {
-            performTestSearch(e.target.value);
+    // Simple input event - no complex logic
+    searchInput.oninput = function() {
+        const query = this.value.trim();
+        console.log('User typed:', query);
+
+        if (query.length === 0) {
+            suggestionsDiv.classList.add('d-none');
+            return;
         }
-    });
 
-    // Add keyboard navigation
-    searchInput.addEventListener('keydown', function(e) {
-        handleKeyboardNavigation(e, suggestionsDiv);
-    });
-
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', function(e) {
-        const currentSearchInput = document.getElementById('test-search');
-        const currentSuggestionsDiv = document.getElementById('test-suggestions');
-        if (currentSearchInput && currentSuggestionsDiv) {
-            if (!currentSearchInput.contains(e.target) && !currentSuggestionsDiv.contains(e.target)) {
-                currentSuggestionsDiv.classList.add('d-none');
+        // Simple search - just find tests that contain the query
+        const results = [];
+        for (let i = 0; i < availableTests.length; i++) {
+            const test = availableTests[i];
+            if (test.name.toLowerCase().includes(query.toLowerCase())) {
+                results.push(test);
             }
         }
-    });
 
-    console.log('Enhanced test search initialized successfully');
-}
+        console.log('Found results:', results.length);
 
-// Perform the actual search with advanced logic
-function performTestSearch(inputValue) {
-    const suggestionsDiv = document.getElementById('test-suggestions');
-    const query = inputValue.toLowerCase().trim();
-
-    console.log('Searching for:', query);
-    console.log('Available tests count:', availableTests.length);
-
-    if (query.length < 1) {
-        suggestionsDiv.classList.add('d-none');
-        return;
-    }
-
-    // Enhanced search algorithm with multiple strategies
-    const filteredTests = availableTests.filter(test => {
-        const testName = test.name.toLowerCase();
-        const testCategory = test.category.toLowerCase();
-
-        // Strategy 1: Exact matches (highest priority)
-        if (testName === query || testCategory === query) {
-            test.searchScore = 100;
-            return true;
-        }
-
-        // Strategy 2: Starts with query (high priority)
-        if (testName.startsWith(query)) {
-            test.searchScore = 90;
-            return true;
-        }
-
-        // Strategy 3: Contains query (medium priority)
-        if (testName.includes(query) || testCategory.includes(query)) {
-            test.searchScore = 70;
-            return true;
-        }
-
-        // Strategy 4: Word-based matching (lower priority)
-        const queryWords = query.split(' ');
-        const testWords = testName.split(' ');
-
-        const wordMatches = queryWords.some(queryWord =>
-            testWords.some(testWord => testWord.startsWith(queryWord))
-        );
-
-        if (wordMatches) {
-            test.searchScore = 50;
-            return true;
-        }
-
-        // Strategy 5: Abbreviation matching (e.g., "cbc" for "Complete Blood Count")
-        const abbreviation = testName.split(' ').map(word => word.charAt(0)).join('').toLowerCase();
-        if (abbreviation.includes(query)) {
-            test.searchScore = 60;
-            return true;
-        }
-
-        return false;
-    });
-
-    // Sort by search score (highest first), then by name length (shorter first)
-    filteredTests.sort((a, b) => {
-        if (b.searchScore !== a.searchScore) {
-            return b.searchScore - a.searchScore;
-        }
-        return a.name.length - b.name.length;
-    });
-
-    console.log('Found tests:', filteredTests.length);
-
-    if (filteredTests.length > 0) {
-        let html = '';
-        filteredTests.slice(0, 8).forEach(test => {
-            // Highlight matching text
-            const highlightedName = highlightSearchText(test.name, query);
-
-            html += `
-                <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
-                     onclick="selectTestFromSuggestion('${escapeForHtml(test.name)}', ${test.price})"
-                     onmouseover="highlightSuggestion(this)" onmouseout="unhighlightSuggestion(this)">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div>${highlightedName}</div>
-                            <small class="text-muted">${test.category}</small>
+        // Show results
+        if (results.length > 0) {
+            let html = '';
+            for (let i = 0; i < Math.min(results.length, 8); i++) {
+                const test = results[i];
+                html += `
+                    <div class="search-result p-2 border-bottom" style="cursor: pointer;" onclick="addTestFromSearch('${test.name}', ${test.price})">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>${test.name}</strong>
+                                <br><small class="text-muted">${test.category}</small>
+                            </div>
+                            <span class="badge bg-primary">₹${test.price}</span>
                         </div>
-                        <span class="badge bg-primary">₹${test.price}</span>
                     </div>
-                </div>
-            `;
-        });
-
-        suggestionsDiv.innerHTML = html;
-        suggestionsDiv.classList.remove('d-none');
-    } else {
-        suggestionsDiv.innerHTML = '<div class="p-2 text-muted"><i class="fas fa-search me-2"></i>No tests found for "' + query + '"</div>';
-        suggestionsDiv.classList.remove('d-none');
-    }
-}
-
-// Helper function to highlight search text in results
-function highlightSearchText(text, query) {
-    if (!query || query.length < 1) return text;
-
-    try {
-        const regex = new RegExp(`(${escapeRegexChars(query)})`, 'gi');
-        return text.replace(regex, '<mark class="bg-warning">$1</mark>');
-    } catch (e) {
-        return text; // Return original text if regex fails
-    }
-}
-
-// Helper function to escape HTML characters
-function escapeForHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Helper function to escape regex special characters
-function escapeRegexChars(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-// Handle keyboard navigation in search suggestions
-function handleKeyboardNavigation(e, suggestionsDiv) {
-    const suggestions = suggestionsDiv.querySelectorAll('.suggestion-item');
-    if (suggestions.length === 0) return;
-
-    let currentIndex = -1;
-
-    // Find currently highlighted suggestion
-    suggestions.forEach((item, index) => {
-        if (item.classList.contains('keyboard-highlighted')) {
-            currentIndex = index;
-        }
-    });
-
-    if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        currentIndex = Math.min(currentIndex + 1, suggestions.length - 1);
-        updateKeyboardHighlight(suggestions, currentIndex);
-    } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        currentIndex = Math.max(currentIndex - 1, 0);
-        updateKeyboardHighlight(suggestions, currentIndex);
-    } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (currentIndex >= 0 && suggestions[currentIndex]) {
-            suggestions[currentIndex].click();
-        }
-    } else if (e.key === 'Escape') {
-        suggestionsDiv.classList.add('d-none');
-        clearKeyboardHighlight(suggestions);
-    }
-}
-
-// Update keyboard navigation highlighting
-function updateKeyboardHighlight(suggestions, activeIndex) {
-    suggestions.forEach((item, index) => {
-        if (index === activeIndex) {
-            item.classList.add('keyboard-highlighted');
-            item.style.backgroundColor = '#e3f2fd';
+                `;
+            }
+            suggestionsDiv.innerHTML = html;
+            suggestionsDiv.classList.remove('d-none');
         } else {
-            item.classList.remove('keyboard-highlighted');
-            item.style.backgroundColor = '';
+            suggestionsDiv.innerHTML = '<div class="p-2 text-muted">No tests found</div>';
+            suggestionsDiv.classList.remove('d-none');
         }
-    });
+    };
+
+    // Hide suggestions when clicking outside
+    document.onclick = function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            suggestionsDiv.classList.add('d-none');
+        }
+    };
+
+    console.log('New search initialized successfully!');
 }
 
-// Clear keyboard navigation highlighting
-function clearKeyboardHighlight(suggestions) {
-    suggestions.forEach(item => {
-        item.classList.remove('keyboard-highlighted');
-        item.style.backgroundColor = '';
-    });
+// Simple function to add test from search results
+function addTestFromSearch(testName, testPrice) {
+    console.log('Adding test from search:', testName, testPrice);
+
+    // Clear search
+    const searchInput = document.getElementById('test-search');
+    const suggestionsDiv = document.getElementById('test-suggestions');
+
+    if (searchInput) searchInput.value = '';
+    if (suggestionsDiv) suggestionsDiv.classList.add('d-none');
+
+    // Add to selected tests (reuse existing function)
+    selectTestFromSuggestion(testName, testPrice);
 }
 
-// Mouse hover highlighting
-function highlightSuggestion(element) {
-    if (!element.classList.contains('keyboard-highlighted')) {
-        element.style.backgroundColor = '#f8f9fa';
-    }
-}
+// Removed old complex search function
 
-// Mouse leave unhighlighting
-function unhighlightSuggestion(element) {
-    if (!element.classList.contains('keyboard-highlighted')) {
-        element.style.backgroundColor = '';
-    }
-}
+// Removed all complex helper functions - keeping it simple
 
 
 
@@ -1170,7 +1057,7 @@ function previousStep() {
 
 // Validation
 function validateStep1() {
-    const requiredFields = ['title', 'first_name', 'last_name', 'date_of_birth', 'phone'];
+    const requiredFields = ['title', 'first_name', 'last_name', 'phone'];
     let isValid = true;
 
     // Validate text and select fields
@@ -1183,6 +1070,22 @@ function validateStep1() {
             input.classList.remove('is-invalid');
         }
     });
+
+    // Validate date of birth dropdowns
+    const dayField = document.querySelector('[name="birth_day"]');
+    const monthField = document.querySelector('[name="birth_month"]');
+    const yearField = document.querySelector('[name="birth_year"]');
+
+    if (!dayField.value || !monthField.value || !yearField.value) {
+        dayField.classList.add('is-invalid');
+        monthField.classList.add('is-invalid');
+        yearField.classList.add('is-invalid');
+        isValid = false;
+    } else {
+        dayField.classList.remove('is-invalid');
+        monthField.classList.remove('is-invalid');
+        yearField.classList.remove('is-invalid');
+    }
 
     // Validate gender radio buttons
     const genderSelected = document.querySelector('input[name="gender"]:checked');
@@ -1214,8 +1117,64 @@ function validateStep1() {
     return isValid;
 }
 
+// Initialize date dropdowns
+function initializeDateDropdowns() {
+    // Populate days (1-31)
+    const daySelect = document.querySelector('[name="birth_day"]');
+    if (daySelect) {
+        for (let i = 1; i <= 31; i++) {
+            const option = document.createElement('option');
+            option.value = i.toString().padStart(2, '0');
+            option.textContent = i;
+            daySelect.appendChild(option);
+        }
+    }
+
+    // Populate years (current year - 100 to current year)
+    const yearSelect = document.querySelector('[name="birth_year"]');
+    if (yearSelect) {
+        const currentYear = new Date().getFullYear();
+        for (let i = currentYear; i >= currentYear - 100; i--) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            yearSelect.appendChild(option);
+        }
+    }
+
+    // Add event listeners to combine date
+    const dayField = document.querySelector('[name="birth_day"]');
+    const monthField = document.querySelector('[name="birth_month"]');
+    const yearField = document.querySelector('[name="birth_year"]');
+    const hiddenField = document.getElementById('combined_date_of_birth');
+
+    if (dayField && monthField && yearField && hiddenField) {
+        function updateCombinedDate() {
+            const day = dayField.value;
+            const month = monthField.value;
+            const year = yearField.value;
+
+            if (day && month && year) {
+                hiddenField.value = `${year}-${month}-${day}`;
+                console.log('Combined date:', hiddenField.value);
+            } else {
+                hiddenField.value = '';
+            }
+        }
+
+        dayField.addEventListener('change', updateCombinedDate);
+        monthField.addEventListener('change', updateCombinedDate);
+        yearField.addEventListener('change', updateCombinedDate);
+    }
+}
+
 // Test Selection
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize date dropdowns
+    initializeDateDropdowns();
+
+    // Initialize test search
+    initializeTestSearch();
     const paymentOptions = document.querySelectorAll('input[name="payment_option"]');
 
     paymentOptions.forEach(option => {
