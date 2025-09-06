@@ -32,44 +32,22 @@
     </div>
 </div>
 
-<!-- Patient Information Card -->
-<div class="row mb-4">
+<!-- Patient Information Card - Simplified -->
+<div class="row mb-3">
     <div class="col-12">
         <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-user-circle me-2"></i>Patient Information
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Name:</strong> {{ patient.full_name }}</p>
-                        <p><strong>Age:</strong> {{ patient.age }} years</p>
-                        <p><strong>Gender:</strong> {{ patient.gender }}</p>
-                        <p><strong>Phone:</strong> {{ patient.phone }}</p>
-                        {% if patient.email %}
-                        <p><strong>Email:</strong> {{ patient.email }}</p>
-                        {% endif %}
+            <div class="card-body py-2">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <strong><i class="fas fa-user me-2"></i>{{ patient.full_name }}</strong>
                     </div>
-                    <div class="col-md-6">
-                        <p><strong>Address:</strong><br>{{ patient.address }}</p>
-                        {% if patient.hospital_name %}
-                        <p><strong>Hospital:</strong> {{ patient.hospital_name }}</p>
-                        {% endif %}
-                        {% if patient.collected_by %}
-                        <p><strong>Sample Collected By:</strong> {{ patient.collected_by }}</p>
-                        {% endif %}
-                        <p><strong>Registration Date:</strong> {{ patient.date_registered.strftime('%Y-%m-%d') }}</p>
+                    <div class="col-md-3">
+                        <span class="badge bg-info">{{ patient.gender }}</span>
+                    </div>
+                    <div class="col-md-5">
+                        <i class="fas fa-phone me-2"></i>{{ patient.phone }}
                     </div>
                 </div>
-                {% if patient.medical_history %}
-                <div class="row">
-                    <div class="col-12">
-                        <p><strong>Medical History:</strong><br>{{ patient.medical_history }}</p>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -129,18 +107,19 @@
                         <i class="fas fa-list me-2"></i>Current Tests ({{ patient_tests|length }})
                     </h6>
 
-                    <!-- Tests Table with Color-Coded Row Format -->
+                    <!-- Tests Table with Color-Coded Row Format - Compact -->
                     <div class="table-responsive">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered table-sm">
                             <thead class="table-dark">
                                 <tr>
-                                    <th style="width: 25%;">Test Name</th>
-                                    <th style="width: 15%;">Test Value</th>
-                                    <th style="width: 8%;">Unit</th>
-                                    <th style="width: 15%;">Normal Range</th>
-                                    <th style="width: 12%;">Status</th>
-                                    <th style="width: 15%;">Notes</th>
-                                    <th style="width: 10%;">Date/Cost</th>
+                                    <th style="width: 20%;">Test Name</th>
+                                    <th style="width: 12%;">Test Value</th>
+                                    <th style="width: 6%;">Unit</th>
+                                    <th style="width: 12%;">Normal Range</th>
+                                    <th style="width: 10%;">Status</th>
+                                    <th style="width: 20%;">Notes</th>
+                                    <th style="width: 8%;">Date</th>
+                                    <th style="width: 8%;">Cost</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -148,66 +127,68 @@
                                 <tr class="test-row" data-status="{{ pt.status }}">
                                     <!-- Test Name -->
                                     <td>
-                                        <strong>{{ pt.test.name }}</strong>
-                                        <br><small class="text-muted">{{ pt.test.category or 'N/A' }}</small>
+                                        <strong style="font-size: 0.9em;">{{ pt.test.name }}</strong>
                                         <input type="hidden" name="test_ids[]" value="{{ pt.id }}">
                                     </td>
 
                                     <!-- Test Value Input with Color Validation -->
                                     <td>
                                         <input type="number"
-                                               class="form-control test-result-input"
+                                               class="form-control form-control-sm test-result-input"
                                                name="results[]"
                                                value="{{ pt.results or '' }}"
-                                               placeholder="Enter value"
+                                               placeholder="Value"
                                                data-min="{{ pt.test.normal_range_min or 0 }}"
                                                data-max="{{ pt.test.normal_range_max or 100 }}"
                                                data-test-id="{{ pt.id }}"
                                                oninput="validateResult(this)"
                                                step="0.01"
-                                               style="min-width: 100px;">
+                                               style="width: 80px;">
                                     </td>
 
                                     <!-- Unit -->
                                     <td>
-                                        <span class="badge bg-info">{{ pt.test.unit or 'units' }}</span>
+                                        <small class="badge bg-info">{{ pt.test.unit or 'units' }}</small>
                                     </td>
 
                                     <!-- Normal Range -->
                                     <td>
                                         <small class="text-muted">
-                                            {{ pt.test.normal_range_min or 0 }} - {{ pt.test.normal_range_max or 100 }}
-                                            <br>{{ pt.test.unit or 'units' }}
+                                            {{ pt.test.normal_range_min or 0 }}-{{ pt.test.normal_range_max or 100 }}
                                         </small>
                                     </td>
 
                                     <!-- Status -->
                                     <td>
-                                        <select name="statuses[]" class="form-select form-select-sm">
+                                        <select name="statuses[]" class="form-select form-select-sm" style="font-size: 0.8em;">
                                             <option value="Pending" {{ 'selected' if pt.status == 'Pending' }}>Pending</option>
-                                            <option value="In Progress" {{ 'selected' if pt.status == 'In Progress' }}>In Progress</option>
-                                            <option value="Completed" {{ 'selected' if pt.status == 'Completed' }}>Completed</option>
-                                            <option value="Cancelled" {{ 'selected' if pt.status == 'Cancelled' }}>Cancelled</option>
+                                            <option value="In Progress" {{ 'selected' if pt.status == 'In Progress' }}>Progress</option>
+                                            <option value="Completed" {{ 'selected' if pt.status == 'Completed' }}>Done</option>
+                                            <option value="Cancelled" {{ 'selected' if pt.status == 'Cancelled' }}>Cancel</option>
                                         </select>
                                     </td>
 
                                     <!-- Notes -->
                                     <td>
                                         <textarea name="notes[]" class="form-control form-control-sm"
-                                                  rows="2"
+                                                  rows="1"
                                                   placeholder="Notes..."
-                                                  style="min-width: 120px;">{{ pt.notes or '' }}</textarea>
+                                                  style="font-size: 0.8em;">{{ pt.notes or '' }}</textarea>
                                     </td>
 
-                                    <!-- Date and Cost -->
+                                    <!-- Date -->
                                     <td>
                                         <small class="text-muted">
-                                            <i class="fas fa-calendar"></i> {{ pt.date_ordered.strftime('%m/%d') }}
+                                            {{ pt.date_ordered.strftime('%m/%d') }}
                                             {% if pt.date_completed %}
-                                            <br><i class="fas fa-check text-success"></i> {{ pt.date_completed.strftime('%m/%d') }}
+                                            <br><i class="fas fa-check text-success"></i>
                                             {% endif %}
-                                            <br><strong class="text-success">₹{{ "%.0f"|format(pt.test.cost) }}</strong>
                                         </small>
+                                    </td>
+
+                                    <!-- Cost -->
+                                    <td>
+                                        <small class="text-success">₹{{ "%.0f"|format(pt.test.cost) }}</small>
                                     </td>
                                 </tr>
                                 {% endfor %}
