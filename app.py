@@ -423,11 +423,69 @@ def update_patient_tests(patient_id):
                 else:
                     patient_bill.bill_status = 'partial'
 
+        # Handle payment from modal
+        payment_option = request.form.get('payment_option')
+        payment_method = request.form.get('payment_method', 'cash')
+        payment_notes = request.form.get('payment_notes', '')
+        custom_amount = request.form.get('custom_amount')
+
+        if payment_option and payment_option != 'no_payment' and new_tests_total_cost > 0:
+            # Calculate payment amount based on option
+            if payment_option == 'full':
+                payment_amount = new_tests_total_cost
+            elif payment_option == 'half':
+                payment_amount = new_tests_total_cost / 2
+            elif payment_option == 'custom' and custom_amount:
+                payment_amount = float(custom_amount)
+            else:
+                payment_amount = 0
+
+            if payment_amount > 0:
+                # Create payment record
+                payment = Payment(
+                    patient_id=patient_id,
+                    amount=payment_amount,
+                    payment_type=payment_option,
+                    payment_method=payment_method,
+                    reference_number='',
+                    notes=payment_notes or f'Payment for test updates and new assignments',
+                    created_by='Admin'
+                )
+                db.session.add(payment)
+
+                # Update patient bill if exists
+                if not patient_bill and new_tests_total_cost > 0:
+                    patient_bill = PatientBill(
+                        patient_id=patient_id,
+                        total_amount=new_tests_total_cost,
+                        paid_amount=payment_amount,
+                        remaining_amount=max(0, new_tests_total_cost - payment_amount),
+                        bill_status='partial' if payment_amount < new_tests_total_cost else 'paid'
+                    )
+                    db.session.add(patient_bill)
+                elif patient_bill:
+                    patient_bill.paid_amount += payment_amount
+                    patient_bill.remaining_amount = max(0, patient_bill.total_amount - patient_bill.paid_amount)
+                    if patient_bill.remaining_amount <= 0:
+                        patient_bill.bill_status = 'paid'
+                    else:
+                        patient_bill.bill_status = 'partial'
+
         db.session.commit()
 
         # Success message with payment info
-        if new_test_ids and collect_payment and advance_amount > 0:
-            flash(f'Successfully updated tests for {patient.full_name} and collected ₹{advance_amount:.2f} advance payment! Remaining: ₹{patient_bill.remaining_amount:.2f}', 'success')
+        payment_amount = 0
+        if payment_option and payment_option != 'no_payment':
+            if payment_option == 'full':
+                payment_amount = new_tests_total_cost
+            elif payment_option == 'half':
+                payment_amount = new_tests_total_cost / 2
+            elif payment_option == 'custom' and custom_amount:
+                payment_amount = float(custom_amount)
+
+        if payment_amount > 0:
+            remaining = patient_bill.remaining_amount if patient_bill else 0
+            flash(f'Successfully updated tests for {patient.full_name} and collected ₹{payment_amount:.2f} payment! Remaining: ₹{remaining:.2f}', 'success')
         elif new_test_ids:
             flash(f'Successfully updated tests for {patient.full_name}! New tests cost: ₹{new_tests_total_cost:.2f}', 'success')
         else:
