@@ -34,6 +34,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 print(f"📁 Database location: {database_path}")
 print(f"📊 Database exists: {os.path.exists(database_path)}")
 
+# Database connection helper function
+def get_db_connection():
+    """Get a direct SQLite connection for raw SQL operations"""
+    conn = sqlite3.connect(database_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 # Handle PostgreSQL URL format for DigitalOcean
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
@@ -2154,7 +2161,6 @@ def multi_step_registration():
 
             # Get test and billing data
             selected_tests = json.loads(request.form.get('selected_tests', '[]'))
-            custom_amounts = json.loads(request.form.get('custom_amounts', '[]'))
             total_amount = float(request.form.get('total_amount', 0))
             payment_option = request.form.get('payment_option')
             payment_method = request.form.get('payment_method')
@@ -2167,81 +2173,93 @@ def multi_step_registration():
                 amount_paid = total_amount
                 remaining_amount = 0
 
-            # Start database transaction
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
             try:
-                # 1. Insert patient
-                cursor.execute('''
-                    INSERT INTO patient (
-                        first_name, last_name, date_of_birth, gender, phone, email,
-                        address, emergency_contact, medical_history, referring_doctor, date_registered
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    patient_data['first_name'], patient_data['last_name'],
-                    patient_data['date_of_birth'], patient_data['gender'],
-                    patient_data['phone'], patient_data['email'], patient_data['address'],
-                    patient_data['emergency_contact'], patient_data['medical_history'],
-                    patient_data['referring_doctor'], datetime.now().strftime('%Y-%m-%d')
-                ))
+                # 1. Create patient using SQLAlchemy model
+                # Calculate age from date of birth
+                from datetime import datetime
+                if patient_data['date_of_birth']:
+                    birth_date = datetime.strptime(patient_data['date_of_birth'], '%Y-%m-%d')
+                    age = datetime.now().year - birth_date.year
+                    if datetime.now().month < birth_date.month or (datetime.now().month == birth_date.month and datetime.now().day < birth_date.day):
+                        age -= 1
+                else:
+                    age = 0
 
-                patient_id = cursor.lastrowid
+                new_patient = Patient(
+                    title=patient_data.get('title', 'Mr.'),
+                    first_name=patient_data['first_name'],
+                    last_name=patient_data['last_name'],
+                    age=age,
+                    gender=patient_data['gender'],
+                    phone=patient_data['phone'],
+                    email=patient_data.get('email', ''),
+                    address=patient_data.get('address', ''),
+                    medical_history=patient_data.get('medical_history', ''),
+                    emergency_contact=patient_data.get('emergency_contact', ''),
+                    collected_by=collection_data.get('collected_by', ''),
+                    date_registered=datetime.now()
+                )
 
-                # 2. Insert tests
+                db.session.add(new_patient)
+                db.session.flush()  # Get the patient ID
+                patient_id = new_patient.id
+
+                # 2. Handle tests
                 test_ids = []
                 for test in selected_tests:
                     # Check if test exists, if not create it
-                    cursor.execute('SELECT test_id FROM test WHERE test_name = ?', (test['name'],))
-                    test_row = cursor.fetchone()
+                    existing_test = Test.query.filter_by(name=test['name']).first()
 
-                    if test_row:
-                        test_id = test_row[0]
+                    if existing_test:
+                        test_obj = existing_test
                     else:
                         # Create new test
-                        cursor.execute('''
-                            INSERT INTO test (test_name, test_price, test_description)
-                            VALUES (?, ?, ?)
-                        ''', (test['name'], test['price'], f"Test: {test['name']}"))
-                        test_id = cursor.lastrowid
+                        test_obj = Test(
+                            name=test['name'],
+                            description=f"Test: {test['name']}",
+                            cost=test['price'],
+                            category='General'
+                        )
+                        db.session.add(test_obj)
+                        db.session.flush()  # Get the test ID
 
-                    # Assign test to patient
-                    cursor.execute('''
-                        INSERT INTO patient_test (patient_id, test_id, status, date_assigned)
-                        VALUES (?, ?, ?, ?)
-                    ''', (patient_id, test_id, 'Pending', datetime.now().strftime('%Y-%m-%d')))
-
-                    test_ids.append(test_id)
+                    # Create patient-test relationship
+                    patient_test = PatientTest(
+                        patient_id=patient_id,
+                        test_id=test_obj.id,
+                        status='Pending',
+                        date_ordered=datetime.now()
+                    )
+                    db.session.add(patient_test)
+                    test_ids.append(test_obj.id)
 
                 # 3. Create bill
-                cursor.execute('''
-                    INSERT INTO patient_bill (
-                        patient_id, total_amount, paid_amount, remaining_amount,
-                        bill_date, payment_status
-                    ) VALUES (?, ?, ?, ?, ?, ?)
-                ''', (
-                    patient_id, total_amount, amount_paid, remaining_amount,
-                    datetime.now().strftime('%Y-%m-%d'),
-                    'Paid' if remaining_amount == 0 else 'Partial'
-                ))
-
-                bill_id = cursor.lastrowid
+                patient_bill = PatientBill(
+                    patient_id=patient_id,
+                    total_amount=total_amount,
+                    paid_amount=amount_paid,
+                    remaining_amount=remaining_amount,
+                    bill_date=datetime.now(),
+                    bill_status='paid' if remaining_amount == 0 else 'partial'
+                )
+                db.session.add(patient_bill)
+                db.session.flush()  # Get the bill ID
+                bill_id = patient_bill.id
 
                 # 4. Record payment if amount paid > 0
                 if amount_paid > 0:
-                    cursor.execute('''
-                        INSERT INTO payment (
-                            patient_id, bill_id, amount, payment_method,
-                            payment_date, payment_status
-                        ) VALUES (?, ?, ?, ?, ?, ?)
-                    ''', (
-                        patient_id, bill_id, amount_paid, payment_method,
-                        datetime.now().strftime('%Y-%m-%d'), 'Completed'
-                    ))
+                    payment = Payment(
+                        patient_id=patient_id,
+                        amount=amount_paid,
+                        payment_type='partial' if remaining_amount > 0 else 'full',
+                        payment_method=payment_method.lower(),
+                        payment_date=datetime.now(),
+                        notes=f'Payment for bill #{bill_id}'
+                    )
+                    db.session.add(payment)
 
-                # Commit transaction
-                conn.commit()
-                conn.close()
+                # Commit all changes
+                db.session.commit()
 
                 # Return JSON response for AJAX
                 return jsonify({
@@ -2264,20 +2282,20 @@ def multi_step_registration():
                         'total_amount': total_amount,
                         'amount_paid': amount_paid,
                         'remaining_amount': remaining_amount,
-                        'tests_count': len(selected_tests),
-                        'custom_amounts_count': len(custom_amounts)
+                        'tests_count': len(selected_tests)
                     }
                 })
 
             except Exception as e:
-                conn.rollback()
-                conn.close()
+                db.session.rollback()
+                print(f"Database error in multi-step registration: {str(e)}")
                 return jsonify({
                     'success': False,
                     'error': f'Database error: {str(e)}'
                 })
 
         except Exception as e:
+            print(f"General error in multi-step registration: {str(e)}")
             return jsonify({
                 'success': False,
                 'error': f'Registration failed: {str(e)}'

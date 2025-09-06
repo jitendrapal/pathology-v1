@@ -237,47 +237,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Custom Amount Fields -->
-                                    <div class="mb-4">
-                                        <h6 class="text-muted">Additional Charges & Custom Amounts</h6>
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <div id="custom-amounts-container">
-                                                    <!-- Custom amount fields will be added here -->
-                                                </div>
 
-                                                <div class="row">
-                                                    <div class="col-md-5">
-                                                        <input type="text" class="form-control" id="custom-amount-description" placeholder="Description (e.g., Consultation Fee, Home Collection)">
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <div class="input-group">
-                                                            <span class="input-group-text">₹</span>
-                                                            <input type="number" class="form-control" id="custom-amount-value" placeholder="Amount" min="0" step="0.01">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <select class="form-select" id="custom-amount-type">
-                                                            <option value="fixed">Fixed</option>
-                                                            <option value="percentage">% of Total</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <button type="button" class="btn btn-success w-100" onclick="addCustomAmount()">
-                                                            <i class="fas fa-plus"></i> Add
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <div class="mt-2">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-info-circle me-1"></i>
-                                                        Add consultation fees, home collection charges, discounts, or any custom amounts
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
 
                                     <!-- Quick Test Categories (Optional) -->
                                     <div class="mb-3">
@@ -351,24 +311,12 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Custom Amounts Summary -->
-                                            <div class="mb-3" id="custom-amounts-summary" style="display: none;">
-                                                <h6 class="text-success mb-2">Additional Charges</h6>
-                                                <div id="custom-amounts-list">
-                                                    <!-- Custom amounts will be listed here -->
-                                                </div>
-                                            </div>
-
                                             <hr>
 
                                             <!-- Subtotals -->
                                             <div class="d-flex justify-content-between mb-1">
                                                 <span>Tests Subtotal:</span>
                                                 <span id="tests-subtotal">₹0</span>
-                                            </div>
-                                            <div class="d-flex justify-content-between mb-1" id="custom-subtotal-row" style="display: none;">
-                                                <span>Additional Charges:</span>
-                                                <span id="custom-subtotal">₹0</span>
                                             </div>
 
                                             <hr>
@@ -406,35 +354,6 @@
                                                 </div>
                                             </div>
                                             
-                                            <!-- Custom Amount Fields -->
-                                            <div class="mt-3">
-                                                <h6 class="text-success mb-2">Additional Charges</h6>
-                                                <div id="custom-amounts-container">
-                                                    <!-- Custom amounts will be added here -->
-                                                </div>
-
-                                                <div class="row mb-2">
-                                                    <div class="col-7">
-                                                        <input type="text" class="form-control form-control-sm" id="custom-amount-description" placeholder="Description (e.g., Home Collection, Consultation)">
-                                                    </div>
-                                                    <div class="col-3">
-                                                        <div class="input-group input-group-sm">
-                                                            <span class="input-group-text">₹</span>
-                                                            <input type="number" class="form-control" id="custom-amount-value" placeholder="Amount" min="0" step="0.01">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-2">
-                                                        <button type="button" class="btn btn-success btn-sm w-100" onclick="addCustomAmount()">
-                                                            <i class="fas fa-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <div id="custom-amounts-summary" class="mb-2" style="display: none;">
-                                                    <small class="text-muted">Additional Charges: <span id="custom-amounts-total">₹0</span></small>
-                                                </div>
-                                            </div>
-
                                             <hr>
 
                                             <!-- Payment Method -->
@@ -654,6 +573,24 @@
     transition: border-color 0.3s ease;
 }
 
+/* Enhanced search highlighting */
+.suggestion-item mark {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+    padding: 1px 2px;
+    border-radius: 2px;
+}
+
+.suggestion-item.keyboard-highlighted {
+    background-color: #e3f2fd !important;
+    border-left: 3px solid #2196f3;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa !important;
+    transition: background-color 0.2s ease;
+}
+
 .form-check-input.is-invalid {
     border-color: #dc3545;
 }
@@ -668,8 +605,6 @@
 let currentStep = 1;
 let totalAmount = 0;
 let selectedTests = [];
-let customAmounts = [];
-let customAmountsTotal = 0;
 
 // Available doctors database for search suggestions
 const availableDoctors = [
@@ -853,7 +788,7 @@ function initializeCollectionFields() {
 
 <script>
 
-// Enhanced Test Search Functionality (Google-like)
+// Enhanced Google-like Test Search Functionality
 function initializeTestSearch() {
     const searchInput = document.getElementById('test-search');
     const suggestionsDiv = document.getElementById('test-suggestions');
@@ -863,153 +798,235 @@ function initializeTestSearch() {
         return;
     }
 
-    console.log('Initializing test search...');
+    console.log('Initializing enhanced test search...');
+    console.log('Available tests:', availableTests.length);
 
-    searchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
+    // Add enhanced search event listener directly
+    searchInput.addEventListener('input', function(e) {
+        console.log('Input event triggered:', e.target.value);
+        performTestSearch(e.target.value);
+    });
 
-        if (query.length < 1) {
-            suggestionsDiv.classList.add('d-none');
-            return;
+    // Add focus event to show suggestions if there's existing text
+    searchInput.addEventListener('focus', function(e) {
+        console.log('Focus event triggered');
+        if (e.target.value.trim().length > 0) {
+            performTestSearch(e.target.value);
         }
+    });
 
-        // Enhanced Google-like search algorithm
-        const filteredTests = availableTests.filter(test => {
-            const testName = test.name.toLowerCase();
-            const testCategory = test.category.toLowerCase();
-
-            // Exact match gets highest priority
-            if (testName.includes(query) || testCategory.includes(query)) {
-                return true;
-            }
-
-            // Word-based matching
-            const queryWords = query.split(' ');
-            const testWords = testName.split(' ');
-
-            return queryWords.some(queryWord =>
-                testWords.some(testWord => testWord.startsWith(queryWord))
-            );
-        });
-
-        // Sort by relevance (exact matches first, then partial matches)
-        filteredTests.sort((a, b) => {
-            const aName = a.name.toLowerCase();
-            const bName = b.name.toLowerCase();
-
-            // Exact start matches first
-            if (aName.startsWith(query) && !bName.startsWith(query)) return -1;
-            if (!aName.startsWith(query) && bName.startsWith(query)) return 1;
-
-            // Then by name length (shorter names first for common tests)
-            return aName.length - bName.length;
-        });
-
-        if (filteredTests.length > 0) {
-            let suggestionsHTML = '';
-            filteredTests.slice(0, 8).forEach(test => {
-                // Highlight matching text
-                const highlightedName = highlightMatch(test.name, query);
-
-                suggestionsHTML += `
-                    <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
-                         onclick="selectTestFromSuggestion('${escapeHtml(test.name)}', ${test.price})">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div>${highlightedName}</div>
-                                <small class="text-muted">${test.category}</small>
-                            </div>
-                            <span class="badge bg-primary">₹${test.price}</span>
-                        </div>
-                    </div>
-                `;
-            });
-
-            suggestionsDiv.innerHTML = suggestionsHTML;
-            suggestionsDiv.classList.remove('d-none');
-        } else {
-            suggestionsDiv.innerHTML = '<div class="p-2 text-muted"><i class="fas fa-search me-2"></i>No tests found for "' + query + '"</div>';
-            suggestionsDiv.classList.remove('d-none');
-        }
+    // Add keyboard navigation
+    searchInput.addEventListener('keydown', function(e) {
+        handleKeyboardNavigation(e, suggestionsDiv);
     });
 
     // Hide suggestions when clicking outside
     document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-            suggestionsDiv.classList.add('d-none');
-        }
-    });
-
-    // Show suggestions on focus if there's text
-    searchInput.addEventListener('focus', function() {
-        if (this.value.trim().length > 0) {
-            this.dispatchEvent(new Event('input'));
-        }
-    });
-
-    // Handle keyboard navigation
-    searchInput.addEventListener('keydown', function(e) {
-        const suggestions = suggestionsDiv.querySelectorAll('.suggestion-item');
-        let currentIndex = -1;
-
-        // Find currently highlighted suggestion
-        suggestions.forEach((item, index) => {
-            if (item.classList.contains('highlighted')) {
-                currentIndex = index;
+        const currentSearchInput = document.getElementById('test-search');
+        const currentSuggestionsDiv = document.getElementById('test-suggestions');
+        if (currentSearchInput && currentSuggestionsDiv) {
+            if (!currentSearchInput.contains(e.target) && !currentSuggestionsDiv.contains(e.target)) {
+                currentSuggestionsDiv.classList.add('d-none');
             }
+        }
+    });
+
+    console.log('Enhanced test search initialized successfully');
+}
+
+// Perform the actual search with advanced logic
+function performTestSearch(inputValue) {
+    const suggestionsDiv = document.getElementById('test-suggestions');
+    const query = inputValue.toLowerCase().trim();
+
+    console.log('Searching for:', query);
+    console.log('Available tests count:', availableTests.length);
+
+    if (query.length < 1) {
+        suggestionsDiv.classList.add('d-none');
+        return;
+    }
+
+    // Enhanced search algorithm with multiple strategies
+    const filteredTests = availableTests.filter(test => {
+        const testName = test.name.toLowerCase();
+        const testCategory = test.category.toLowerCase();
+
+        // Strategy 1: Exact matches (highest priority)
+        if (testName === query || testCategory === query) {
+            test.searchScore = 100;
+            return true;
+        }
+
+        // Strategy 2: Starts with query (high priority)
+        if (testName.startsWith(query)) {
+            test.searchScore = 90;
+            return true;
+        }
+
+        // Strategy 3: Contains query (medium priority)
+        if (testName.includes(query) || testCategory.includes(query)) {
+            test.searchScore = 70;
+            return true;
+        }
+
+        // Strategy 4: Word-based matching (lower priority)
+        const queryWords = query.split(' ');
+        const testWords = testName.split(' ');
+
+        const wordMatches = queryWords.some(queryWord =>
+            testWords.some(testWord => testWord.startsWith(queryWord))
+        );
+
+        if (wordMatches) {
+            test.searchScore = 50;
+            return true;
+        }
+
+        // Strategy 5: Abbreviation matching (e.g., "cbc" for "Complete Blood Count")
+        const abbreviation = testName.split(' ').map(word => word.charAt(0)).join('').toLowerCase();
+        if (abbreviation.includes(query)) {
+            test.searchScore = 60;
+            return true;
+        }
+
+        return false;
+    });
+
+    // Sort by search score (highest first), then by name length (shorter first)
+    filteredTests.sort((a, b) => {
+        if (b.searchScore !== a.searchScore) {
+            return b.searchScore - a.searchScore;
+        }
+        return a.name.length - b.name.length;
+    });
+
+    console.log('Found tests:', filteredTests.length);
+
+    if (filteredTests.length > 0) {
+        let html = '';
+        filteredTests.slice(0, 8).forEach(test => {
+            // Highlight matching text
+            const highlightedName = highlightSearchText(test.name, query);
+
+            html += `
+                <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
+                     onclick="selectTestFromSuggestion('${escapeForHtml(test.name)}', ${test.price})"
+                     onmouseover="highlightSuggestion(this)" onmouseout="unhighlightSuggestion(this)">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div>${highlightedName}</div>
+                            <small class="text-muted">${test.category}</small>
+                        </div>
+                        <span class="badge bg-primary">₹${test.price}</span>
+                    </div>
+                </div>
+            `;
         });
 
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            currentIndex = Math.min(currentIndex + 1, suggestions.length - 1);
-            highlightSuggestion(suggestions, currentIndex);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            currentIndex = Math.max(currentIndex - 1, 0);
-            highlightSuggestion(suggestions, currentIndex);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (currentIndex >= 0 && suggestions[currentIndex]) {
-                suggestions[currentIndex].click();
-            }
-        } else if (e.key === 'Escape') {
-            suggestionsDiv.classList.add('d-none');
-        }
-    });
+        suggestionsDiv.innerHTML = html;
+        suggestionsDiv.classList.remove('d-none');
+    } else {
+        suggestionsDiv.innerHTML = '<div class="p-2 text-muted"><i class="fas fa-search me-2"></i>No tests found for "' + query + '"</div>';
+        suggestionsDiv.classList.remove('d-none');
+    }
 }
 
-// Helper function to highlight matching text
-function highlightMatch(text, query) {
-    if (!query) return text;
+// Helper function to highlight search text in results
+function highlightSearchText(text, query) {
+    if (!query || query.length < 1) return text;
 
-    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-    return text.replace(regex, '<strong class="text-primary">$1</strong>');
+    try {
+        const regex = new RegExp(`(${escapeRegexChars(query)})`, 'gi');
+        return text.replace(regex, '<mark class="bg-warning">$1</mark>');
+    } catch (e) {
+        return text; // Return original text if regex fails
+    }
 }
 
-// Helper function to escape HTML
-function escapeHtml(text) {
+// Helper function to escape HTML characters
+function escapeForHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
 // Helper function to escape regex special characters
-function escapeRegex(string) {
+function escapeRegexChars(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Helper function to highlight suggestion with keyboard navigation
-function highlightSuggestion(suggestions, index) {
-    suggestions.forEach((item, i) => {
-        if (i === index) {
-            item.classList.add('highlighted');
+// Handle keyboard navigation in search suggestions
+function handleKeyboardNavigation(e, suggestionsDiv) {
+    const suggestions = suggestionsDiv.querySelectorAll('.suggestion-item');
+    if (suggestions.length === 0) return;
+
+    let currentIndex = -1;
+
+    // Find currently highlighted suggestion
+    suggestions.forEach((item, index) => {
+        if (item.classList.contains('keyboard-highlighted')) {
+            currentIndex = index;
+        }
+    });
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        currentIndex = Math.min(currentIndex + 1, suggestions.length - 1);
+        updateKeyboardHighlight(suggestions, currentIndex);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        currentIndex = Math.max(currentIndex - 1, 0);
+        updateKeyboardHighlight(suggestions, currentIndex);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentIndex >= 0 && suggestions[currentIndex]) {
+            suggestions[currentIndex].click();
+        }
+    } else if (e.key === 'Escape') {
+        suggestionsDiv.classList.add('d-none');
+        clearKeyboardHighlight(suggestions);
+    }
+}
+
+// Update keyboard navigation highlighting
+function updateKeyboardHighlight(suggestions, activeIndex) {
+    suggestions.forEach((item, index) => {
+        if (index === activeIndex) {
+            item.classList.add('keyboard-highlighted');
             item.style.backgroundColor = '#e3f2fd';
         } else {
-            item.classList.remove('highlighted');
+            item.classList.remove('keyboard-highlighted');
             item.style.backgroundColor = '';
         }
     });
 }
+
+// Clear keyboard navigation highlighting
+function clearKeyboardHighlight(suggestions) {
+    suggestions.forEach(item => {
+        item.classList.remove('keyboard-highlighted');
+        item.style.backgroundColor = '';
+    });
+}
+
+// Mouse hover highlighting
+function highlightSuggestion(element) {
+    if (!element.classList.contains('keyboard-highlighted')) {
+        element.style.backgroundColor = '#f8f9fa';
+    }
+}
+
+// Mouse leave unhighlighting
+function unhighlightSuggestion(element) {
+    if (!element.classList.contains('keyboard-highlighted')) {
+        element.style.backgroundColor = '';
+    }
+}
+
+
+
+
 
 function selectTestFromSuggestion(testName, testPrice) {
     console.log('Selecting test:', testName, 'Price:', testPrice);
@@ -1039,7 +1056,7 @@ function selectTestFromSuggestion(testName, testPrice) {
     // Enable submit button
     const submitBtn = document.getElementById('submit-btn');
     if (submitBtn) {
-        submitBtn.disabled = selectedTests.length === 0 && customAmounts.length === 0;
+        submitBtn.disabled = selectedTests.length === 0;
     }
 
     // Show success feedback
@@ -1128,6 +1145,13 @@ function nextStep() {
         // Initialize test search when entering step 2
         setTimeout(() => {
             initializeTestSearch();
+
+            // Test if search is working
+            const testInput = document.getElementById('test-search');
+            if (testInput) {
+                console.log('Test search input found, adding test event');
+                testInput.focus();
+            }
         }, 100);
     }
 }
@@ -1211,7 +1235,7 @@ function updateBilling() {
 
     // Enable/disable submit button
     const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = selectedTests.length === 0 && customAmounts.length === 0;
+    submitBtn.disabled = selectedTests.length === 0;
 }
 
 function displaySelectedTests() {
@@ -1239,17 +1263,16 @@ function displaySelectedTests() {
 
 function updatePaymentAmount() {
     const paymentOption = document.querySelector('input[name="payment_option"]:checked').value;
-    const grandTotal = totalAmount + customAmountsTotal;
-    let amountToPay = grandTotal;
+    let amountToPay = totalAmount;
     let remainingAmount = 0;
 
     if (paymentOption === 'half') {
-        amountToPay = Math.round(grandTotal / 2);
-        remainingAmount = grandTotal - amountToPay;
+        amountToPay = Math.round(totalAmount / 2);
+        remainingAmount = totalAmount - amountToPay;
     }
 
     // Update total amount display
-    document.getElementById('total-amount').textContent = `₹${grandTotal}`;
+    document.getElementById('total-amount').textContent = `₹${totalAmount}`;
     document.getElementById('amount-to-pay').textContent = `₹${amountToPay}`;
     document.getElementById('remaining-amount').textContent = `₹${remainingAmount}`;
 }
@@ -1286,100 +1309,23 @@ function addCustomTest() {
     document.getElementById('submit-btn').disabled = false;
 }
 
-// Custom Amount Functions
-function addCustomAmount() {
-    const description = document.getElementById('custom-amount-description').value.trim();
-    const amount = parseFloat(document.getElementById('custom-amount-value').value);
 
-    if (!description || !amount || amount <= 0) {
-        alert('Please enter valid description and amount');
-        return;
-    }
-
-    // Check if description already exists
-    const existingAmount = customAmounts.find(item => item.description === description);
-    if (existingAmount) {
-        alert('This description already exists!');
-        return;
-    }
-
-    // Add to custom amounts
-    customAmounts.push({description: description, amount: amount});
-    customAmountsTotal += amount;
-
-    // Clear inputs
-    document.getElementById('custom-amount-description').value = '';
-    document.getElementById('custom-amount-value').value = '';
-
-    // Update displays
-    updateCustomAmountsDisplay();
-    updateBilling();
-
-    // Enable submit button
-    document.getElementById('submit-btn').disabled = false;
-}
-
-function removeCustomAmount(description) {
-    const amountIndex = customAmounts.findIndex(item => item.description === description);
-    if (amountIndex > -1) {
-        customAmountsTotal -= customAmounts[amountIndex].amount;
-        customAmounts.splice(amountIndex, 1);
-
-        updateCustomAmountsDisplay();
-        updateBilling();
-
-        // Disable submit button if no tests and no custom amounts
-        document.getElementById('submit-btn').disabled = selectedTests.length === 0 && customAmounts.length === 0;
-    }
-}
-
-function updateCustomAmountsDisplay() {
-    const container = document.getElementById('custom-amounts-container');
-    const summary = document.getElementById('custom-amounts-summary');
-    const totalSpan = document.getElementById('custom-amounts-total');
-
-    if (customAmounts.length === 0) {
-        container.innerHTML = '';
-        summary.style.display = 'none';
-        return;
-    }
-
-    let html = '';
-    customAmounts.forEach(item => {
-        html += `
-            <div class="d-flex justify-content-between align-items-center mb-1 p-1 bg-light rounded">
-                <small><strong>${item.description}</strong></small>
-                <div>
-                    <span class="badge bg-info me-1">₹${item.amount}</span>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCustomAmount('${item.description}')" style="padding: 0px 4px; font-size: 10px;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-
-    container.innerHTML = html;
-    totalSpan.textContent = `₹${customAmountsTotal}`;
-    summary.style.display = 'block';
-}
 
 // Form Submission
 document.getElementById('multiStepForm').addEventListener('submit', function(e) {
     e.preventDefault(); // Prevent default form submission
 
-    if (selectedTests.length === 0 && customAmounts.length === 0) {
-        alert('Please select at least one test or add custom amounts');
+    if (selectedTests.length === 0) {
+        alert('Please select at least one test');
         return;
     }
 
     // Collect form data
     const formData = new FormData(this);
 
-    // Add selected tests, custom amounts, and total amount
+    // Add selected tests and total amount
     formData.append('selected_tests', JSON.stringify(selectedTests));
-    formData.append('custom_amounts', JSON.stringify(customAmounts));
-    formData.append('total_amount', totalAmount + customAmountsTotal);
+    formData.append('total_amount', totalAmount);
 
     // Show loading state
     const submitBtn = document.getElementById('submit-btn');
@@ -1464,12 +1410,6 @@ function printInvoice() {
                         <tr>
                             <td style="border: 1px solid #dee2e6; padding: 8px;">${test.name}</td>
                             <td style="border: 1px solid #dee2e6; padding: 8px;">₹${test.price}</td>
-                        </tr>
-                    `).join('')}
-                    ${customAmounts.map(item => `
-                        <tr>
-                            <td style="border: 1px solid #dee2e6; padding: 8px;">${item.description}</td>
-                            <td style="border: 1px solid #dee2e6; padding: 8px;">₹${item.amount}</td>
                         </tr>
                     `).join('')}
                 </tbody>
