@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Overview{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-chart-line me-2"></i>Financial Overview</h2>
+                <div class="btn-group">
+                    <a href="{{ url_for('payment_overview') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-money-bill me-1"></i>Payment Overview
+                    </a>
+                    <a href="{{ url_for('doctors') }}" class="btn btn-outline-success">
+                        <i class="fas fa-user-md me-1"></i>Manage Doctors
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>₹{{ "%.2f"|format(summary_stats.total_revenue) }}</h4>
+                    <p class="mb-0">Total Revenue</p>
+                    <small>{{ summary_stats.total_patients }} patients</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>₹{{ "%.2f"|format(summary_stats.total_collected) }}</h4>
+                    <p class="mb-0">Amount Collected</p>
+                    <small>{{ "%.1f"|format(summary_stats.collection_percentage) }}% collected</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4>₹{{ "%.2f"|format(summary_stats.total_pending) }}</h4>
+                    <p class="mb-0">Pending Collection</p>
+                    <small>{{ summary_stats.patients_with_pending }} patients</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>₹{{ "%.2f"|format(summary_stats.total_doctor_commissions) }}</h4>
+                    <p class="mb-0">Doctor Commissions</p>
+                    <small>{{ doctor_commission_summary|length }} doctors</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Net Revenue Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center">
+                    <h4>₹{{ "%.2f"|format(summary_stats.net_revenue) }}</h4>
+                    <p class="mb-0">Net Revenue (After Commissions)</p>
+                    <small>Total Revenue - Doctor Commissions</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <h4>₹{{ "%.2f"|format(summary_stats.net_collected) }}</h4>
+                    <p class="mb-0">Net Collected (After Commissions)</p>
+                    <small>Amount Collected - Commission Owed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Doctor Commission Summary -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-md me-2"></i>Doctor Commission Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% if doctor_commission_summary %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Doctor</th>
+                                    <th>Patients</th>
+                                    <th>Commission Type</th>
+                                    <th>Total Owed</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doctor_name, commission_data in doctor_commission_summary.items() %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ doctor_name }}</strong>
+                                        <br><small class="text-muted">{{ commission_data.doctor.specialization or 'General' }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ commission_data.patient_count }}</span>
+                                    </td>
+                                    <td>
+                                        {% if commission_data.doctor.commission_type == 'percentage' %}
+                                        <span class="badge bg-success">{{ commission_data.doctor.commission_percentage }}%</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">₹{{ commission_data.doctor.commission_amount }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">₹{{ "%.2f"|format(commission_data.total_commission) }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">Pending</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-dark">
+                                    <th colspan="3">Total Commission Owed:</th>
+                                    <th>₹{{ "%.2f"|format(summary_stats.total_doctor_commissions) }}</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-user-md fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No doctor commissions to display</p>
+                        <small>Assign doctors to patients to track commissions</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Financial Summary -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Patient Financial Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% if patient_financial_data %}
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm">
+                            <thead class="sticky-top bg-light">
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Total</th>
+                                    <th>Paid</th>
+                                    <th>Pending</th>
+                                    <th>Commission</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient_data in patient_financial_data %}
+                                <tr class="{{ 'table-warning' if patient_data.pending_amount > 0 else '' }}">
+                                    <td>
+                                        <strong>{{ patient_data.patient.full_name }}</strong>
+                                        <br><small class="text-muted">{{ patient_data.test_count }} tests</small>
+                                    </td>
+                                    <td>₹{{ "%.0f"|format(patient_data.total_amount) }}</td>
+                                    <td>
+                                        <span class="text-success">₹{{ "%.0f"|format(patient_data.paid_amount) }}</span>
+                                    </td>
+                                    <td>
+                                        {% if patient_data.pending_amount > 0 %}
+                                        <span class="text-warning">₹{{ "%.0f"|format(patient_data.pending_amount) }}</span>
+                                        {% else %}
+                                        <span class="text-muted">₹0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if patient_data.doctor_commission > 0 %}
+                                        <span class="text-info">₹{{ "%.0f"|format(patient_data.doctor_commission) }}</span>
+                                        {% else %}
+                                        <span class="text-muted">₹0</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No patient data to display</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Payments -->
+    {% if recent_payments %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Payments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Patient</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in recent_payments %}
+                                <tr>
+                                    <td>{{ payment.date_paid.strftime('%m/%d/%Y') }}</td>
+                                    <td>{{ payment.patient.full_name }}</td>
+                                    <td><span class="text-success">₹{{ "%.2f"|format(payment.amount) }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ payment.payment_method.title() }}</span></td>
+                                    <td>{{ payment.notes or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -17,10 +17,12 @@ class Patient(db.Model):
     emergency_contact = db.Column(db.String(100), nullable=True)
     hospital_name = db.Column(db.String(100), nullable=True)
     collected_by = db.Column(db.String(100), nullable=True)
+    referring_doctor_id = db.Column(db.Integer, db.ForeignKey('doctor.id'), nullable=True)  # New foreign key
     date_registered = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationship with PatientTest
+    # Relationships
     patient_tests = db.relationship('PatientTest', backref='patient', lazy=True)
+    doctor = db.relationship('Doctor', backref='patients')
     
     def __repr__(self):
         return f'<Patient {self.first_name} {self.last_name}>'
@@ -83,6 +85,56 @@ class SampleCollector(db.Model):
 
     def __repr__(self):
         return f'<SampleCollector {self.name}>'
+
+class Doctor(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    specialization = db.Column(db.String(100), nullable=True)
+    hospital_name = db.Column(db.String(100), nullable=True)
+    phone = db.Column(db.String(15), nullable=True)
+    email = db.Column(db.String(100), nullable=True)
+    commission_percentage = db.Column(db.Float, nullable=True, default=0.0)  # Commission percentage (0-100)
+    commission_amount = db.Column(db.Float, nullable=True, default=0.0)  # Fixed commission amount per test
+    commission_type = db.Column(db.String(20), nullable=False, default='percentage')  # 'percentage' or 'fixed'
+    address = db.Column(db.Text, nullable=True)
+    license_number = db.Column(db.String(50), nullable=True)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+
+    def __repr__(self):
+        return f'<Doctor {self.name}>'
+
+    def calculate_commission(self, test_amount):
+        """Calculate commission based on commission type"""
+        if not self.is_active:
+            return 0.0
+
+        if self.commission_type == 'percentage':
+            return (test_amount * (self.commission_percentage or 0)) / 100
+        else:  # fixed amount
+            return self.commission_amount or 0.0
+
+class DoctorCommission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctor.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+    patient_test_id = db.Column(db.Integer, db.ForeignKey('patient_test.id'), nullable=False)
+    test_amount = db.Column(db.Float, nullable=False)
+    commission_amount = db.Column(db.Float, nullable=False)
+    commission_type = db.Column(db.String(20), nullable=False)  # 'percentage' or 'fixed'
+    commission_rate = db.Column(db.Float, nullable=True)  # Store the rate used for calculation
+    status = db.Column(db.String(20), nullable=False, default='pending')  # 'pending', 'paid', 'cancelled'
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    date_paid = db.Column(db.DateTime, nullable=True)
+    payment_notes = db.Column(db.Text, nullable=True)
+
+    # Relationships
+    doctor = db.relationship('Doctor', backref='commissions')
+    patient = db.relationship('Patient', backref='doctor_commissions')
+    patient_test = db.relationship('PatientTest', backref='doctor_commission')
+
+    def __repr__(self):
+        return f'<DoctorCommission {self.doctor.name} - ₹{self.commission_amount}>'
 
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -46,7 +46,7 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
     app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 
 # Initialize database
-from models import db, Patient, Test, PatientTest, Hospital, SampleCollector, Payment, PatientBill
+from models import db, Patient, Test, PatientTest, Hospital, SampleCollector, Payment, PatientBill, Doctor, DoctorCommission
 db.init_app(app)
 
 # Create tables automatically on app startup (for production deployment)
@@ -81,7 +81,7 @@ with app.app_context():
     init_database()
 
 # Import forms
-from forms import PatientForm, TestForm, PatientTestForm, HospitalForm, SampleCollectorForm, PatientStep1Form, PatientStep2Form, PatientStep3Form, MultipleTestAssignmentForm, PaymentForm, BillForm
+from forms import PatientForm, TestForm, PatientTestForm, HospitalForm, SampleCollectorForm, PatientStep1Form, PatientStep2Form, PatientStep3Form, MultipleTestAssignmentForm, PaymentForm, BillForm, DoctorForm
 
 # Authentication Routes
 @app.route('/login', methods=['GET', 'POST'])
@@ -423,11 +423,69 @@ def update_patient_tests(patient_id):
                 else:
                     patient_bill.bill_status = 'partial'
 
+        # Handle payment from modal
+        payment_option = request.form.get('payment_option')
+        payment_method = request.form.get('payment_method', 'cash')
+        payment_notes = request.form.get('payment_notes', '')
+        custom_amount = request.form.get('custom_amount')
+
+        if payment_option and payment_option != 'no_payment' and new_tests_total_cost > 0:
+            # Calculate payment amount based on option
+            if payment_option == 'full':
+                payment_amount = new_tests_total_cost
+            elif payment_option == 'half':
+                payment_amount = new_tests_total_cost / 2
+            elif payment_option == 'custom' and custom_amount:
+                payment_amount = float(custom_amount)
+            else:
+                payment_amount = 0
+
+            if payment_amount > 0:
+                # Create payment record
+                payment = Payment(
+                    patient_id=patient_id,
+                    amount=payment_amount,
+                    payment_type=payment_option,
+                    payment_method=payment_method,
+                    reference_number='',
+                    notes=payment_notes or f'Payment for test updates and new assignments',
+                    created_by='Admin'
+                )
+                db.session.add(payment)
+
+                # Update patient bill if exists
+                if not patient_bill and new_tests_total_cost > 0:
+                    patient_bill = PatientBill(
+                        patient_id=patient_id,
+                        total_amount=new_tests_total_cost,
+                        paid_amount=payment_amount,
+                        remaining_amount=max(0, new_tests_total_cost - payment_amount),
+                        bill_status='partial' if payment_amount < new_tests_total_cost else 'paid'
+                    )
+                    db.session.add(patient_bill)
+                elif patient_bill:
+                    patient_bill.paid_amount += payment_amount
+                    patient_bill.remaining_amount = max(0, patient_bill.total_amount - patient_bill.paid_amount)
+                    if patient_bill.remaining_amount <= 0:
+                        patient_bill.bill_status = 'paid'
+                    else:
+                        patient_bill.bill_status = 'partial'
+
         db.session.commit()
 
         # Success message with payment info
-        if new_test_ids and collect_payment and advance_amount > 0:
-            flash(f'Successfully updated tests for {patient.full_name} and collected ₹{advance_amount:.2f} advance payment! Remaining: ₹{patient_bill.remaining_amount:.2f}', 'success')
+        payment_amount = 0
+        if payment_option and payment_option != 'no_payment':
+            if payment_option == 'full':
+                payment_amount = new_tests_total_cost
+            elif payment_option == 'half':
+                payment_amount = new_tests_total_cost / 2
+            elif payment_option == 'custom' and custom_amount:
+                payment_amount = float(custom_amount)
+
+        if payment_amount > 0:
+            remaining = patient_bill.remaining_amount if patient_bill else 0
+            flash(f'Successfully updated tests for {patient.full_name} and collected ₹{payment_amount:.2f} payment! Remaining: ₹{remaining:.2f}', 'success')
         elif new_test_ids:
             flash(f'Successfully updated tests for {patient.full_name}! New tests cost: ₹{new_tests_total_cost:.2f}', 'success')
         else:
@@ -1694,6 +1752,159 @@ def add_sample_collector():
             flash('An error occurred while adding the sample collector. Please try again.', 'error')
             app.logger.error(f'Error adding sample collector: {str(e)}')
     return render_template('add_sample_collector.html', form=form)
+
+# Doctor Management Routes
+@app.route('/doctors')
+def doctors():
+    doctors = Doctor.query.all()
+    return render_template('doctors.html', doctors=doctors)
+
+@app.route('/add_doctor', methods=['GET', 'POST'])
+def add_doctor():
+    form = DoctorForm()
+    if form.validate_on_submit():
+        try:
+            # Check for duplicate doctor name
+            existing_doctor = Doctor.query.filter_by(name=form.name.data.strip()).first()
+            if existing_doctor:
+                flash('A doctor with this name already exists.', 'error')
+                return render_template('add_doctor.html', form=form)
+
+            doctor = Doctor(
+                name=form.name.data.strip(),
+                specialization=form.specialization.data.strip() if form.specialization.data else None,
+                hospital_name=form.hospital_name.data.strip() if form.hospital_name.data else None,
+                phone=form.phone.data.strip() if form.phone.data else None,
+                email=form.email.data.strip().lower() if form.email.data else None,
+                license_number=form.license_number.data.strip() if form.license_number.data else None,
+                address=form.address.data.strip() if form.address.data else None,
+                commission_type=form.commission_type.data,
+                commission_percentage=float(form.commission_percentage.data) if form.commission_percentage.data else 0.0,
+                commission_amount=float(form.commission_amount.data) if form.commission_amount.data else 0.0,
+                is_active=form.is_active.data
+            )
+            db.session.add(doctor)
+            db.session.commit()
+            flash(f'Doctor "{doctor.name}" added successfully with commission settings!', 'success')
+            return redirect(url_for('doctors'))
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while adding the doctor. Please try again.', 'error')
+            app.logger.error(f'Error adding doctor: {str(e)}')
+    return render_template('add_doctor.html', form=form)
+
+@app.route('/edit_doctor/<int:id>', methods=['GET', 'POST'])
+def edit_doctor(id):
+    doctor = Doctor.query.get_or_404(id)
+    form = DoctorForm(obj=doctor)
+    if form.validate_on_submit():
+        try:
+            form.populate_obj(doctor)
+            db.session.commit()
+            flash('Doctor information updated successfully!', 'success')
+            return redirect(url_for('doctors'))
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while updating the doctor. Please try again.', 'error')
+            app.logger.error(f'Error updating doctor: {str(e)}')
+    return render_template('edit_doctor.html', form=form, doctor=doctor)
+
+# Financial Overview Route
+@app.route('/financial_overview')
+def financial_overview():
+    """Comprehensive payment overview with financial data and doctor commissions"""
+    try:
+        # Get all patients with their bills and payments
+        patients = Patient.query.all()
+
+        # Calculate total amounts
+        total_revenue = 0
+        total_collected = 0
+        total_pending = 0
+        total_doctor_commissions = 0
+
+        # Doctor commission summary
+        doctor_commission_summary = {}
+
+        # Process each patient
+        patient_financial_data = []
+        for patient in patients:
+            patient_tests = PatientTest.query.filter_by(patient_id=patient.id).all()
+            patient_bill = PatientBill.query.filter_by(patient_id=patient.id).first()
+
+            # Calculate patient totals
+            patient_total = sum(pt.test.cost for pt in patient_tests)
+            patient_paid = patient_bill.paid_amount if patient_bill else 0
+            patient_pending = patient_total - patient_paid
+
+            # Calculate doctor commissions for this patient
+            patient_doctor_commission = 0
+            if patient.referring_doctor_id:
+                doctor = Doctor.query.get(patient.referring_doctor_id)
+                if doctor and doctor.is_active:
+                    for pt in patient_tests:
+                        commission = doctor.calculate_commission(pt.test.cost)
+                        patient_doctor_commission += commission
+
+                        # Add to doctor summary
+                        if doctor.name not in doctor_commission_summary:
+                            doctor_commission_summary[doctor.name] = {
+                                'doctor': doctor,
+                                'total_commission': 0,
+                                'pending_commission': 0,
+                                'paid_commission': 0,
+                                'patient_count': 0
+                            }
+                        doctor_commission_summary[doctor.name]['total_commission'] += commission
+                        doctor_commission_summary[doctor.name]['pending_commission'] += commission  # All pending for now
+                        doctor_commission_summary[doctor.name]['patient_count'] += 1
+
+            patient_financial_data.append({
+                'patient': patient,
+                'total_amount': patient_total,
+                'paid_amount': patient_paid,
+                'pending_amount': patient_pending,
+                'doctor_commission': patient_doctor_commission,
+                'test_count': len(patient_tests),
+                'bill': patient_bill
+            })
+
+            # Add to totals
+            total_revenue += patient_total
+            total_collected += patient_paid
+            total_pending += patient_pending
+            total_doctor_commissions += patient_doctor_commission
+
+        # Calculate net revenue (after doctor commissions)
+        net_revenue = total_revenue - total_doctor_commissions
+        net_collected = total_collected - total_doctor_commissions  # Assuming commissions paid when collected
+
+        # Recent payments
+        recent_payments = Payment.query.order_by(Payment.date_paid.desc()).limit(10).all()
+
+        # Summary statistics
+        summary_stats = {
+            'total_revenue': total_revenue,
+            'total_collected': total_collected,
+            'total_pending': total_pending,
+            'total_doctor_commissions': total_doctor_commissions,
+            'net_revenue': net_revenue,
+            'net_collected': net_collected,
+            'collection_percentage': (total_collected / total_revenue * 100) if total_revenue > 0 else 0,
+            'total_patients': len(patients),
+            'patients_with_pending': len([p for p in patient_financial_data if p['pending_amount'] > 0])
+        }
+
+        return render_template('financial_overview.html',
+                             patient_financial_data=patient_financial_data,
+                             doctor_commission_summary=doctor_commission_summary,
+                             recent_payments=recent_payments,
+                             summary_stats=summary_stats)
+
+    except Exception as e:
+        flash('An error occurred while loading payment overview.', 'error')
+        app.logger.error(f'Error in payment overview: {str(e)}')
+        return redirect(url_for('dashboard'))
 
 def create_tables():
     """Create all database tables including Payment and PatientBill"""
