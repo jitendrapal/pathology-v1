@@ -33,7 +33,10 @@ class Test(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.Text, nullable=True)
-    normal_range = db.Column(db.String(100), nullable=True)
+    normal_range = db.Column(db.String(100), nullable=True)  # Keep for backward compatibility
+    normal_range_min = db.Column(db.Float, nullable=True, default=0.0)  # Minimum normal value
+    normal_range_max = db.Column(db.Float, nullable=True, default=100.0)  # Maximum normal value
+    unit = db.Column(db.String(20), nullable=True, default='')  # Unit of measurement (mg/dL, %, etc.)
     cost = db.Column(db.Float, nullable=False, default=0.0)
     category = db.Column(db.String(50), nullable=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
