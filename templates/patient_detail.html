@@ -53,41 +53,7 @@
     </div>
 </div>
 
-<!-- Test Summary Statistics -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white text-center">
-            <div class="card-body">
-                <h4>{{ patient_tests|length }}</h4>
-                <p class="mb-0">Total Tests</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white text-center">
-            <div class="card-body">
-                <h4>{{ patient_tests|selectattr("status", "equalto", "Pending")|list|length }}</h4>
-                <p class="mb-0">Pending</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white text-center">
-            <div class="card-body">
-                <h4>{{ patient_tests|selectattr("status", "equalto", "Completed")|list|length }}</h4>
-                <p class="mb-0">Completed</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white text-center">
-            <div class="card-body">
-                <h4>₹{{ "%.2f"|format(patient_tests|sum(attribute="test.cost")) }}</h4>
-                <p class="mb-0">Total Cost</p>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- All Patient Tests - Update in One Place -->
 <div class="row">
@@ -107,19 +73,19 @@
                         <i class="fas fa-list me-2"></i>Current Tests ({{ patient_tests|length }})
                     </h6>
 
-                    <!-- Tests Table with Color-Coded Row Format - Compact -->
+                    <!-- Modern Tests Table with Color-Coded Validation -->
                     <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead class="table-dark">
+                        <table class="table modern-table">
+                            <thead>
                                 <tr>
-                                    <th style="width: 20%;">Test Name</th>
+                                    <th style="width: 22%;">Test Name</th>
                                     <th style="width: 12%;">Test Value</th>
-                                    <th style="width: 6%;">Unit</th>
-                                    <th style="width: 12%;">Normal Range</th>
-                                    <th style="width: 10%;">Status</th>
+                                    <th style="width: 8%;">Unit</th>
+                                    <th style="width: 14%;">Normal Range</th>
+                                    <th style="width: 12%;">Status</th>
                                     <th style="width: 20%;">Notes</th>
-                                    <th style="width: 8%;">Date</th>
-                                    <th style="width: 8%;">Cost</th>
+                                    <th style="width: 6%;">Date</th>
+                                    <th style="width: 6%;">Cost</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -127,14 +93,15 @@
                                 <tr class="test-row" data-status="{{ pt.status }}">
                                     <!-- Test Name -->
                                     <td>
-                                        <strong style="font-size: 0.9em;">{{ pt.test.name }}</strong>
+                                        <div class="fw-bold text-dark" style="font-size: 0.9em;">{{ pt.test.name }}</div>
+                                        <small class="text-muted">{{ pt.test.category or 'General' }}</small>
                                         <input type="hidden" name="test_ids[]" value="{{ pt.id }}">
                                     </td>
 
                                     <!-- Test Value Input with Color Validation -->
                                     <td>
                                         <input type="number"
-                                               class="form-control form-control-sm test-result-input"
+                                               class="form-control form-control-sm test-result-input test-input-modern"
                                                name="results[]"
                                                value="{{ pt.results or '' }}"
                                                placeholder="Value"
@@ -143,24 +110,27 @@
                                                data-test-id="{{ pt.id }}"
                                                oninput="validateResult(this)"
                                                step="0.01"
-                                               style="width: 80px;">
+                                               style="width: 85px;">
                                     </td>
 
                                     <!-- Unit -->
-                                    <td>
-                                        <small class="badge bg-info">{{ pt.test.unit or 'units' }}</small>
+                                    <td class="text-center">
+                                        <span class="unit-badge-modern">{{ pt.test.unit or 'units' }}</span>
                                     </td>
 
                                     <!-- Normal Range -->
                                     <td>
-                                        <small class="text-muted">
-                                            {{ pt.test.normal_range_min or 0 }}-{{ pt.test.normal_range_max or 100 }}
-                                        </small>
+                                        <div class="text-center">
+                                            <small class="fw-bold text-primary">
+                                                {{ pt.test.normal_range_min or 0 }} - {{ pt.test.normal_range_max or 100 }}
+                                            </small>
+                                            <br><small class="text-muted">{{ pt.test.unit or 'units' }}</small>
+                                        </div>
                                     </td>
 
                                     <!-- Status -->
                                     <td>
-                                        <select name="statuses[]" class="form-select form-select-sm" style="font-size: 0.8em;">
+                                        <select name="statuses[]" class="form-select form-select-sm status-select-modern">
                                             <option value="Pending" {{ 'selected' if pt.status == 'Pending' }}>Pending</option>
                                             <option value="In Progress" {{ 'selected' if pt.status == 'In Progress' }}>Progress</option>
                                             <option value="Completed" {{ 'selected' if pt.status == 'Completed' }}>Done</option>
@@ -170,25 +140,24 @@
 
                                     <!-- Notes -->
                                     <td>
-                                        <textarea name="notes[]" class="form-control form-control-sm"
+                                        <textarea name="notes[]" class="form-control form-control-sm notes-textarea-modern"
                                                   rows="1"
-                                                  placeholder="Notes..."
-                                                  style="font-size: 0.8em;">{{ pt.notes or '' }}</textarea>
+                                                  placeholder="Add notes...">{{ pt.notes or '' }}</textarea>
                                     </td>
 
                                     <!-- Date -->
-                                    <td>
+                                    <td class="text-center">
                                         <small class="text-muted">
                                             {{ pt.date_ordered.strftime('%m/%d') }}
                                             {% if pt.date_completed %}
-                                            <br><i class="fas fa-check text-success"></i>
+                                            <br><i class="fas fa-check-circle text-success"></i>
                                             {% endif %}
                                         </small>
                                     </td>
 
                                     <!-- Cost -->
-                                    <td>
-                                        <small class="text-success">₹{{ "%.0f"|format(pt.test.cost) }}</small>
+                                    <td class="text-center">
+                                        <span class="fw-bold text-success">₹{{ "%.0f"|format(pt.test.cost) }}</span>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -615,6 +584,83 @@
     .range-info {
         font-size: 0.85em;
         color: #6c757d;
+    }
+
+    /* Modern table styling */
+    .modern-table {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .modern-table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8em;
+        letter-spacing: 0.5px;
+        padding: 15px 8px;
+    }
+
+    .modern-table tbody tr {
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .modern-table tbody td {
+        border: none;
+        border-bottom: 1px solid #e9ecef;
+        padding: 12px 8px;
+        vertical-align: middle;
+    }
+
+    .modern-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .test-input-modern {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .test-input-modern:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .status-select-modern {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background-color: white;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+
+    .notes-textarea-modern {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        resize: vertical;
+        font-size: 0.8em;
+    }
+
+    .unit-badge-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.7em;
     }
 </style>
 
