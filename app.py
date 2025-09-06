@@ -2304,6 +2304,90 @@ def multi_step_registration():
     # GET request - show the form
     return render_template('multi_step_registration.html')
 
+# ================================
+# TEST RESULTS MANAGEMENT ROUTES
+# ================================
+
+@app.route('/test-results-management')
+def test_results_management():
+    """Display all assigned tests for updating status and results"""
+    try:
+        # Get all assigned tests with patient information
+        query = """
+        SELECT
+            pt.id as patient_test_id,
+            p.first_name,
+            p.last_name,
+            p.phone,
+            t.name as test_name,
+            t.normal_range_min,
+            t.normal_range_max,
+            t.unit,
+            pt.results,
+            pt.status,
+            pt.date_ordered,
+            pt.date_completed,
+            pt.notes
+        FROM patient_test pt
+        JOIN patient p ON pt.patient_id = p.id
+        JOIN test t ON pt.test_id = t.id
+        ORDER BY pt.date_ordered DESC, p.last_name, p.first_name
+        """
+
+        cursor = db.cursor()
+        cursor.execute(query)
+        assigned_tests = cursor.fetchall()
+
+        # Convert to list of dictionaries for easier template handling
+        tests_data = []
+        for test in assigned_tests:
+            tests_data.append({
+                'patient_test_id': test[0],
+                'patient_name': f"{test[1]} {test[2]}",
+                'phone': test[3],
+                'test_name': test[4],
+                'normal_range_min': test[5] or 0,
+                'normal_range_max': test[6] or 100,
+                'unit': test[7] or '',
+                'results': test[8] or '',
+                'status': test[9],
+                'date_ordered': test[10],
+                'date_completed': test[11],
+                'notes': test[12] or ''
+            })
+
+        return render_template('test_results_management.html', tests=tests_data)
+
+    except Exception as e:
+        print(f"Error in test results management: {str(e)}")
+        return f"Error loading test results: {str(e)}", 500
+
+@app.route('/update-test-result', methods=['POST'])
+def update_test_result():
+    """Update test result and status"""
+    try:
+        data = request.get_json()
+        patient_test_id = data.get('patient_test_id')
+        result_value = data.get('result_value')
+        status = data.get('status', 'Completed')
+        notes = data.get('notes', '')
+
+        # Update the test result
+        cursor = db.cursor()
+        cursor.execute("""
+            UPDATE patient_test
+            SET results = ?, status = ?, notes = ?, date_completed = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (result_value, status, notes, patient_test_id))
+
+        db.commit()
+
+        return jsonify({'success': True, 'message': 'Test result updated successfully'})
+
+    except Exception as e:
+        print(f"Error updating test result: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
 if __name__ == '__main__':
     create_tables()
 
