@@ -801,24 +801,22 @@ function initializeTestSearch() {
     console.log('Initializing enhanced test search...');
     console.log('Available tests:', availableTests.length);
 
-    // Clear any existing event listeners by cloning the element
-    const newSearchInput = searchInput.cloneNode(true);
-    searchInput.parentNode.replaceChild(newSearchInput, searchInput);
-
-    // Add enhanced search event listener
-    newSearchInput.addEventListener('input', function(e) {
+    // Add enhanced search event listener directly
+    searchInput.addEventListener('input', function(e) {
+        console.log('Input event triggered:', e.target.value);
         performTestSearch(e.target.value);
     });
 
     // Add focus event to show suggestions if there's existing text
-    newSearchInput.addEventListener('focus', function(e) {
+    searchInput.addEventListener('focus', function(e) {
+        console.log('Focus event triggered');
         if (e.target.value.trim().length > 0) {
             performTestSearch(e.target.value);
         }
     });
 
     // Add keyboard navigation
-    newSearchInput.addEventListener('keydown', function(e) {
+    searchInput.addEventListener('keydown', function(e) {
         handleKeyboardNavigation(e, suggestionsDiv);
     });
 
@@ -842,6 +840,7 @@ function performTestSearch(inputValue) {
     const query = inputValue.toLowerCase().trim();
 
     console.log('Searching for:', query);
+    console.log('Available tests count:', availableTests.length);
 
     if (query.length < 1) {
         suggestionsDiv.classList.add('d-none');
