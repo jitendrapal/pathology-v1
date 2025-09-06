@@ -301,28 +301,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Custom Test -->
-                                    <div class="row mt-3">
-                                        <div class="col-12">
-                                            <h6 class="text-muted">Add Custom Test</h6>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <input type="text" class="form-control" id="custom-test-name" placeholder="Enter custom test name">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="input-group">
-                                                        <span class="input-group-text">₹</span>
-                                                        <input type="number" class="form-control" id="custom-test-price" placeholder="Price">
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <button type="button" class="btn btn-success w-100" onclick="addCustomTest()">
-                                                        <i class="fas fa-plus"></i> Add
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+
                                 </div>
                                 
                                 <!-- Billing Summary -->
@@ -370,6 +349,21 @@
                                                 <label class="form-check-label" for="payment-half">
                                                     Half Payment (50%)
                                                 </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="payment_option" value="custom" id="payment-custom">
+                                                <label class="form-check-label" for="payment-custom">
+                                                    Custom Amount
+                                                </label>
+                                            </div>
+
+                                            <!-- Custom Amount Input -->
+                                            <div class="mt-2" id="custom-amount-section" style="display: none;">
+                                                <div class="input-group">
+                                                    <span class="input-group-text">₹</span>
+                                                    <input type="number" class="form-control" id="custom-amount-input" placeholder="Enter custom amount" min="1">
+                                                </div>
+                                                <small class="text-muted">Enter the amount you want to pay now</small>
                                             </div>
                                             
                                             <div class="mt-3">
@@ -1181,6 +1175,12 @@ document.addEventListener('DOMContentLoaded', function() {
         option.addEventListener('change', updatePaymentAmount);
     });
 
+    // Add event listener for custom amount input
+    const customAmountInput = document.getElementById('custom-amount-input');
+    if (customAmountInput) {
+        customAmountInput.addEventListener('input', updatePaymentAmount);
+    }
+
     // Initialize doctor search
     initializeDoctorSearch();
 
@@ -1222,12 +1222,31 @@ function displaySelectedTests() {
 
 function updatePaymentAmount() {
     const paymentOption = document.querySelector('input[name="payment_option"]:checked').value;
+    const customAmountSection = document.getElementById('custom-amount-section');
+    const customAmountInput = document.getElementById('custom-amount-input');
+
     let amountToPay = totalAmount;
     let remainingAmount = 0;
 
     if (paymentOption === 'half') {
         amountToPay = Math.round(totalAmount / 2);
         remainingAmount = totalAmount - amountToPay;
+        customAmountSection.style.display = 'none';
+    } else if (paymentOption === 'custom') {
+        customAmountSection.style.display = 'block';
+        const customAmount = parseInt(customAmountInput.value) || 0;
+        if (customAmount > 0 && customAmount <= totalAmount) {
+            amountToPay = customAmount;
+            remainingAmount = totalAmount - amountToPay;
+        } else {
+            amountToPay = 0;
+            remainingAmount = totalAmount;
+        }
+    } else {
+        // Full payment
+        amountToPay = totalAmount;
+        remainingAmount = 0;
+        customAmountSection.style.display = 'none';
     }
 
     // Update total amount display
@@ -1236,37 +1255,7 @@ function updatePaymentAmount() {
     document.getElementById('remaining-amount').textContent = `₹${remainingAmount}`;
 }
 
-function addCustomTest() {
-    const testName = document.getElementById('custom-test-name').value.trim();
-    const testPrice = parseInt(document.getElementById('custom-test-price').value);
-
-    if (!testName || !testPrice || testPrice <= 0) {
-        alert('Please enter valid test name and price');
-        return;
-    }
-
-    // Check if test is already selected
-    const existingTest = selectedTests.find(test => test.name === testName);
-    if (existingTest) {
-        alert('This test is already selected!');
-        return;
-    }
-
-    // Add to selected tests
-    selectedTests.push({name: testName, price: testPrice});
-    totalAmount += testPrice;
-
-    // Clear inputs
-    document.getElementById('custom-test-name').value = '';
-    document.getElementById('custom-test-price').value = '';
-
-    // Update displays
-    updateSelectedTestsDisplay();
-    updateBilling();
-
-    // Enable submit button
-    document.getElementById('submit-btn').disabled = false;
-}
+// Removed addCustomTest function
 
 
 
