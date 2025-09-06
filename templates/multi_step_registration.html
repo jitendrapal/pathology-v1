@@ -365,8 +365,55 @@
                                                 </div>
                                                 <small class="text-muted">Enter the amount you want to pay now</small>
                                             </div>
-                                            
+
+                                            <!-- Discount Section -->
                                             <div class="mt-3">
+                                                <h6 class="text-info mb-2">Discount</h6>
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="discount_type" value="percentage" id="discount-percentage" checked>
+                                                            <label class="form-check-label" for="discount-percentage">
+                                                                Percentage (%)
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="discount_type" value="amount" id="discount-amount">
+                                                            <label class="form-check-label" for="discount-amount">
+                                                                Fixed Amount (₹)
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mt-2">
+                                                    <div class="input-group">
+                                                        <span class="input-group-text" id="discount-symbol">%</span>
+                                                        <input type="number" class="form-control" id="discount-input" placeholder="Enter discount" min="0" max="100" step="0.01">
+                                                        <button type="button" class="btn btn-outline-secondary" onclick="clearDiscount()">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                    <small class="text-muted" id="discount-help">Enter discount percentage (0-100%)</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Subtotal:</span>
+                                                    <span id="subtotal-amount">₹0</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between text-success">
+                                                    <span>Discount:</span>
+                                                    <span id="discount-amount-display">-₹0</span>
+                                                </div>
+                                                <hr class="my-2">
+                                                <div class="d-flex justify-content-between">
+                                                    <span><strong>Total Amount:</strong></span>
+                                                    <strong id="total-amount">₹0</strong>
+                                                </div>
                                                 <div class="d-flex justify-content-between">
                                                     <span>Amount to Pay:</span>
                                                     <strong id="amount-to-pay">₹0</strong>
@@ -626,7 +673,9 @@
 
 <script>
 let currentStep = 1;
-let totalAmount = 0;
+let subtotalAmount = 0;  // Amount before discount
+let discountAmount = 0;  // Discount amount
+let totalAmount = 0;     // Final amount after discount
 let selectedTests = [];
 
 // Available doctors database for search suggestions
@@ -1181,6 +1230,17 @@ document.addEventListener('DOMContentLoaded', function() {
         customAmountInput.addEventListener('input', updatePaymentAmount);
     }
 
+    // Add event listeners for discount functionality
+    const discountTypeOptions = document.querySelectorAll('input[name="discount_type"]');
+    discountTypeOptions.forEach(option => {
+        option.addEventListener('change', updateDiscountDisplay);
+    });
+
+    const discountInput = document.getElementById('discount-input');
+    if (discountInput) {
+        discountInput.addEventListener('input', updateBilling);
+    }
+
     // Initialize doctor search
     initializeDoctorSearch();
 
@@ -1189,6 +1249,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function updateBilling() {
+    // Calculate subtotal from selected tests
+    subtotalAmount = selectedTests.reduce((sum, test) => sum + test.price, 0);
+
+    // Calculate discount
+    discountAmount = calculateDiscount();
+
+    // Calculate final total after discount
+    totalAmount = subtotalAmount - discountAmount;
+
+    // Update displays
     displaySelectedTests();
     updatePaymentAmount();
 
@@ -1202,6 +1272,9 @@ function displaySelectedTests() {
 
     if (selectedTests.length === 0) {
         container.innerHTML = '<p class="text-muted">No tests selected</p>';
+        // Reset all amounts
+        document.getElementById('subtotal-amount').textContent = '₹0';
+        document.getElementById('discount-amount-display').textContent = '-₹0';
         document.getElementById('total-amount').textContent = '₹0';
         return;
     }
@@ -1217,6 +1290,10 @@ function displaySelectedTests() {
     });
 
     container.innerHTML = html;
+
+    // Update billing breakdown
+    document.getElementById('subtotal-amount').textContent = `₹${subtotalAmount}`;
+    document.getElementById('discount-amount-display').textContent = `-₹${discountAmount}`;
     document.getElementById('total-amount').textContent = `₹${totalAmount}`;
 }
 
@@ -1255,7 +1332,56 @@ function updatePaymentAmount() {
     document.getElementById('remaining-amount').textContent = `₹${remainingAmount}`;
 }
 
-// Removed addCustomTest function
+// Discount calculation functions
+function calculateDiscount() {
+    const discountType = document.querySelector('input[name="discount_type"]:checked').value;
+    const discountInput = document.getElementById('discount-input');
+    const discountValue = parseFloat(discountInput.value) || 0;
+
+    let calculatedDiscount = 0;
+
+    if (discountValue > 0) {
+        if (discountType === 'percentage') {
+            // Percentage discount (0-100%)
+            const percentage = Math.min(discountValue, 100); // Cap at 100%
+            calculatedDiscount = Math.round((subtotalAmount * percentage) / 100);
+        } else {
+            // Fixed amount discount
+            calculatedDiscount = Math.min(discountValue, subtotalAmount); // Can't exceed subtotal
+        }
+    }
+
+    return calculatedDiscount;
+}
+
+function updateDiscountDisplay() {
+    const discountType = document.querySelector('input[name="discount_type"]:checked').value;
+    const discountSymbol = document.getElementById('discount-symbol');
+    const discountHelp = document.getElementById('discount-help');
+    const discountInput = document.getElementById('discount-input');
+
+    if (discountType === 'percentage') {
+        discountSymbol.textContent = '%';
+        discountHelp.textContent = 'Enter discount percentage (0-100%)';
+        discountInput.max = '100';
+        discountInput.placeholder = 'Enter discount %';
+    } else {
+        discountSymbol.textContent = '₹';
+        discountHelp.textContent = 'Enter discount amount in rupees';
+        discountInput.max = subtotalAmount.toString();
+        discountInput.placeholder = 'Enter discount amount';
+    }
+
+    // Recalculate when type changes
+    updateBilling();
+}
+
+function clearDiscount() {
+    document.getElementById('discount-input').value = '';
+    updateBilling();
+}
+
+// Updated billing calculation function
 
 
 
