@@ -90,26 +90,27 @@
                             </div>
                             
                             <div class="col-md-4 mb-3">
-                                {{ form.commission_type.label(class="form-label") }}
-                                {{ form.commission_type(class="form-select", id="commission_type") }}
+                                {{ form.commission_type.label(class="form-label fw-bold text-primary") }}
+                                {{ form.commission_type(class="form-select form-select-lg border-primary", id="commission_type") }}
+                                <small class="text-primary fw-bold">Choose commission structure</small>
                             </div>
                             
                             <div class="col-md-4 mb-3" id="percentage_field">
-                                {{ form.commission_percentage.label(class="form-label") }}
+                                {{ form.commission_percentage.label(class="form-label fw-bold text-success") }}
                                 <div class="input-group">
-                                    {{ form.commission_percentage(class="form-control", placeholder="0.00", step="0.01") }}
-                                    <span class="input-group-text">%</span>
+                                    {{ form.commission_percentage(class="form-control form-control-lg", placeholder="10.00", step="0.01", value="10.00") }}
+                                    <span class="input-group-text bg-success text-white fw-bold">%</span>
                                 </div>
-                                <small class="text-muted">Enter percentage (0-100)</small>
+                                <small class="text-success fw-bold">Enter percentage (0-100) - Example: 10.00</small>
                             </div>
-                            
+
                             <div class="col-md-4 mb-3" id="fixed_field" style="display: none;">
-                                {{ form.commission_amount.label(class="form-label") }}
+                                {{ form.commission_amount.label(class="form-label fw-bold text-warning") }}
                                 <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    {{ form.commission_amount(class="form-control", placeholder="0.00", step="0.01") }}
+                                    <span class="input-group-text bg-warning text-dark fw-bold">₹</span>
+                                    {{ form.commission_amount(class="form-control form-control-lg", placeholder="50.00", step="0.01", value="50.00") }}
                                 </div>
-                                <small class="text-muted">Fixed amount per test</small>
+                                <small class="text-warning fw-bold">Fixed amount per test - Example: ₹50.00</small>
                             </div>
                             
                             <div class="col-12">

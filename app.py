@@ -221,6 +221,9 @@ def register_patient():
     # Populate collected_by dropdown
     collectors = SampleCollector.query.all()
     form.collected_by.choices = [('', 'Select Collector')] + [(c.name, c.name) for c in collectors]
+    # Populate referring doctor dropdown
+    doctors = Doctor.query.filter_by(is_active=True).all()
+    form.referring_doctor.choices = [('', 'Select Referring Doctor')] + [(str(d.id), f"{d.name} - {d.specialization or 'General'}") for d in doctors]
 
     if form.validate_on_submit():
         try:
@@ -242,7 +245,8 @@ def register_patient():
                 medical_history=form.medical_history.data.strip() if form.medical_history.data else None,
                 emergency_contact=form.emergency_contact.data.strip() if form.emergency_contact.data else None,
                 hospital_name=form.hospital_name.data if form.hospital_name.data else None,
-                collected_by=form.collected_by.data if form.collected_by.data else None
+                collected_by=form.collected_by.data if form.collected_by.data else None,
+                referring_doctor_id=int(form.referring_doctor.data) if form.referring_doctor.data else None
             )
             db.session.add(patient)
             db.session.commit()
@@ -264,9 +268,18 @@ def edit_patient(id):
     # Populate collected_by dropdown
     collectors = SampleCollector.query.all()
     form.collected_by.choices = [('', 'Select Collector')] + [(c.name, c.name) for c in collectors]
+    # Populate referring doctor dropdown
+    doctors = Doctor.query.filter_by(is_active=True).all()
+    form.referring_doctor.choices = [('', 'Select Referring Doctor')] + [(str(d.id), f"{d.name} - {d.specialization or 'General'}") for d in doctors]
+
+    # Set current referring doctor if exists
+    if patient.referring_doctor_id:
+        form.referring_doctor.data = str(patient.referring_doctor_id)
 
     if form.validate_on_submit():
         form.populate_obj(patient)
+        # Handle referring doctor separately
+        patient.referring_doctor_id = int(form.referring_doctor.data) if form.referring_doctor.data else None
         db.session.commit()
         flash('Patient information updated successfully!', 'success')
         return redirect(url_for('patients'))
@@ -650,37 +663,121 @@ def quick_update_test(test_id):
 
 @app.route('/payment_overview')
 def payment_overview():
-    """Payment overview dashboard showing pending, paid, and remaining amounts"""
+    """Payment overview dashboard showing pending, paid, and remaining amounts with financial data and doctor commissions"""
     from sqlalchemy.orm import joinedload
     from sqlalchemy import func
 
-    # Get all patient bills with payment statistics
-    patient_bills = PatientBill.query.options(
-        joinedload(PatientBill.patient)
-    ).all()
+    try:
+        # Get all patient bills with payment statistics
+        patient_bills = PatientBill.query.options(
+            joinedload(PatientBill.patient)
+        ).all()
 
-    # Calculate summary statistics
-    total_amount = sum([bill.total_amount for bill in patient_bills])
-    total_paid = sum([bill.paid_amount for bill in patient_bills])
-    total_remaining = sum([bill.remaining_amount for bill in patient_bills])
+        # Calculate summary statistics
+        total_amount = sum([bill.total_amount for bill in patient_bills])
+        total_paid = sum([bill.paid_amount for bill in patient_bills])
+        total_remaining = sum([bill.remaining_amount for bill in patient_bills])
 
-    # Get bills by status
-    pending_bills = [bill for bill in patient_bills if bill.remaining_amount > 0]
-    paid_bills = [bill for bill in patient_bills if bill.remaining_amount <= 0 and bill.paid_amount > 0]
+        # Get bills by status
+        pending_bills = [bill for bill in patient_bills if bill.remaining_amount > 0]
+        paid_bills = [bill for bill in patient_bills if bill.remaining_amount <= 0 and bill.paid_amount > 0]
 
-    # Get recent payments
-    recent_payments = Payment.query.options(
-        joinedload(Payment.patient)
-    ).order_by(Payment.payment_date.desc()).limit(10).all()
+        # Get recent payments
+        recent_payments = Payment.query.options(
+            joinedload(Payment.patient)
+        ).order_by(Payment.payment_date.desc()).limit(10).all()
 
-    return render_template('payment_overview.html',
-                         patient_bills=patient_bills,
-                         pending_bills=pending_bills,
-                         paid_bills=paid_bills,
-                         recent_payments=recent_payments,
-                         total_amount=total_amount,
-                         total_paid=total_paid,
-                         total_remaining=total_remaining)
+        # FINANCIAL OVERVIEW DATA - Doctor Commissions
+        patients = Patient.query.all()
+        total_revenue = 0
+        total_collected = 0
+        total_pending = 0
+        total_doctor_commissions = 0
+        doctor_commission_summary = {}
+
+        # Process each patient for financial data
+        patient_financial_data = []
+        for patient in patients:
+            patient_tests = PatientTest.query.filter_by(patient_id=patient.id).all()
+            patient_bill = PatientBill.query.filter_by(patient_id=patient.id).first()
+
+            # Calculate patient totals
+            patient_total = sum(pt.test.cost for pt in patient_tests)
+            patient_paid = patient_bill.paid_amount if patient_bill else 0
+            patient_pending = patient_total - patient_paid
+
+            # Calculate doctor commissions for this patient
+            patient_doctor_commission = 0
+            if patient.referring_doctor_id:
+                doctor = Doctor.query.get(patient.referring_doctor_id)
+                if doctor and doctor.is_active:
+                    for pt in patient_tests:
+                        commission = doctor.calculate_commission(pt.test.cost)
+                        patient_doctor_commission += commission
+
+                        # Add to doctor summary
+                        if doctor.name not in doctor_commission_summary:
+                            doctor_commission_summary[doctor.name] = {
+                                'doctor': doctor,
+                                'total_commission': 0,
+                                'pending_commission': 0,
+                                'paid_commission': 0,
+                                'patient_count': 0
+                            }
+                        doctor_commission_summary[doctor.name]['total_commission'] += commission
+                        doctor_commission_summary[doctor.name]['pending_commission'] += commission
+                        doctor_commission_summary[doctor.name]['patient_count'] += 1
+
+            patient_financial_data.append({
+                'patient': patient,
+                'total_amount': patient_total,
+                'paid_amount': patient_paid,
+                'pending_amount': patient_pending,
+                'doctor_commission': patient_doctor_commission,
+                'test_count': len(patient_tests),
+                'bill': patient_bill
+            })
+
+            # Add to totals
+            total_revenue += patient_total
+            total_collected += patient_paid
+            total_pending += patient_pending
+            total_doctor_commissions += patient_doctor_commission
+
+        # Calculate net revenue (after doctor commissions)
+        net_revenue = total_revenue - total_doctor_commissions
+        net_collected = total_collected - total_doctor_commissions
+
+        # Summary statistics
+        financial_summary = {
+            'total_revenue': total_revenue,
+            'total_collected': total_collected,
+            'total_pending': total_pending,
+            'total_doctor_commissions': total_doctor_commissions,
+            'net_revenue': net_revenue,
+            'net_collected': net_collected,
+            'collection_percentage': (total_collected / total_revenue * 100) if total_revenue > 0 else 0,
+            'total_patients': len(patients),
+            'patients_with_pending': len([p for p in patient_financial_data if p['pending_amount'] > 0])
+        }
+
+        return render_template('payment_overview.html',
+                             patient_bills=patient_bills,
+                             pending_bills=pending_bills,
+                             paid_bills=paid_bills,
+                             recent_payments=recent_payments,
+                             total_amount=total_amount,
+                             total_paid=total_paid,
+                             total_remaining=total_remaining,
+                             # Financial overview data
+                             patient_financial_data=patient_financial_data,
+                             doctor_commission_summary=doctor_commission_summary,
+                             financial_summary=financial_summary)
+
+    except Exception as e:
+        flash('An error occurred while loading payment overview.', 'error')
+        app.logger.error(f'Error in payment overview: {str(e)}')
+        return redirect(url_for('dashboard'))
 
 # Payment Management Routes
 @app.route('/payments')
@@ -904,12 +1001,39 @@ def print_test_report(test_id):
     # Get payment history
     payments = Payment.query.filter_by(patient_id=patient_test.patient_id).order_by(Payment.payment_date.desc()).all()
 
-    return render_template('reports/test_report.html',
+    # Use simplified template by default
+    from datetime import datetime
+    return render_template('reports/simple_test_report.html',
                          patient_test=patient_test,
                          patient=patient_test.patient,
                          all_completed_tests=all_completed_tests,
-                         patient_bill=patient_bill,
-                         payments=payments)
+                         current_time=datetime.now())
+
+@app.route('/print_simple_test_report/<int:test_id>')
+def print_simple_test_report(test_id):
+    """Print simplified test report with only essential information"""
+    patient_test = PatientTest.query.get_or_404(test_id)
+
+    # Check if test is completed
+    if patient_test.status != 'Completed':
+        flash('Test must be completed before printing report.', 'error')
+        return redirect(url_for('edit_patient_test', id=test_id))
+
+    # Get all completed tests for this patient
+    from sqlalchemy.orm import joinedload
+    all_completed_tests = PatientTest.query.options(
+        joinedload(PatientTest.test)
+    ).filter_by(
+        patient_id=patient_test.patient_id,
+        status='Completed'
+    ).order_by(PatientTest.date_completed.desc()).all()
+
+    from datetime import datetime
+    return render_template('reports/simple_test_report.html',
+                         patient_test=patient_test,
+                         patient=patient_test.patient,
+                         all_completed_tests=all_completed_tests,
+                         current_time=datetime.now())
 
 @app.route('/print_bill/<int:patient_id>')
 def print_bill(patient_id):
@@ -2396,6 +2520,13 @@ def multi_step_registration():
                 else:
                     age = 0
 
+                # Find referring doctor by name
+                referring_doctor_id = None
+                if patient_data.get('referring_doctor'):
+                    referring_doctor = Doctor.query.filter_by(name=patient_data['referring_doctor'], is_active=True).first()
+                    if referring_doctor:
+                        referring_doctor_id = referring_doctor.id
+
                 new_patient = Patient(
                     title=patient_data.get('title', 'Mr.'),
                     first_name=patient_data['first_name'],
@@ -2408,6 +2539,7 @@ def multi_step_registration():
                     medical_history=patient_data.get('medical_history', ''),
                     emergency_contact=patient_data.get('emergency_contact', ''),
                     collected_by=collection_data.get('collected_by', ''),
+                    referring_doctor_id=referring_doctor_id,
                     date_registered=datetime.now()
                 )
 
@@ -2513,7 +2645,9 @@ def multi_step_registration():
             })
 
     # GET request - show the form
-    return render_template('multi_step_registration.html')
+    # Get doctors for autocomplete
+    doctors = Doctor.query.filter_by(is_active=True).all()
+    return render_template('multi_step_registration.html', doctors=doctors)
 
 # ================================
 # TEST RESULTS MANAGEMENT ROUTES

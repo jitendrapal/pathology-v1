@@ -193,7 +193,7 @@
                 <div class="row mt-3">
                     <div class="col-12">
                         <small class="text-muted">
-                            <i class="fas fa-calendar me-1"></i>Added on: {{ doctor.date_created.strftime('%B %d, %Y') }}
+                            <i class="fas fa-calendar me-1"></i>Added on: {{ doctor.date_created.strftime('%B %d, %Y') if doctor.date_created else 'Unknown' }}
                         </small>
                     </div>
                 </div>

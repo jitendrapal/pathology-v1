@@ -151,7 +151,23 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <!-- Placeholder for future fields -->
+                            <label for="{{ form.referring_doctor.id }}" class="form-label">
+                                <i class="fas fa-user-md me-2 text-primary"></i>{{ form.referring_doctor.label.text }}
+                                <small class="text-muted">(Optional)</small>
+                            </label>
+                            {{ form.referring_doctor(class="form-select") }}
+                            {% if form.referring_doctor.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.referring_doctor.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <a href="{{ url_for('add_doctor') }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-plus me-1"></i>Add New Doctor
+                                </a>
+                            </div>
                         </div>
                     </div>
 

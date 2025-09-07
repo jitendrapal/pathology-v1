@@ -194,7 +194,7 @@
                         <a href="{{ url_for('payment_overview') }}" class="btn btn-warning w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
                             <i class="fas fa-chart-pie fa-2x mb-2"></i>
                             <span class="h6 mb-1">Payment Overview</span>
-                            <small class="text-light">Pending, Paid, Remaining</small>
+                            <small class="text-light">Pending, Paid, Doctor Commissions</small>
                         </a>
                     </div>
 
@@ -214,10 +214,24 @@
                         </a>
                     </div>
                     <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('financial_overview') }}" class="btn btn-gradient w-100 d-flex flex-column justify-content-center" style="min-height: 80px; background: linear-gradient(135deg, #ffc107, #fd7e14); border: none;">
+                            <i class="fas fa-chart-line fa-2x mb-2 text-white"></i>
+                            <span class="h6 mb-1 text-white">Financial Overview</span>
+                            <small class="text-white">Revenue, Commissions, Analytics</small>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <a href="{{ url_for('database_viewer') }}" class="btn btn-dark w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
                             <i class="fas fa-database fa-2x mb-2"></i>
                             <span class="h6 mb-1">Database Viewer</span>
                             <small class="text-light">View & export data</small>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('doctors') }}" class="btn btn-purple w-100 d-flex flex-column justify-content-center" style="min-height: 80px; background: linear-gradient(135deg, #6f42c1, #e83e8c); border: none;">
+                            <i class="fas fa-user-md fa-2x mb-2 text-white"></i>
+                            <span class="h6 mb-1 text-white">Doctor Management</span>
+                            <small class="text-white">Add, Edit, Commission Setup</small>
                         </a>
                     </div>
                 </div>
