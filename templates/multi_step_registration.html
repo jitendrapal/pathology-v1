@@ -680,16 +680,20 @@ let selectedTests = [];
 
 // Available doctors database for search suggestions
 const availableDoctors = [
-    {name: "Dr. Rajesh Kumar", specialization: "Cardiologist", hospital: "City Hospital"},
-    {name: "Dr. Priya Sharma", specialization: "General Physician", hospital: "General Hospital"},
-    {name: "Dr. Amit Singh", specialization: "Orthopedic", hospital: "Bone Care Center"},
-    {name: "Dr. Sunita Patel", specialization: "Gynecologist", hospital: "Women's Hospital"},
-    {name: "Dr. Vikram Gupta", specialization: "Neurologist", hospital: "Neuro Care Center"},
-    {name: "Dr. Meera Joshi", specialization: "Pediatrician", hospital: "Children's Hospital"},
-    {name: "Dr. Ravi Verma", specialization: "Dermatologist", hospital: "Skin Care Clinic"},
-    {name: "Dr. Kavita Agarwal", specialization: "Endocrinologist", hospital: "Diabetes Center"},
-    {name: "Dr. Suresh Reddy", specialization: "Gastroenterologist", hospital: "Digestive Care"},
-    {name: "Dr. Anita Malhotra", specialization: "Ophthalmologist", hospital: "Eye Care Center"}
+    {% if doctors %}
+        {% for doctor in doctors %}
+        {
+            id: {{ doctor.id }},
+            name: "{{ doctor.name }}",
+            specialization: "{{ doctor.specialization or 'General' }}",
+            hospital: "{{ doctor.hospital_name or 'Not specified' }}",
+            commission_type: "{{ doctor.commission_type }}",
+            commission_rate: "{{ doctor.commission_percentage if doctor.commission_type == 'percentage' else doctor.commission_amount }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    {% else %}
+        {name: "No doctors available", specialization: "", hospital: ""}
+    {% endif %}
 ];
 
 // Available tests database for search suggestions

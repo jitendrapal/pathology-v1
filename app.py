@@ -221,6 +221,9 @@ def register_patient():
     # Populate collected_by dropdown
     collectors = SampleCollector.query.all()
     form.collected_by.choices = [('', 'Select Collector')] + [(c.name, c.name) for c in collectors]
+    # Populate referring doctor dropdown
+    doctors = Doctor.query.filter_by(is_active=True).all()
+    form.referring_doctor.choices = [('', 'Select Referring Doctor')] + [(str(d.id), f"{d.name} - {d.specialization or 'General'}") for d in doctors]
 
     if form.validate_on_submit():
         try:
@@ -242,7 +245,8 @@ def register_patient():
                 medical_history=form.medical_history.data.strip() if form.medical_history.data else None,
                 emergency_contact=form.emergency_contact.data.strip() if form.emergency_contact.data else None,
                 hospital_name=form.hospital_name.data if form.hospital_name.data else None,
-                collected_by=form.collected_by.data if form.collected_by.data else None
+                collected_by=form.collected_by.data if form.collected_by.data else None,
+                referring_doctor_id=int(form.referring_doctor.data) if form.referring_doctor.data else None
             )
             db.session.add(patient)
             db.session.commit()
@@ -264,9 +268,18 @@ def edit_patient(id):
     # Populate collected_by dropdown
     collectors = SampleCollector.query.all()
     form.collected_by.choices = [('', 'Select Collector')] + [(c.name, c.name) for c in collectors]
+    # Populate referring doctor dropdown
+    doctors = Doctor.query.filter_by(is_active=True).all()
+    form.referring_doctor.choices = [('', 'Select Referring Doctor')] + [(str(d.id), f"{d.name} - {d.specialization or 'General'}") for d in doctors]
+
+    # Set current referring doctor if exists
+    if patient.referring_doctor_id:
+        form.referring_doctor.data = str(patient.referring_doctor_id)
 
     if form.validate_on_submit():
         form.populate_obj(patient)
+        # Handle referring doctor separately
+        patient.referring_doctor_id = int(form.referring_doctor.data) if form.referring_doctor.data else None
         db.session.commit()
         flash('Patient information updated successfully!', 'success')
         return redirect(url_for('patients'))
@@ -2480,6 +2493,13 @@ def multi_step_registration():
                 else:
                     age = 0
 
+                # Find referring doctor by name
+                referring_doctor_id = None
+                if patient_data.get('referring_doctor'):
+                    referring_doctor = Doctor.query.filter_by(name=patient_data['referring_doctor'], is_active=True).first()
+                    if referring_doctor:
+                        referring_doctor_id = referring_doctor.id
+
                 new_patient = Patient(
                     title=patient_data.get('title', 'Mr.'),
                     first_name=patient_data['first_name'],
@@ -2492,6 +2512,7 @@ def multi_step_registration():
                     medical_history=patient_data.get('medical_history', ''),
                     emergency_contact=patient_data.get('emergency_contact', ''),
                     collected_by=collection_data.get('collected_by', ''),
+                    referring_doctor_id=referring_doctor_id,
                     date_registered=datetime.now()
                 )
 
@@ -2597,7 +2618,9 @@ def multi_step_registration():
             })
 
     # GET request - show the form
-    return render_template('multi_step_registration.html')
+    # Get doctors for autocomplete
+    doctors = Doctor.query.filter_by(is_active=True).all()
+    return render_template('multi_step_registration.html', doctors=doctors)
 
 # ================================
 # TEST RESULTS MANAGEMENT ROUTES

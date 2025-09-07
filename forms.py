@@ -34,6 +34,7 @@ class PatientForm(FlaskForm):
     emergency_contact = StringField('Emergency Contact', validators=[Optional(), Length(max=100)])
     hospital_name = SelectField('Hospital', choices=[], validators=[Optional()])
     collected_by = SelectField('Sample Collected By', choices=[], validators=[Optional()])
+    referring_doctor = SelectField('Referring Doctor', choices=[], validators=[Optional()])
     submit = SubmitField('Register Patient')
 
     def validate_phone(self, phone):
