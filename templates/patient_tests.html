@@ -110,41 +110,7 @@
     </div>
 </div>
 
-<!-- Summary Statistics -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body text-center">
-                <h4>{{ patient_tests|length }}</h4>
-                <p class="mb-0">Total Orders</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body text-center">
-                <h4>{{ patient_tests|selectattr("status", "equalto", "Pending")|list|length }}</h4>
-                <p class="mb-0">Pending</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <h4>{{ patient_tests|selectattr("status", "equalto", "Completed")|list|length }}</h4>
-                <p class="mb-0">Completed</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body text-center">
-                <h4>${{ "%.2f"|format(patient_tests|sum(attribute="test.cost")) }}</h4>
-                <p class="mb-0">Total Value</p>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Test Orders Table -->
 <div class="row">

@@ -21,54 +21,7 @@
     </div>
 </div>
 
-<!-- Summary Statistics -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4>{{ total_pending_tests }}</h4>
-                        <p class="mb-0">Tests Pending Results</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-hourglass-half fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4>₹{{ "%.2f"|format(total_pending_amount) }}</h4>
-                        <p class="mb-0">Pending Payments</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-rupee-sign fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4>{{ total_completed_today }}</h4>
-                        <p class="mb-0">Completed Today</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-check-circle fa-2x"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Tabs for different sections -->
 <ul class="nav nav-tabs" id="resultsTabs" role="tablist">
