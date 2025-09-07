@@ -650,37 +650,121 @@ def quick_update_test(test_id):
 
 @app.route('/payment_overview')
 def payment_overview():
-    """Payment overview dashboard showing pending, paid, and remaining amounts"""
+    """Payment overview dashboard showing pending, paid, and remaining amounts with financial data and doctor commissions"""
     from sqlalchemy.orm import joinedload
     from sqlalchemy import func
 
-    # Get all patient bills with payment statistics
-    patient_bills = PatientBill.query.options(
-        joinedload(PatientBill.patient)
-    ).all()
+    try:
+        # Get all patient bills with payment statistics
+        patient_bills = PatientBill.query.options(
+            joinedload(PatientBill.patient)
+        ).all()
 
-    # Calculate summary statistics
-    total_amount = sum([bill.total_amount for bill in patient_bills])
-    total_paid = sum([bill.paid_amount for bill in patient_bills])
-    total_remaining = sum([bill.remaining_amount for bill in patient_bills])
+        # Calculate summary statistics
+        total_amount = sum([bill.total_amount for bill in patient_bills])
+        total_paid = sum([bill.paid_amount for bill in patient_bills])
+        total_remaining = sum([bill.remaining_amount for bill in patient_bills])
 
-    # Get bills by status
-    pending_bills = [bill for bill in patient_bills if bill.remaining_amount > 0]
-    paid_bills = [bill for bill in patient_bills if bill.remaining_amount <= 0 and bill.paid_amount > 0]
+        # Get bills by status
+        pending_bills = [bill for bill in patient_bills if bill.remaining_amount > 0]
+        paid_bills = [bill for bill in patient_bills if bill.remaining_amount <= 0 and bill.paid_amount > 0]
 
-    # Get recent payments
-    recent_payments = Payment.query.options(
-        joinedload(Payment.patient)
-    ).order_by(Payment.payment_date.desc()).limit(10).all()
+        # Get recent payments
+        recent_payments = Payment.query.options(
+            joinedload(Payment.patient)
+        ).order_by(Payment.payment_date.desc()).limit(10).all()
 
-    return render_template('payment_overview.html',
-                         patient_bills=patient_bills,
-                         pending_bills=pending_bills,
-                         paid_bills=paid_bills,
-                         recent_payments=recent_payments,
-                         total_amount=total_amount,
-                         total_paid=total_paid,
-                         total_remaining=total_remaining)
+        # FINANCIAL OVERVIEW DATA - Doctor Commissions
+        patients = Patient.query.all()
+        total_revenue = 0
+        total_collected = 0
+        total_pending = 0
+        total_doctor_commissions = 0
+        doctor_commission_summary = {}
+
+        # Process each patient for financial data
+        patient_financial_data = []
+        for patient in patients:
+            patient_tests = PatientTest.query.filter_by(patient_id=patient.id).all()
+            patient_bill = PatientBill.query.filter_by(patient_id=patient.id).first()
+
+            # Calculate patient totals
+            patient_total = sum(pt.test.cost for pt in patient_tests)
+            patient_paid = patient_bill.paid_amount if patient_bill else 0
+            patient_pending = patient_total - patient_paid
+
+            # Calculate doctor commissions for this patient
+            patient_doctor_commission = 0
+            if patient.referring_doctor_id:
+                doctor = Doctor.query.get(patient.referring_doctor_id)
+                if doctor and doctor.is_active:
+                    for pt in patient_tests:
+                        commission = doctor.calculate_commission(pt.test.cost)
+                        patient_doctor_commission += commission
+
+                        # Add to doctor summary
+                        if doctor.name not in doctor_commission_summary:
+                            doctor_commission_summary[doctor.name] = {
+                                'doctor': doctor,
+                                'total_commission': 0,
+                                'pending_commission': 0,
+                                'paid_commission': 0,
+                                'patient_count': 0
+                            }
+                        doctor_commission_summary[doctor.name]['total_commission'] += commission
+                        doctor_commission_summary[doctor.name]['pending_commission'] += commission
+                        doctor_commission_summary[doctor.name]['patient_count'] += 1
+
+            patient_financial_data.append({
+                'patient': patient,
+                'total_amount': patient_total,
+                'paid_amount': patient_paid,
+                'pending_amount': patient_pending,
+                'doctor_commission': patient_doctor_commission,
+                'test_count': len(patient_tests),
+                'bill': patient_bill
+            })
+
+            # Add to totals
+            total_revenue += patient_total
+            total_collected += patient_paid
+            total_pending += patient_pending
+            total_doctor_commissions += patient_doctor_commission
+
+        # Calculate net revenue (after doctor commissions)
+        net_revenue = total_revenue - total_doctor_commissions
+        net_collected = total_collected - total_doctor_commissions
+
+        # Summary statistics
+        financial_summary = {
+            'total_revenue': total_revenue,
+            'total_collected': total_collected,
+            'total_pending': total_pending,
+            'total_doctor_commissions': total_doctor_commissions,
+            'net_revenue': net_revenue,
+            'net_collected': net_collected,
+            'collection_percentage': (total_collected / total_revenue * 100) if total_revenue > 0 else 0,
+            'total_patients': len(patients),
+            'patients_with_pending': len([p for p in patient_financial_data if p['pending_amount'] > 0])
+        }
+
+        return render_template('payment_overview.html',
+                             patient_bills=patient_bills,
+                             pending_bills=pending_bills,
+                             paid_bills=paid_bills,
+                             recent_payments=recent_payments,
+                             total_amount=total_amount,
+                             total_paid=total_paid,
+                             total_remaining=total_remaining,
+                             # Financial overview data
+                             patient_financial_data=patient_financial_data,
+                             doctor_commission_summary=doctor_commission_summary,
+                             financial_summary=financial_summary)
+
+    except Exception as e:
+        flash('An error occurred while loading payment overview.', 'error')
+        app.logger.error(f'Error in payment overview: {str(e)}')
+        return redirect(url_for('dashboard'))
 
 # Payment Management Routes
 @app.route('/payments')
