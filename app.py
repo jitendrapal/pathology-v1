@@ -1001,12 +1001,39 @@ def print_test_report(test_id):
     # Get payment history
     payments = Payment.query.filter_by(patient_id=patient_test.patient_id).order_by(Payment.payment_date.desc()).all()
 
-    return render_template('reports/test_report.html',
+    # Use simplified template by default
+    from datetime import datetime
+    return render_template('reports/simple_test_report.html',
                          patient_test=patient_test,
                          patient=patient_test.patient,
                          all_completed_tests=all_completed_tests,
-                         patient_bill=patient_bill,
-                         payments=payments)
+                         current_time=datetime.now())
+
+@app.route('/print_simple_test_report/<int:test_id>')
+def print_simple_test_report(test_id):
+    """Print simplified test report with only essential information"""
+    patient_test = PatientTest.query.get_or_404(test_id)
+
+    # Check if test is completed
+    if patient_test.status != 'Completed':
+        flash('Test must be completed before printing report.', 'error')
+        return redirect(url_for('edit_patient_test', id=test_id))
+
+    # Get all completed tests for this patient
+    from sqlalchemy.orm import joinedload
+    all_completed_tests = PatientTest.query.options(
+        joinedload(PatientTest.test)
+    ).filter_by(
+        patient_id=patient_test.patient_id,
+        status='Completed'
+    ).order_by(PatientTest.date_completed.desc()).all()
+
+    from datetime import datetime
+    return render_template('reports/simple_test_report.html',
+                         patient_test=patient_test,
+                         patient=patient_test.patient,
+                         all_completed_tests=all_completed_tests,
+                         current_time=datetime.now())
 
 @app.route('/print_bill/<int:patient_id>')
 def print_bill(patient_id):
