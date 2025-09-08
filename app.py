@@ -225,28 +225,34 @@ def register_patient():
     doctors = Doctor.query.filter_by(is_active=True).all()
     form.referring_doctor.choices = [('', 'Select Referring Doctor')] + [(str(d.id), f"{d.name} - {d.specialization or 'General'}") for d in doctors]
 
-    if form.validate_on_submit():
+    if request.method == 'POST':
         try:
+            # Handle age from dropdowns
+            age_years = int(request.form.get('age_years', 0))
+            age_months = int(request.form.get('age_months', 0))
+            age = age_years + round(age_months / 12.0)
+
             # Check for duplicate phone number
-            existing_patient = Patient.query.filter_by(phone=form.phone.data).first()
+            phone = request.form.get('phone')
+            existing_patient = Patient.query.filter_by(phone=phone).first()
             if existing_patient:
                 flash('A patient with this phone number already exists.', 'error')
                 return render_template('register_patient.html', form=form)
 
             patient = Patient(
-                title=form.title.data,
-                first_name=form.first_name.data.strip().title(),
-                last_name=form.last_name.data.strip().title(),
-                age=form.age.data,
-                gender=form.gender.data,
-                phone=form.phone.data.strip(),
-                email=form.email.data.strip().lower() if form.email.data else None,
-                address=form.address.data.strip(),
-                medical_history=form.medical_history.data.strip() if form.medical_history.data else None,
-                emergency_contact=form.emergency_contact.data.strip() if form.emergency_contact.data else None,
-                hospital_name=form.hospital_name.data if form.hospital_name.data else None,
-                collected_by=form.collected_by.data if form.collected_by.data else None,
-                referring_doctor_id=int(form.referring_doctor.data) if form.referring_doctor.data else None
+                title=request.form.get('title'),
+                first_name=request.form.get('first_name').strip().title(),
+                last_name=request.form.get('last_name').strip().title(),
+                age=age,
+                gender=request.form.get('gender'),
+                phone=phone.strip(),
+                email=request.form.get('email', '').strip().lower() if request.form.get('email') else None,
+                address=request.form.get('address', '').strip(),
+                medical_history=request.form.get('medical_history', '').strip() if request.form.get('medical_history') else None,
+                emergency_contact=request.form.get('emergency_contact', '').strip() if request.form.get('emergency_contact') else None,
+                hospital_name=request.form.get('hospital_name') if request.form.get('hospital_name') else None,
+                collected_by=request.form.get('collected_by') if request.form.get('collected_by') else None,
+                referring_doctor_id=int(request.form.get('referring_doctor')) if request.form.get('referring_doctor') else None
             )
             db.session.add(patient)
             db.session.commit()
@@ -276,10 +282,27 @@ def edit_patient(id):
     if patient.referring_doctor_id:
         form.referring_doctor.data = str(patient.referring_doctor_id)
 
-    if form.validate_on_submit():
-        form.populate_obj(patient)
-        # Handle referring doctor separately
-        patient.referring_doctor_id = int(form.referring_doctor.data) if form.referring_doctor.data else None
+    if request.method == 'POST':
+        # Handle age from dropdowns
+        age_years = int(request.form.get('age_years', 0))
+        age_months = int(request.form.get('age_months', 0))
+        age = age_years + round(age_months / 12.0)
+
+        # Update patient fields
+        patient.title = request.form.get('title')
+        patient.first_name = request.form.get('first_name').strip().title()
+        patient.last_name = request.form.get('last_name').strip().title()
+        patient.age = age
+        patient.gender = request.form.get('gender')
+        patient.phone = request.form.get('phone').strip()
+        patient.email = request.form.get('email', '').strip().lower() if request.form.get('email') else None
+        patient.address = request.form.get('address', '').strip()
+        patient.medical_history = request.form.get('medical_history', '').strip() if request.form.get('medical_history') else None
+        patient.emergency_contact = request.form.get('emergency_contact', '').strip() if request.form.get('emergency_contact') else None
+        patient.hospital_name = request.form.get('hospital_name') if request.form.get('hospital_name') else None
+        patient.collected_by = request.form.get('collected_by') if request.form.get('collected_by') else None
+        patient.referring_doctor_id = int(request.form.get('referring_doctor')) if request.form.get('referring_doctor') else None
+
         db.session.commit()
         flash('Patient information updated successfully!', 'success')
         return redirect(url_for('patients'))
@@ -2475,7 +2498,8 @@ def multi_step_registration():
                 'title': request.form.get('title'),
                 'first_name': request.form.get('first_name'),
                 'last_name': request.form.get('last_name'),
-                'date_of_birth': request.form.get('date_of_birth'),
+                'age_years': request.form.get('age_years'),
+                'age_months': request.form.get('age_months', '0'),
                 'gender': request.form.get('gender'),
                 'phone': request.form.get('phone'),
                 'email': request.form.get('email'),
@@ -2510,15 +2534,14 @@ def multi_step_registration():
 
             try:
                 # 1. Create patient using SQLAlchemy model
-                # Calculate age from date of birth
-                from datetime import datetime
-                if patient_data['date_of_birth']:
-                    birth_date = datetime.strptime(patient_data['date_of_birth'], '%Y-%m-%d')
-                    age = datetime.now().year - birth_date.year
-                    if datetime.now().month < birth_date.month or (datetime.now().month == birth_date.month and datetime.now().day < birth_date.day):
-                        age -= 1
-                else:
-                    age = 0
+                # Calculate age from dropdown selections
+                age_years = int(patient_data.get('age_years', 0))
+                age_months = int(patient_data.get('age_months', 0))
+
+                # Convert to total age in years (with decimal for months)
+                age = age_years + (age_months / 12.0)
+                # Round to nearest integer for storage
+                age = round(age)
 
                 # Find referring doctor by name
                 referring_doctor_id = None
@@ -2615,7 +2638,8 @@ def multi_step_registration():
                         'first_name': patient_data['first_name'],
                         'last_name': patient_data['last_name'],
                         'phone': patient_data['phone'],
-                        'date_of_birth': patient_data['date_of_birth'],
+                        'age_years': patient_data['age_years'],
+                        'age_months': patient_data['age_months'],
                         'gender': patient_data['gender'],
                         'barcode': patient_data.get('barcode', ''),
                         'referring_doctor': patient_data.get('referring_doctor', ''),
