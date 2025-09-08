@@ -59,37 +59,26 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label">Date of Birth *</label>
+                                        <label class="form-label">Age *</label>
                                         <div class="row">
-                                            <div class="col-4">
-                                                <select class="form-select" name="birth_day" required>
-                                                    <option value="">Day</option>
+                                            <div class="col-6">
+                                                <select class="form-select" name="age_years" required>
+                                                    <option value="">Years</option>
+                                                    {% for year in range(0, 101) %}
+                                                    <option value="{{ year }}">{{ year }} years</option>
+                                                    {% endfor %}
                                                 </select>
                                             </div>
-                                            <div class="col-4">
-                                                <select class="form-select" name="birth_month" required>
-                                                    <option value="">Month</option>
-                                                    <option value="01">January</option>
-                                                    <option value="02">February</option>
-                                                    <option value="03">March</option>
-                                                    <option value="04">April</option>
-                                                    <option value="05">May</option>
-                                                    <option value="06">June</option>
-                                                    <option value="07">July</option>
-                                                    <option value="08">August</option>
-                                                    <option value="09">September</option>
-                                                    <option value="10">October</option>
-                                                    <option value="11">November</option>
-                                                    <option value="12">December</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-4">
-                                                <select class="form-select" name="birth_year" required>
-                                                    <option value="">Year</option>
+                                            <div class="col-6">
+                                                <select class="form-select" name="age_months">
+                                                    <option value="0">0 months</option>
+                                                    {% for month in range(1, 12) %}
+                                                    <option value="{{ month }}">{{ month }} months</option>
+                                                    {% endfor %}
                                                 </select>
                                             </div>
                                         </div>
-                                        <input type="hidden" name="date_of_birth" id="combined_date_of_birth">
+                                        <small class="form-text text-muted">Select years and additional months</small>
                                     </div>
 
                                     <div class="mb-3">
@@ -1118,20 +1107,16 @@ function validateStep1() {
         }
     });
 
-    // Validate date of birth dropdowns
-    const dayField = document.querySelector('[name="birth_day"]');
-    const monthField = document.querySelector('[name="birth_month"]');
-    const yearField = document.querySelector('[name="birth_year"]');
+    // Validate age dropdowns
+    const ageYearsField = document.querySelector('[name="age_years"]');
+    const ageMonthsField = document.querySelector('[name="age_months"]');
 
-    if (!dayField.value || !monthField.value || !yearField.value) {
-        dayField.classList.add('is-invalid');
-        monthField.classList.add('is-invalid');
-        yearField.classList.add('is-invalid');
+    if (!ageYearsField.value) {
+        ageYearsField.classList.add('is-invalid');
         isValid = false;
     } else {
-        dayField.classList.remove('is-invalid');
-        monthField.classList.remove('is-invalid');
-        yearField.classList.remove('is-invalid');
+        ageYearsField.classList.remove('is-invalid');
+        ageMonthsField.classList.remove('is-invalid');
     }
 
     // Validate gender radio buttons
@@ -1164,61 +1149,16 @@ function validateStep1() {
     return isValid;
 }
 
-// Initialize date dropdowns
-function initializeDateDropdowns() {
-    // Populate days (1-31)
-    const daySelect = document.querySelector('[name="birth_day"]');
-    if (daySelect) {
-        for (let i = 1; i <= 31; i++) {
-            const option = document.createElement('option');
-            option.value = i.toString().padStart(2, '0');
-            option.textContent = i;
-            daySelect.appendChild(option);
-        }
-    }
-
-    // Populate years (current year - 100 to current year)
-    const yearSelect = document.querySelector('[name="birth_year"]');
-    if (yearSelect) {
-        const currentYear = new Date().getFullYear();
-        for (let i = currentYear; i >= currentYear - 100; i--) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = i;
-            yearSelect.appendChild(option);
-        }
-    }
-
-    // Add event listeners to combine date
-    const dayField = document.querySelector('[name="birth_day"]');
-    const monthField = document.querySelector('[name="birth_month"]');
-    const yearField = document.querySelector('[name="birth_year"]');
-    const hiddenField = document.getElementById('combined_date_of_birth');
-
-    if (dayField && monthField && yearField && hiddenField) {
-        function updateCombinedDate() {
-            const day = dayField.value;
-            const month = monthField.value;
-            const year = yearField.value;
-
-            if (day && month && year) {
-                hiddenField.value = `${year}-${month}-${day}`;
-                console.log('Combined date:', hiddenField.value);
-            } else {
-                hiddenField.value = '';
-            }
-        }
-
-        dayField.addEventListener('change', updateCombinedDate);
-        monthField.addEventListener('change', updateCombinedDate);
-        yearField.addEventListener('change', updateCombinedDate);
-    }
+// Initialize age dropdowns (no longer needed as dropdowns are pre-populated in HTML)
+function initializeAgeDropdowns() {
+    // Age dropdowns are now pre-populated in HTML template
+    // No additional JavaScript initialization needed
 }
 
 // Test Selection
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize date dropdowns
-    initializeDateDropdowns();
+    // Initialize age dropdowns (no longer needed)
+    initializeAgeDropdowns();
 
     // Initialize test search
     initializeTestSearch();
@@ -1463,7 +1403,7 @@ function printInvoice() {
                     <h5>Patient Information</h5>
                     <p><strong>Name:</strong> ${data.title} ${data.first_name} ${data.last_name}</p>
                     <p><strong>Phone:</strong> ${data.phone}</p>
-                    <p><strong>Date of Birth:</strong> ${data.date_of_birth}</p>
+                    <p><strong>Age:</strong> ${data.age_years} years ${data.age_months > 0 ? data.age_months + ' months' : ''}</p>
                     <p><strong>Gender:</strong> ${data.gender}</p>
                     ${data.barcode ? `<p><strong>Barcode:</strong> ${data.barcode}</p>` : ''}
                 </div>
