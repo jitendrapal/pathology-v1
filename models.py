@@ -34,6 +34,7 @@ class Test(db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.Text, nullable=True)
     normal_range = db.Column(db.String(100), nullable=True)
+    unit = db.Column(db.String(50), nullable=True)  # Added unit field for test measurements
     cost = db.Column(db.Float, nullable=False, default=0.0)
     category = db.Column(db.String(50), nullable=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)

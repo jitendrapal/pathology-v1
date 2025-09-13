@@ -144,89 +144,86 @@
             </div>
         </div>
 
-        <!-- Patient Information -->
-        <div class="patient-info">
+        <!-- Patient Information - Compact Format -->
+        <div class="patient-info mb-4">
             <div class="row">
-                <div class="col-md-6">
-                    <h5 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Patient Information</h5>
-                    <p class="mb-1"><strong>Name:</strong> {{ patient.full_name }}</p>
-                    <p class="mb-1"><strong>Age:</strong> {{ patient.age }} years</p>
-                    <p class="mb-1"><strong>Gender:</strong> {{ patient.gender }}</p>
-                    <p class="mb-1"><strong>Phone:</strong> {{ patient.phone }}</p>
-                    {% if patient.email %}
-                    <p class="mb-1"><strong>Email:</strong> {{ patient.email }}</p>
-                    {% endif %}
-                </div>
-                <div class="col-md-6">
-                    <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Test Information</h5>
-                    <p class="mb-1"><strong>Patient ID:</strong> {{ patient.id }}</p>
-                    <p class="mb-1"><strong>Date Ordered:</strong> {{ patient_test.date_ordered.strftime('%d/%m/%Y') }}</p>
-                    <p class="mb-1"><strong>Date Completed:</strong> {{ patient_test.date_completed.strftime('%d/%m/%Y %H:%M') if patient_test.date_completed else 'N/A' }}</p>
-                    <p class="mb-1"><strong>Sample Collector:</strong> {{ patient_test.sample_collector or 'N/A' }}</p>
-                    {% if patient.medical_history %}
-                    <p class="mb-1"><strong>Medical History:</strong> {{ patient.medical_history[:100] }}{% if patient.medical_history|length > 100 %}...{% endif %}</p>
-                    {% endif %}
+                <div class="col-12">
+                    <div class="border p-3 bg-light">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Patient:</strong> {{ patient.full_name }}<br>
+                                <strong>Age:</strong> {{ patient.age }} years<br>
+                                <strong>Gender:</strong> {{ patient.gender }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Phone:</strong> {{ patient.phone }}<br>
+                                <strong>Patient ID:</strong> {{ patient.id }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Date Ordered:</strong> {{ patient_test.date_ordered.strftime('%d/%m/%Y') }}<br>
+                                <strong>Date Completed:</strong> {{ patient_test.date_completed.strftime('%d/%m/%Y') if patient_test.date_completed else 'N/A' }}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Report ID:</strong> RPT-{{ patient_test.id }}<br>
+                                <strong>Sample Collector:</strong> {{ patient_test.sample_collector or 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Test Results -->
-        <h5 class="text-primary mb-3"><i class="fas fa-flask me-2"></i>Test Results</h5>
-        
-        {% for test in all_completed_tests %}
-        <div class="test-results">
-            <div class="test-header">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h6 class="mb-0">{{ test.test.name }}</h6>
-                        {% if test.test.description %}
-                        <small class="text-muted">{{ test.test.description }}</small>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <span class="status-badge status-{{ test.status.lower() }}">{{ test.status }}</span>
-                        <small class="text-muted ms-2">Cost: ₹{{ "%.2f"|format(test.test.cost) }}</small>
-                    </div>
-                </div>
-            </div>
-            <div class="test-content">
-                {% if test.results %}
-                <div class="row">
-                    <div class="col-md-8">
-                        <h6>Results:</h6>
-                        <div class="border p-3 bg-light">
-                            {{ test.results|replace('\n', '<br>')|safe }}
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        {% if test.test.normal_range %}
-                        <h6>Normal Range:</h6>
-                        <div class="normal-range">
-                            {{ test.test.normal_range }}
-                        </div>
-                        {% endif %}
-                        {% if test.notes %}
-                        <h6 class="mt-3">Notes:</h6>
-                        <div class="normal-range">
-                            {{ test.notes }}
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% else %}
-                <p class="text-muted">Results not available</p>
-                {% endif %}
-                
-                {% if test.date_completed %}
-                <div class="mt-2">
-                    <small class="text-muted">
-                        <i class="fas fa-calendar me-1"></i>Completed on: {{ test.date_completed.strftime('%d/%m/%Y at %H:%M') }}
-                    </small>
-                </div>
-                {% endif %}
-            </div>
+        <!-- Test Results - Simple Table Format -->
+        <h5 class="text-primary mb-3">Test Results</h5>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 25%;">Test Name</th>
+                        <th style="width: 20%;">Test Value</th>
+                        <th style="width: 15%;">Unit</th>
+                        <th style="width: 20%;">Normal Range</th>
+                        <th style="width: 20%;">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in all_completed_tests %}
+                    <tr>
+                        <td><strong>{{ test.test.name }}</strong></td>
+                        <td>
+                            {% if test.results %}
+                                {{ test.results|replace('\n', ' ')|safe }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test.test.unit %}
+                                {{ test.test.unit }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test.test.normal_range %}
+                                {{ test.test.normal_range }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if test.notes %}
+                                {{ test.notes|replace('\n', ' ')|safe }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {% endfor %}
 
         <!-- Payment Information -->
         {% if patient_bill %}

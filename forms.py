@@ -46,6 +46,7 @@ class TestForm(FlaskForm):
     name = StringField('Test Name', validators=[DataRequired(), Length(min=2, max=100)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=1000)])
     normal_range = StringField('Normal Range', validators=[Optional(), Length(max=100)])
+    unit = StringField('Unit', validators=[Optional(), Length(max=50)])
     cost = FloatField('Cost', validators=[DataRequired(), NumberRange(min=0, max=10000)])
     category = SelectField('Category', choices=[
         ('', 'Select Category'),

@@ -70,18 +70,32 @@
                         </div>
                     </div>
 
-                    <!-- Normal Range -->
-                    <div class="mb-3">
-                        <label for="{{ form.normal_range.id }}" class="form-label">{{ form.normal_range.label.text }} <small class="text-muted">(Optional)</small></label>
-                        {{ form.normal_range(class="form-control", placeholder="e.g., 4.5-11.0 x10³/µL") }}
-                        {% if form.normal_range.errors %}
-                            <div class="text-danger">
-                                {% for error in form.normal_range.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">Enter the normal range for this test (e.g., numerical ranges, positive/negative, etc.)</div>
+                    <!-- Normal Range and Unit -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="{{ form.normal_range.id }}" class="form-label">{{ form.normal_range.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.normal_range(class="form-control", placeholder="e.g., 4.5-11.0") }}
+                            {% if form.normal_range.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.normal_range.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Enter the normal range for this test</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.unit.id }}" class="form-label">{{ form.unit.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.unit(class="form-control", placeholder="e.g., mg/dL, %, x10³/µL") }}
+                            {% if form.unit.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.unit.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Measurement unit</div>
+                        </div>
                     </div>
 
                     <!-- Description -->

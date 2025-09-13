@@ -1168,6 +1168,7 @@ def add_test():
                 name=form.name.data.strip(),
                 description=form.description.data.strip() if form.description.data else None,
                 normal_range=form.normal_range.data.strip() if form.normal_range.data else None,
+                unit=form.unit.data.strip() if form.unit.data else None,
                 cost=form.cost.data,
                 category=form.category.data if form.category.data else None
             )
@@ -1329,9 +1330,16 @@ def edit_patient_test(id):
     patient_bill = PatientBill.query.filter_by(patient_id=patient_test.patient_id).first()
 
     if form.validate_on_submit():
+        # Auto-complete status when results are entered
+        if form.results.data and form.results.data.strip() and form.status.data == 'Pending':
+            form.status.data = 'Completed'
+
         form.populate_obj(patient_test)
+
+        # Set completion date when status is completed
         if form.status.data == 'Completed' and not patient_test.date_completed:
             patient_test.date_completed = datetime.utcnow()
+
         db.session.commit()
         flash('Test order updated successfully!', 'success')
         return redirect(url_for('patient_tests'))
