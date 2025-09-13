@@ -32,84 +32,28 @@
     </div>
 </div>
 
-<!-- Patient Information Card -->
-<div class="row mb-4">
+<!-- Patient Information Card - Simplified -->
+<div class="row mb-3">
     <div class="col-12">
         <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-user-circle me-2"></i>Patient Information
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>Name:</strong> {{ patient.full_name }}</p>
-                        <p><strong>Age:</strong> {{ patient.age }} years</p>
-                        <p><strong>Gender:</strong> {{ patient.gender }}</p>
-                        <p><strong>Phone:</strong> {{ patient.phone }}</p>
-                        {% if patient.email %}
-                        <p><strong>Email:</strong> {{ patient.email }}</p>
-                        {% endif %}
+            <div class="card-body py-2">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <strong><i class="fas fa-user me-2"></i>{{ patient.full_name }}</strong>
                     </div>
-                    <div class="col-md-6">
-                        <p><strong>Address:</strong><br>{{ patient.address }}</p>
-                        {% if patient.hospital_name %}
-                        <p><strong>Hospital:</strong> {{ patient.hospital_name }}</p>
-                        {% endif %}
-                        {% if patient.collected_by %}
-                        <p><strong>Sample Collected By:</strong> {{ patient.collected_by }}</p>
-                        {% endif %}
-                        <p><strong>Registration Date:</strong> {{ patient.date_registered.strftime('%Y-%m-%d') }}</p>
+                    <div class="col-md-3">
+                        <span class="badge bg-info">{{ patient.gender }}</span>
+                    </div>
+                    <div class="col-md-5">
+                        <i class="fas fa-phone me-2"></i>{{ patient.phone }}
                     </div>
                 </div>
-                {% if patient.medical_history %}
-                <div class="row">
-                    <div class="col-12">
-                        <p><strong>Medical History:</strong><br>{{ patient.medical_history }}</p>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Test Summary Statistics -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white text-center">
-            <div class="card-body">
-                <h4>{{ patient_tests|length }}</h4>
-                <p class="mb-0">Total Tests</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white text-center">
-            <div class="card-body">
-                <h4>{{ patient_tests|selectattr("status", "equalto", "Pending")|list|length }}</h4>
-                <p class="mb-0">Pending</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white text-center">
-            <div class="card-body">
-                <h4>{{ patient_tests|selectattr("status", "equalto", "Completed")|list|length }}</h4>
-                <p class="mb-0">Completed</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white text-center">
-            <div class="card-body">
-                <h4>₹{{ "%.2f"|format(patient_tests|sum(attribute="test.cost")) }}</h4>
-                <p class="mb-0">Total Cost</p>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- All Patient Tests - Update in One Place -->
 <div class="row">
@@ -124,60 +68,96 @@
                 <form method="POST" action="{{ url_for('update_patient_tests', patient_id=patient.id) }}" id="updateTestsForm">
                     
                     {% if patient_tests %}
-                    <!-- Existing Tests -->
+                    <!-- Existing Tests - New Color-Coded Format -->
                     <h6 class="text-primary mb-3">
                         <i class="fas fa-list me-2"></i>Current Tests ({{ patient_tests|length }})
                     </h6>
-                    
+
+                    <!-- Modern Tests Table with Color-Coded Validation -->
                     <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="table-dark">
+                        <table class="table modern-table">
+                            <thead>
                                 <tr>
-                                    <th style="width: 20%;">Test Name</th>
-                                    <th style="width: 10%;">Category</th>
-                                    <th style="width: 12%;">Date Ordered</th>
+                                    <th style="width: 22%;">Test Name</th>
+                                    <th style="width: 12%;">Test Value</th>
+                                    <th style="width: 8%;">Unit</th>
+                                    <th style="width: 14%;">Normal Range</th>
                                     <th style="width: 12%;">Status</th>
-                                    <th style="width: 25%;">Results</th>
-                                    <th style="width: 15%;">Notes</th>
+                                    <th style="width: 20%;">Notes</th>
+                                    <th style="width: 6%;">Date</th>
                                     <th style="width: 6%;">Cost</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for pt in patient_tests %}
                                 <tr class="test-row" data-status="{{ pt.status }}">
+                                    <!-- Test Name -->
                                     <td>
-                                        <strong>{{ pt.test.name }}</strong>
-                                        {% if pt.test.normal_range %}
-                                        <br><small class="text-muted">Normal: {{ pt.test.normal_range }}</small>
-                                        {% endif %}
+                                        <div class="fw-bold text-dark" style="font-size: 0.9em;">{{ pt.test.name }}</div>
+                                        <small class="text-muted">{{ pt.test.category or 'General' }}</small>
                                         <input type="hidden" name="test_ids[]" value="{{ pt.id }}">
                                     </td>
+
+                                    <!-- Test Value Input with Color Validation -->
                                     <td>
-                                        <span class="badge bg-secondary">{{ pt.test.category or 'N/A' }}</span>
+                                        <input type="number"
+                                               class="form-control form-control-sm test-result-input test-input-modern"
+                                               name="results[]"
+                                               value="{{ pt.results or '' }}"
+                                               placeholder="Value"
+                                               data-min="{{ pt.test.normal_range_min or 0 }}"
+                                               data-max="{{ pt.test.normal_range_max or 100 }}"
+                                               data-test-id="{{ pt.id }}"
+                                               oninput="validateResult(this)"
+                                               step="0.01"
+                                               style="width: 85px;">
                                     </td>
-                                    <td>
-                                        <small>{{ pt.date_ordered.strftime('%Y-%m-%d %H:%M') }}</small>
-                                        {% if pt.date_completed %}
-                                        <br><small class="text-success">Completed: {{ pt.date_completed.strftime('%Y-%m-%d %H:%M') }}</small>
-                                        {% endif %}
+
+                                    <!-- Unit -->
+                                    <td class="text-center">
+                                        <span class="unit-badge-modern">{{ pt.test.unit or 'units' }}</span>
                                     </td>
+
+                                    <!-- Normal Range -->
                                     <td>
-                                        <select name="statuses[]" class="form-select form-select-sm status-select">
+                                        <div class="text-center">
+                                            <small class="fw-bold text-primary">
+                                                {{ pt.test.normal_range_min or 0 }} - {{ pt.test.normal_range_max or 100 }}
+                                            </small>
+                                            <br><small class="text-muted">{{ pt.test.unit or 'units' }}</small>
+                                        </div>
+                                    </td>
+
+                                    <!-- Status -->
+                                    <td>
+                                        <select name="statuses[]" class="form-select form-select-sm status-select-modern">
                                             <option value="Pending" {{ 'selected' if pt.status == 'Pending' }}>Pending</option>
-                                            <option value="Completed" {{ 'selected' if pt.status == 'Completed' }}>Completed</option>
-                                            <option value="Cancelled" {{ 'selected' if pt.status == 'Cancelled' }}>Cancelled</option>
+                                            <option value="In Progress" {{ 'selected' if pt.status == 'In Progress' }}>Progress</option>
+                                            <option value="Completed" {{ 'selected' if pt.status == 'Completed' }}>Done</option>
+                                            <option value="Cancelled" {{ 'selected' if pt.status == 'Cancelled' }}>Cancel</option>
                                         </select>
                                     </td>
+
+                                    <!-- Notes -->
                                     <td>
-                                        <textarea name="results[]" class="form-control form-control-sm" rows="2" 
-                                                placeholder="Enter test results...">{{ pt.results or '' }}</textarea>
+                                        <textarea name="notes[]" class="form-control form-control-sm notes-textarea-modern"
+                                                  rows="1"
+                                                  placeholder="Add notes...">{{ pt.notes or '' }}</textarea>
                                     </td>
-                                    <td>
-                                        <textarea name="notes[]" class="form-control form-control-sm" rows="2" 
-                                                placeholder="Additional notes...">{{ pt.notes or '' }}</textarea>
+
+                                    <!-- Date -->
+                                    <td class="text-center">
+                                        <small class="text-muted">
+                                            {{ pt.date_ordered.strftime('%m/%d') }}
+                                            {% if pt.date_completed %}
+                                            <br><i class="fas fa-check-circle text-success"></i>
+                                            {% endif %}
+                                        </small>
                                     </td>
-                                    <td>
-                                        <strong class="text-success">₹{{ "%.2f"|format(pt.test.cost) }}</strong>
+
+                                    <!-- Cost -->
+                                    <td class="text-center">
+                                        <span class="fw-bold text-success">₹{{ "%.0f"|format(pt.test.cost) }}</span>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -420,7 +400,7 @@
                     <!-- Submit Button -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                         <a href="{{ url_for('patients') }}" class="btn btn-secondary me-md-2">Back to Patients</a>
-                        <button type="submit" class="btn btn-success btn-lg" id="submitAllTestsBtn">
+                        <button type="button" class="btn btn-success btn-lg" id="submitAllTestsBtn" onclick="showPaymentModal()">
                             <i class="fas fa-save me-2"></i>Update All Tests & Assign New
                         </button>
                     </div>
@@ -429,10 +409,390 @@
         </div>
     </div>
 </div>
+
+<!-- Payment Collection Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="paymentModalLabel">
+                    <i class="fas fa-credit-card me-2"></i>Collect Payment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Patient Info -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-user me-2"></i>Patient: {{ patient.full_name }}</h6>
+                    <p class="mb-0"><i class="fas fa-phone me-2"></i>Phone: {{ patient.phone }}</p>
+                </div>
+
+                <!-- Payment Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Payment Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <span>Existing Tests Updates:</span>
+                                    <span id="existingTestsAmount">₹0</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>New Tests Assigned:</span>
+                                    <span id="newTestsAmount">₹0</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <strong>Total Amount:</strong>
+                                    <strong id="totalPaymentAmount">₹0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-money-bill me-2"></i>Payment Options</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_option" value="full" id="fullPayment" checked>
+                                    <label class="form-check-label" for="fullPayment">
+                                        Full Payment: ₹<span id="fullPaymentAmount">0</span>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_option" value="half" id="halfPayment">
+                                    <label class="form-check-label" for="halfPayment">
+                                        Half Payment: ₹<span id="halfPaymentAmount">0</span>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_option" value="custom" id="customPayment">
+                                    <label class="form-check-label" for="customPayment">
+                                        Custom Amount
+                                    </label>
+                                </div>
+                                <div id="customAmountSection" style="display: none;" class="mt-2">
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" class="form-control" id="customAmountInput" placeholder="Enter amount" min="0" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_option" value="no_payment" id="noPayment">
+                                    <label class="form-check-label" for="noPayment">
+                                        No Payment (Update Only)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="card mb-3" id="paymentMethodCard">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Method</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="cash" id="cashPayment" checked>
+                                    <label class="form-check-label" for="cashPayment">
+                                        <i class="fas fa-money-bill-wave me-2"></i>Cash
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="card" id="cardPayment">
+                                    <label class="form-check-label" for="cardPayment">
+                                        <i class="fas fa-credit-card me-2"></i>Card
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="upi" id="upiPayment">
+                                    <label class="form-check-label" for="upiPayment">
+                                        <i class="fas fa-mobile-alt me-2"></i>UPI
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Notes -->
+                <div class="mb-3">
+                    <label for="paymentNotes" class="form-label">Payment Notes (Optional)</label>
+                    <textarea class="form-control" id="paymentNotes" rows="2" placeholder="Add payment notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="processPaymentBtn" onclick="processPaymentAndSubmit()">
+                    <i class="fas fa-check me-2"></i>Process Payment & Update
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<style>
+    /* Color-coded test result validation styles */
+    .test-result-input {
+        transition: all 0.3s ease;
+    }
+
+    .result-normal {
+        background-color: #d4edda !important;
+        border-color: #28a745 !important;
+        color: #155724 !important;
+    }
+
+    .result-high {
+        background-color: #f8d7da !important;
+        border-color: #dc3545 !important;
+        color: #721c24 !important;
+    }
+
+    .result-low {
+        background-color: #fff3cd !important;
+        border-color: #ffc107 !important;
+        color: #856404 !important;
+    }
+
+    .test-card {
+        transition: all 0.3s ease;
+    }
+
+    .test-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .status-badge {
+        font-size: 0.8em;
+    }
+
+    .range-info {
+        font-size: 0.85em;
+        color: #6c757d;
+    }
+
+    /* Modern table styling */
+    .modern-table {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .modern-table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8em;
+        letter-spacing: 0.5px;
+        padding: 15px 8px;
+    }
+
+    .modern-table tbody tr {
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .modern-table tbody td {
+        border: none;
+        border-bottom: 1px solid #e9ecef;
+        padding: 12px 8px;
+        vertical-align: middle;
+    }
+
+    .modern-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .test-input-modern {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .test-input-modern:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .status-select-modern {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background-color: white;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+
+    .notes-textarea-modern {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        resize: vertical;
+        font-size: 0.8em;
+    }
+
+    .unit-badge-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.7em;
+    }
+</style>
+
 <script>
+// Validate test result and apply color coding
+function validateResult(input) {
+    const value = parseFloat(input.value);
+    const min = parseFloat(input.dataset.min);
+    const max = parseFloat(input.dataset.max);
+
+    // Remove all result classes
+    input.classList.remove('result-normal', 'result-high', 'result-low');
+
+    if (!isNaN(value)) {
+        if (value < min) {
+            // Low value - Yellow
+            input.classList.add('result-low');
+        } else if (value > max) {
+            // High value - Red
+            input.classList.add('result-high');
+        } else {
+            // Normal value - Green
+            input.classList.add('result-normal');
+        }
+    }
+}
+
+// Payment Modal Functions
+function showPaymentModal() {
+    // Calculate payment amounts
+    calculatePaymentAmounts();
+
+    // Show the modal
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    paymentModal.show();
+}
+
+function calculatePaymentAmounts() {
+    // Calculate new tests cost
+    let newTestsCost = 0;
+    const checkedNewTests = document.querySelectorAll('.new-test-checkbox:checked');
+    checkedNewTests.forEach(checkbox => {
+        const cost = parseFloat(checkbox.dataset.cost) || 0;
+        newTestsCost += cost;
+    });
+
+    // For existing tests, we don't charge additional (just updates)
+    const existingTestsCost = 0;
+
+    const totalAmount = existingTestsCost + newTestsCost;
+
+    // Update modal amounts
+    document.getElementById('existingTestsAmount').textContent = `₹${existingTestsCost.toFixed(2)}`;
+    document.getElementById('newTestsAmount').textContent = `₹${newTestsCost.toFixed(2)}`;
+    document.getElementById('totalPaymentAmount').textContent = `₹${totalAmount.toFixed(2)}`;
+    document.getElementById('fullPaymentAmount').textContent = totalAmount.toFixed(2);
+    document.getElementById('halfPaymentAmount').textContent = (totalAmount / 2).toFixed(2);
+
+    // Show/hide payment method card based on amount
+    const paymentMethodCard = document.getElementById('paymentMethodCard');
+    if (totalAmount > 0) {
+        paymentMethodCard.style.display = 'block';
+    } else {
+        paymentMethodCard.style.display = 'none';
+        // If no payment needed, select "No Payment" option
+        document.getElementById('noPayment').checked = true;
+    }
+}
+
+function processPaymentAndSubmit() {
+    const paymentOption = document.querySelector('input[name="payment_option"]:checked').value;
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value || 'cash';
+    const paymentNotes = document.getElementById('paymentNotes').value;
+    const customAmount = document.getElementById('customAmountInput').value;
+
+    // Add payment data to the form
+    const form = document.getElementById('updateTestsForm');
+
+    // Add hidden fields for payment data
+    addHiddenField(form, 'payment_option', paymentOption);
+    addHiddenField(form, 'payment_method', paymentMethod);
+    addHiddenField(form, 'payment_notes', paymentNotes);
+    if (paymentOption === 'custom' && customAmount) {
+        addHiddenField(form, 'custom_amount', customAmount);
+    }
+
+    // Close modal and submit form
+    const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+    paymentModal.hide();
+
+    // Submit the form
+    form.submit();
+}
+
+function addHiddenField(form, name, value) {
+    const hiddenField = document.createElement('input');
+    hiddenField.type = 'hidden';
+    hiddenField.name = name;
+    hiddenField.value = value;
+    form.appendChild(hiddenField);
+}
+
+// Initialize result validation on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const resultInputs = document.querySelectorAll('.test-result-input');
+    resultInputs.forEach(input => {
+        if (input.value) {
+            validateResult(input);
+        }
+    });
+
+    // Payment option change handlers
+    const paymentOptions = document.querySelectorAll('input[name="payment_option"]');
+    paymentOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            const customAmountSection = document.getElementById('customAmountSection');
+            const paymentMethodCard = document.getElementById('paymentMethodCard');
+
+            if (this.value === 'custom') {
+                customAmountSection.style.display = 'block';
+                paymentMethodCard.style.display = 'block';
+            } else if (this.value === 'no_payment') {
+                customAmountSection.style.display = 'none';
+                paymentMethodCard.style.display = 'none';
+            } else {
+                customAmountSection.style.display = 'none';
+                paymentMethodCard.style.display = 'block';
+            }
+        });
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Color-code rows based on status
     const statusRows = document.querySelectorAll('.test-row');

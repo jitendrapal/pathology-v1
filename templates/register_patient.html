@@ -67,15 +67,26 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="{{ form.age.id }}" class="form-label">{{ form.age.label.text }}</label>
-                            {{ form.age(class="form-control") }}
-                            {% if form.age.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.age.errors %}
-                                        <small>{{ error }}</small>
-                                    {% endfor %}
+                            <label class="form-label">Age</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <select class="form-select" name="age_years" required>
+                                        <option value="">Years</option>
+                                        {% for year in range(0, 101) %}
+                                        <option value="{{ year }}">{{ year }} years</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
-                            {% endif %}
+                                <div class="col-6">
+                                    <select class="form-select" name="age_months">
+                                        <option value="0">0 months</option>
+                                        {% for month in range(1, 12) %}
+                                        <option value="{{ month }}">{{ month }} months</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Select years and additional months</small>
                         </div>
                         <div class="col-md-4">
                             <label for="{{ form.gender.id }}" class="form-label">{{ form.gender.label.text }}</label>
@@ -162,7 +173,23 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <!-- Placeholder for future fields -->
+                            <label for="{{ form.referring_doctor.id }}" class="form-label">
+                                <i class="fas fa-user-md me-2 text-primary"></i>{{ form.referring_doctor.label.text }}
+                                <small class="text-muted">(Optional)</small>
+                            </label>
+                            {{ form.referring_doctor(class="form-select") }}
+                            {% if form.referring_doctor.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.referring_doctor.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <a href="{{ url_for('add_doctor') }}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-plus me-1"></i>Add New Doctor
+                                </a>
+                            </div>
                         </div>
                     </div>
 

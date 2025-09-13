@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Doctors Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-user-md me-2"></i>Doctors Management</h2>
+                <a href="{{ url_for('add_doctor') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add New Doctor
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>{{ doctors|length }}</h4>
+                    <p class="mb-0">Total Doctors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>{{ doctors|selectattr("is_active")|list|length }}</h4>
+                    <p class="mb-0">Active Doctors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>{{ doctors|selectattr("commission_type", "equalto", "percentage")|list|length }}</h4>
+                    <p class="mb-0">Percentage Commission</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4>{{ doctors|selectattr("commission_type", "equalto", "fixed")|list|length }}</h4>
+                    <p class="mb-0">Fixed Commission</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctors Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Doctors</h5>
+                </div>
+                <div class="card-body">
+                    {% if doctors %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Doctor Name</th>
+                                    <th>Specialization</th>
+                                    <th>Hospital</th>
+                                    <th>Contact</th>
+                                    <th>Commission</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doctor in doctors %}
+                                <tr class="{{ 'table-light' if not doctor.is_active else '' }}">
+                                    <td>
+                                        <strong>{{ doctor.name }}</strong>
+                                        {% if doctor.license_number %}
+                                        <br><small class="text-muted">License: {{ doctor.license_number }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ doctor.specialization or 'General' }}</span>
+                                    </td>
+                                    <td>{{ doctor.hospital_name or 'Not specified' }}</td>
+                                    <td>
+                                        {% if doctor.phone %}
+                                        <i class="fas fa-phone me-1"></i>{{ doctor.phone }}<br>
+                                        {% endif %}
+                                        {% if doctor.email %}
+                                        <i class="fas fa-envelope me-1"></i>{{ doctor.email }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if doctor.commission_type == 'percentage' %}
+                                        <span class="badge bg-success">{{ doctor.commission_percentage }}%</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">₹{{ doctor.commission_amount }}</span>
+                                        {% endif %}
+                                        <br><small class="text-muted">{{ doctor.commission_type.title() }}</small>
+                                    </td>
+                                    <td>
+                                        {% if doctor.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('edit_doctor', id=doctor.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               title="Edit Doctor">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-info" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#doctorModal{{ doctor.id }}"
+                                                    title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No doctors found</h5>
+                        <p class="text-muted">Add your first doctor to start tracking commissions.</p>
+                        <a href="{{ url_for('add_doctor') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add First Doctor
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Doctor Detail Modals -->
+{% for doctor in doctors %}
+<div class="modal fade" id="doctorModal{{ doctor.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">{{ doctor.name }} - Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Basic Information</h6>
+                        <p><strong>Name:</strong> {{ doctor.name }}</p>
+                        <p><strong>Specialization:</strong> {{ doctor.specialization or 'Not specified' }}</p>
+                        <p><strong>Hospital:</strong> {{ doctor.hospital_name or 'Not specified' }}</p>
+                        <p><strong>License:</strong> {{ doctor.license_number or 'Not specified' }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if doctor.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">Commission Settings</h6>
+                        <p><strong>Type:</strong> {{ doctor.commission_type.title() }}</p>
+                        {% if doctor.commission_type == 'percentage' %}
+                        <p><strong>Rate:</strong> {{ doctor.commission_percentage }}%</p>
+                        <p><strong>Example:</strong> On ₹500 test = ₹{{ (500 * doctor.commission_percentage / 100)|round(2) }}</p>
+                        {% else %}
+                        <p><strong>Amount:</strong> ₹{{ doctor.commission_amount }}</p>
+                        <p><strong>Example:</strong> ₹{{ doctor.commission_amount }} per test</p>
+                        {% endif %}
+                        
+                        <h6 class="text-info mt-3">Contact Information</h6>
+                        <p><strong>Phone:</strong> {{ doctor.phone or 'Not provided' }}</p>
+                        <p><strong>Email:</strong> {{ doctor.email or 'Not provided' }}</p>
+                        {% if doctor.address %}
+                        <p><strong>Address:</strong><br>{{ doctor.address }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>Added on: {{ doctor.date_created.strftime('%B %d, %Y') if doctor.date_created else 'Unknown' }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('edit_doctor', id=doctor.id) }}" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i>Edit Doctor
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

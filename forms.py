@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, SelectField, TextAreaField, DateField, FloatField, SubmitField
+from wtforms import StringField, IntegerField, SelectField, TextAreaField, DateField, FloatField, SubmitField, BooleanField, DecimalField
 from wtforms.validators import DataRequired, Email, Optional, NumberRange, Length, Regexp, ValidationError
 import re
 
@@ -34,6 +34,7 @@ class PatientForm(FlaskForm):
     emergency_contact = StringField('Emergency Contact', validators=[Optional(), Length(max=100)])
     hospital_name = SelectField('Hospital', choices=[], validators=[Optional()])
     collected_by = SelectField('Sample Collected By', choices=[], validators=[Optional()])
+    referring_doctor = SelectField('Referring Doctor', choices=[], validators=[Optional()])
     submit = SubmitField('Register Patient')
 
     def validate_phone(self, phone):
@@ -120,6 +121,27 @@ class HospitalForm(FlaskForm):
     phone = StringField('Phone Number', validators=[Optional(), Length(max=15)])
     email = StringField('Email', validators=[Optional(), Email()])
     submit = SubmitField('Add Hospital')
+
+class DoctorForm(FlaskForm):
+    name = StringField('Doctor Name', validators=[DataRequired(), Length(min=2, max=100)])
+    specialization = StringField('Specialization', validators=[Optional(), Length(max=100)])
+    hospital_name = StringField('Hospital/Clinic', validators=[Optional(), Length(max=100)])
+    phone = StringField('Phone Number', validators=[Optional(), Length(max=15)])
+    email = StringField('Email', validators=[Optional(), Email()])
+    license_number = StringField('License Number', validators=[Optional(), Length(max=50)])
+    address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
+    commission_type = SelectField('Commission Type', choices=[
+        ('percentage', 'Percentage (%)'),
+        ('fixed', 'Fixed Amount (₹)')
+    ], validators=[DataRequired()])
+    commission_percentage = DecimalField('Commission Percentage (%)',
+                                       validators=[Optional(), NumberRange(min=0, max=100)],
+                                       places=2)
+    commission_amount = DecimalField('Commission Amount (₹)',
+                                   validators=[Optional(), NumberRange(min=0)],
+                                   places=2)
+    is_active = BooleanField('Active', default=True)
+    submit = SubmitField('Add Doctor')
 
 class SampleCollectorForm(FlaskForm):
     name = StringField('Collector Name', validators=[DataRequired(), Length(min=2, max=100)])
