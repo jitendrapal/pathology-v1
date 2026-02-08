@@ -15,8 +15,10 @@ blinker==1.7.0
 # Production Server
 gunicorn==21.2.0
 
-# Database Support
-psycopg2-binary==2.9.7
+# Database Support (PostgreSQL - optional, only needed for PostgreSQL databases)
+# psycopg2-binary==2.9.9
+# Note: Commented out for Vercel deployment which uses SQLite
+# Uncomment if deploying to a platform with PostgreSQL (like DigitalOcean, Heroku, etc.)
 
 # Form Validation
 email-validator==2.0.0
