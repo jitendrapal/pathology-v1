@@ -1,0 +1,39 @@
+# Vercel ignore file - exclude files from deployment
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Database files (SQLite is ephemeral on Vercel)
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# IDE
+.vscode/
+.idea/
+
+# Documentation
+*.md
+!README.md
+
+# Scripts
+*.sh
+*.bat
+
+# Test files
+test_*.py
+debug_*.py
+
+# Backup files
+backup_*.py
+

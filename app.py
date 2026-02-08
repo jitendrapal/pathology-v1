@@ -22,9 +22,19 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here-ch
 
 # Create data directory if it doesn't exist
 import os
-data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
-if not os.path.exists(data_dir):
-    os.makedirs(data_dir)
+
+# Check if running on Vercel (serverless)
+is_vercel = os.environ.get('VERCEL') == '1'
+
+if is_vercel:
+    # On Vercel, use /tmp directory (ephemeral storage)
+    data_dir = '/tmp'
+    print("🌐 Running on Vercel - using ephemeral storage")
+else:
+    # Local development - use persistent data directory
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
 
 # Database configuration with persistent file location
 database_path = os.path.join(data_dir, 'pathology.db')
