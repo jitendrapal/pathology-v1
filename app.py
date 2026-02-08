@@ -849,6 +849,19 @@ def add_payment():
     form = PaymentForm()
     form.patient_id.choices = [(p.id, p.full_name) for p in Patient.query.all()]
 
+    # Pre-fill form from URL parameters
+    if request.method == 'GET':
+        patient_id = request.args.get('patient')
+        amount = request.args.get('amount')
+        payment_type = request.args.get('type')
+
+        if patient_id:
+            form.patient_id.data = int(patient_id)
+        if amount:
+            form.amount.data = float(amount)
+        if payment_type:
+            form.payment_type.data = payment_type
+
     if form.validate_on_submit():
         try:
             # Create payment record
@@ -890,14 +903,39 @@ def add_payment():
                 patient_bill.bill_status = 'pending'
 
             db.session.commit()
-            flash(f'Payment of ${form.amount.data:.2f} recorded successfully!', 'success')
-            return redirect(url_for('payments'))
+            flash(f'Payment of ₹{form.amount.data:.2f} recorded successfully!', 'success')
+            return redirect(url_for('patient_billing', patient_id=form.patient_id.data))
         except Exception as e:
             db.session.rollback()
             flash('An error occurred while recording payment. Please try again.', 'error')
             app.logger.error(f'Error recording payment: {str(e)}')
 
     return render_template('add_payment.html', form=form)
+
+# API endpoint to get patient bill data
+@app.route('/api/patient_bill/<int:patient_id>')
+@login_required
+def get_patient_bill(patient_id):
+    patient_bill = PatientBill.query.filter_by(patient_id=patient_id).first()
+    if patient_bill:
+        return {
+            'total': float(patient_bill.total_amount),
+            'paid': float(patient_bill.paid_amount),
+            'remaining': float(patient_bill.remaining_amount),
+            'discount': float(patient_bill.discount_amount),
+            'final': float(patient_bill.final_amount)
+        }
+    else:
+        # Calculate from tests if no bill exists
+        patient_tests = PatientTest.query.filter_by(patient_id=patient_id).all()
+        total = sum([pt.test.cost for pt in patient_tests])
+        return {
+            'total': float(total),
+            'paid': 0.0,
+            'remaining': float(total),
+            'discount': 0.0,
+            'final': float(total)
+        }
 
 @app.route('/patient_billing/<int:patient_id>')
 @login_required
@@ -1116,36 +1154,29 @@ def print_bill(patient_id):
 
 @app.route('/print_patient_report/<int:patient_id>')
 def print_patient_report(patient_id):
-    """Print comprehensive report for all completed tests of a patient"""
+    """Print report for tests that have results/values"""
     patient = Patient.query.get_or_404(patient_id)
 
-    # Get all completed tests for this patient
+    # Get ALL tests for this patient that have results (values)
     from sqlalchemy.orm import joinedload
-    completed_tests = PatientTest.query.options(
+    from datetime import datetime
+    all_tests = PatientTest.query.options(
         joinedload(PatientTest.test)
     ).filter_by(
-        patient_id=patient_id,
-        status='Completed'
-    ).order_by(PatientTest.date_completed.desc()).all()
+        patient_id=patient_id
+    ).order_by(PatientTest.date_ordered.desc()).all()
 
-    if not completed_tests:
-        flash('No completed tests found for this patient.', 'error')
+    # Filter only tests that have results/values
+    tests_with_results = [test for test in all_tests if test.results and test.results.strip()]
+
+    if not tests_with_results:
+        flash('No test results found for this patient. Please update test values first.', 'error')
         return redirect(url_for('patient_detail', id=patient_id))
 
-    # Check if all payments are complete
-    patient_bill = PatientBill.query.filter_by(patient_id=patient_id).first()
-    if patient_bill and patient_bill.remaining_amount > 0:
-        flash('All payments must be completed before printing comprehensive report.', 'warning')
-        return redirect(url_for('patient_billing', patient_id=patient_id))
-
-    # Get payment history
-    payments = Payment.query.filter_by(patient_id=patient_id).order_by(Payment.payment_date.desc()).all()
-
-    return render_template('reports/patient_comprehensive_report.html',
+    return render_template('reports/simple_test_report.html',
                          patient=patient,
-                         completed_tests=completed_tests,
-                         patient_bill=patient_bill,
-                         payments=payments)
+                         all_completed_tests=tests_with_results,
+                         current_time=datetime.now())
 
 # Bulk Update Routes
 @app.route('/bulk_update_tests', methods=['GET'])
@@ -1846,32 +1877,28 @@ def patient_tests_report():
 
 @app.route('/reports/patient/<int:patient_id>')
 def patient_report(patient_id):
+    """Print clean pathology report for tests with results"""
     from sqlalchemy.orm import joinedload
+    from datetime import datetime
+
     patient = Patient.query.get_or_404(patient_id)
+
+    # Get all tests for this patient
     patient_tests = PatientTest.query.options(
         joinedload(PatientTest.test)
     ).filter_by(patient_id=patient_id).order_by(PatientTest.date_ordered.desc()).all()
 
-    # Calculate patient statistics
-    total_tests = len(patient_tests)
-    pending_tests = len([pt for pt in patient_tests if pt.status == 'Pending'])
-    completed_tests = len([pt for pt in patient_tests if pt.status == 'Completed'])
-    total_cost = sum([pt.test.cost for pt in patient_tests])
+    # Filter only tests that have results/values
+    tests_with_results = [test for test in patient_tests if test.results and test.results.strip()]
 
-    # Get billing information
-    patient_bill = PatientBill.query.filter_by(patient_id=patient_id).first()
-    paid_amount = patient_bill.paid_amount if patient_bill else 0
-    remaining_amount = patient_bill.remaining_amount if patient_bill else total_cost
+    if not tests_with_results:
+        flash('No test results found for this patient. Please update test values first.', 'error')
+        return redirect(url_for('patients'))
 
-    return render_template('reports/patient_report.html',
+    # Use the new clean pathology report template
+    return render_template('reports/simple_test_report.html',
                          patient=patient,
-                         patient_tests=patient_tests,
-                         total_tests=total_tests,
-                         pending_tests=pending_tests,
-                         completed_tests=completed_tests,
-                         total_cost=total_cost,
-                         paid_amount=paid_amount,
-                         remaining_amount=remaining_amount,
+                         all_completed_tests=tests_with_results,
                          current_time=datetime.now())
 
 # Hospital Management Routes
@@ -1945,7 +1972,35 @@ def add_sample_collector():
 @app.route('/doctors')
 def doctors():
     doctors = Doctor.query.all()
-    return render_template('doctors.html', doctors=doctors)
+
+    # Calculate commission amounts for each doctor
+    doctor_commissions = {}
+    for doctor in doctors:
+        # Get all patients referred by this doctor
+        referred_patients = Patient.query.filter_by(referring_doctor_id=doctor.id).all()
+
+        total_commission = 0.0
+        total_patients = len(referred_patients)
+        total_tests = 0
+
+        for patient in referred_patients:
+            # Get all tests for this patient
+            patient_tests = PatientTest.query.filter_by(patient_id=patient.id).all()
+            total_tests += len(patient_tests)
+
+            for patient_test in patient_tests:
+                # Calculate commission for each test
+                test_amount = patient_test.test.cost
+                commission = doctor.calculate_commission(test_amount)
+                total_commission += commission
+
+        doctor_commissions[doctor.id] = {
+            'total_commission': total_commission,
+            'total_patients': total_patients,
+            'total_tests': total_tests
+        }
+
+    return render_template('doctors.html', doctors=doctors, doctor_commissions=doctor_commissions)
 
 @app.route('/add_doctor', methods=['GET', 'POST'])
 def add_doctor():
@@ -1999,6 +2054,7 @@ def edit_doctor(id):
 
 # Financial Overview Route
 @app.route('/financial_overview')
+@login_required
 def financial_overview():
     """Comprehensive payment overview with financial data and doctor commissions"""
     try:
@@ -2030,22 +2086,25 @@ def financial_overview():
             if patient.referring_doctor_id:
                 doctor = Doctor.query.get(patient.referring_doctor_id)
                 if doctor and doctor.is_active:
+                    # Add to doctor summary (initialize if needed)
+                    if doctor.name not in doctor_commission_summary:
+                        doctor_commission_summary[doctor.name] = {
+                            'doctor': doctor,
+                            'total_commission': 0,
+                            'pending_commission': 0,
+                            'paid_commission': 0,
+                            'patient_count': 0
+                        }
+
+                    # Increment patient count once per patient
+                    doctor_commission_summary[doctor.name]['patient_count'] += 1
+
+                    # Calculate commission for each test
                     for pt in patient_tests:
                         commission = doctor.calculate_commission(pt.test.cost)
                         patient_doctor_commission += commission
-
-                        # Add to doctor summary
-                        if doctor.name not in doctor_commission_summary:
-                            doctor_commission_summary[doctor.name] = {
-                                'doctor': doctor,
-                                'total_commission': 0,
-                                'pending_commission': 0,
-                                'paid_commission': 0,
-                                'patient_count': 0
-                            }
                         doctor_commission_summary[doctor.name]['total_commission'] += commission
                         doctor_commission_summary[doctor.name]['pending_commission'] += commission  # All pending for now
-                        doctor_commission_summary[doctor.name]['patient_count'] += 1
 
             patient_financial_data.append({
                 'patient': patient,
@@ -2068,7 +2127,7 @@ def financial_overview():
         net_collected = total_collected - total_doctor_commissions  # Assuming commissions paid when collected
 
         # Recent payments
-        recent_payments = Payment.query.order_by(Payment.date_paid.desc()).limit(10).all()
+        recent_payments = Payment.query.order_by(Payment.payment_date.desc()).limit(10).all()
 
         # Summary statistics
         summary_stats = {
@@ -2090,9 +2149,12 @@ def financial_overview():
                              summary_stats=summary_stats)
 
     except Exception as e:
-        flash('An error occurred while loading payment overview.', 'error')
-        app.logger.error(f'Error in payment overview: {str(e)}')
-        return redirect(url_for('dashboard'))
+        flash('An error occurred while loading financial overview.', 'error')
+        app.logger.error(f'Error in financial overview: {str(e)}')
+        app.logger.error(f'Error type: {type(e).__name__}')
+        import traceback
+        app.logger.error(f'Traceback: {traceback.format_exc()}')
+        return redirect(url_for('index'))
 
 def create_tables():
     """Create all database tables including Payment and PatientBill"""

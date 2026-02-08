@@ -154,66 +154,7 @@
       </div>
       <div class="card-body">
         <div class="row">
-          <!-- Row 1: Primary Actions -->
-          <div class="col-md-4 mb-3">
-            <a
-              href="{{ url_for('multi_step_registration') }}"
-              class="btn btn-primary w-100 d-flex flex-column justify-content-center"
-              style="min-height: 80px"
-            >
-              <i class="fas fa-clipboard-list fa-2x mb-2"></i>
-              <span class="h6 mb-1">Quick Registration</span>
-              <small class="text-light">Patient + Tests + Billing</small>
-            </a>
-          </div>
-          <div class="col-md-4 mb-3">
-            <a
-              href="{{ url_for('test_results_dashboard') }}"
-              class="btn btn-success w-100 d-flex flex-column justify-content-center"
-              style="min-height: 80px"
-            >
-              <i class="fas fa-microscope fa-2x mb-2"></i>
-              <span class="h6 mb-1">Test Results & Payment</span>
-              <small class="text-light"
-                >Update results & collect payments</small
-              >
-            </a>
-          </div>
-          <div class="col-md-4 mb-3">
-            <a
-              href="{{ url_for('assign_multiple_tests') }}"
-              class="btn btn-info w-100 d-flex flex-column justify-content-center"
-              style="min-height: 80px"
-            >
-              <i class="fas fa-clipboard-list fa-2x mb-2"></i>
-              <span class="h6 mb-1">Assign Tests to Patient</span>
-              <small class="text-light">Multi-grid view assignment</small>
-            </a>
-          </div>
-
-          <!-- Row 2: Secondary Actions -->
-          <div class="col-md-4 mb-3">
-            <a
-              href="{{ url_for('register_patient') }}"
-              class="btn btn-outline-primary w-100 d-flex flex-column justify-content-center"
-              style="min-height: 80px"
-            >
-              <i class="fas fa-user fa-2x mb-2"></i>
-              <span class="h6 mb-1">Patient Only</span>
-              <small class="text-muted">Basic patient registration</small>
-            </a>
-          </div>
-          <div class="col-md-4 mb-3">
-            <a
-              href="{{ url_for('patient_tests') }}"
-              class="btn btn-dark w-100 d-flex flex-column justify-content-center"
-              style="min-height: 80px"
-            >
-              <i class="fas fa-list-alt fa-2x mb-2"></i>
-              <span class="h6 mb-1">View Test Orders</span>
-              <small class="text-light">All test orders & status</small>
-            </a>
-          </div>
+          <!-- Quick Actions -->
           <div class="col-md-4 mb-3">
             <a
               href="{{ url_for('payment_overview') }}"
@@ -225,30 +166,6 @@
               <small class="text-light"
                 >Pending, Paid, Doctor Commissions</small
               >
-            </a>
-          </div>
-
-          <!-- Row 3: Additional Actions -->
-          <div class="col-md-4 mb-3">
-            <a
-              href="{{ url_for('patients') }}"
-              class="btn btn-secondary w-100 d-flex flex-column justify-content-center"
-              style="min-height: 80px"
-            >
-              <i class="fas fa-search fa-2x mb-2"></i>
-              <span class="h6 mb-1">Patient Search</span>
-              <small class="text-light">Find & view patients</small>
-            </a>
-          </div>
-          <div class="col-md-4 mb-3">
-            <a
-              href="{{ url_for('assign_test') }}"
-              class="btn btn-info w-100 d-flex flex-column justify-content-center"
-              style="min-height: 80px"
-            >
-              <i class="fas fa-vial fa-2x mb-2"></i>
-              <span class="h6 mb-1">Assign Tests</span>
-              <small class="text-light">Add tests to patient</small>
             </a>
           </div>
           <div class="col-md-4 mb-3">

@@ -33,31 +33,27 @@
         top: 0;
         height: 100vh;
         width: 280px;
-        background: linear-gradient(
-          180deg,
-          #1e40af 0%,
-          #1d4ed8 50%,
-          #2563eb 100%
-        );
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
         padding: 0;
-        box-shadow: 4px 0 20px rgba(30, 64, 175, 0.2);
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
         z-index: 1000;
         overflow-y: auto;
+        border-right: 1px solid #e2e8f0;
       }
 
       .sidebar-header {
         padding: 30px 20px;
         text-align: center;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         color: white;
-        border-bottom: 3px solid #ffffff;
+        border-bottom: 1px solid #e2e8f0;
         margin-bottom: 10px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
       }
 
       .sidebar-header i {
         color: #ffffff;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       .sidebar-header h3 {
@@ -66,7 +62,7 @@
         margin-bottom: 5px;
         margin-top: 10px;
         letter-spacing: 0.5px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
 
       .sidebar-header p {
@@ -91,7 +87,7 @@
         display: flex;
         align-items: center;
         padding: 14px 20px;
-        color: #ffffff;
+        color: #475569;
         text-decoration: none;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 10px;
@@ -108,16 +104,16 @@
         top: 0;
         height: 100%;
         width: 4px;
-        background: #ffffff;
+        background: #3b82f6;
         transform: scaleY(0);
         transition: transform 0.3s ease;
       }
 
       .sidebar-menu a:hover {
-        background: rgba(255, 255, 255, 0.15);
-        color: #ffffff;
+        background: #e0e7ff;
+        color: #1e40af;
         transform: translateX(5px);
-        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
       }
 
       .sidebar-menu a:hover::before {
@@ -125,31 +121,32 @@
       }
 
       .sidebar-menu a.active {
-        background: #ffffff;
-        color: #1e40af;
-        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         font-weight: 600;
       }
 
       .sidebar-menu a.active::before {
         transform: scaleY(1);
-        background: #1e40af;
+        background: #ffffff;
       }
 
       .sidebar-menu a i {
         width: 28px;
         font-size: 1.15rem;
         margin-right: 15px;
-        color: #ffffff;
+        color: #64748b;
         transition: all 0.3s ease;
       }
 
       .sidebar-menu a.active i {
-        color: #1e40af;
+        color: #ffffff;
       }
 
       .sidebar-menu a:hover i {
         transform: scale(1.1);
+        color: #1e40af;
       }
 
       .sidebar-menu a span {
@@ -546,6 +543,15 @@
           >
             <i class="fas fa-flask"></i>
             <span>Tests</span>
+          </a>
+        </li>
+        <li>
+          <a
+            href="{{ url_for('doctors') }}"
+            class="{% if request.endpoint == 'doctors' or request.endpoint == 'add_doctor' or request.endpoint == 'edit_doctor' %}active{% endif %}"
+          >
+            <i class="fas fa-user-md"></i>
+            <span>Doctors</span>
           </a>
         </li>
         <li>

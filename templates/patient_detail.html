@@ -78,12 +78,11 @@
                         <table class="table modern-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 22%;">Test Name</th>
-                                    <th style="width: 12%;">Test Value</th>
-                                    <th style="width: 8%;">Unit</th>
-                                    <th style="width: 14%;">Normal Range</th>
-                                    <th style="width: 12%;">Status</th>
-                                    <th style="width: 20%;">Notes</th>
+                                    <th style="width: 25%;">Test Name</th>
+                                    <th style="width: 15%;">Test Value</th>
+                                    <th style="width: 10%;">Unit</th>
+                                    <th style="width: 15%;">Normal Range</th>
+                                    <th style="width: 23%;">Notes</th>
                                     <th style="width: 6%;">Date</th>
                                     <th style="width: 6%;">Cost</th>
                                 </tr>
@@ -96,6 +95,7 @@
                                         <div class="fw-bold text-dark" style="font-size: 0.9em;">{{ pt.test.name }}</div>
                                         <small class="text-muted">{{ pt.test.category or 'General' }}</small>
                                         <input type="hidden" name="test_ids[]" value="{{ pt.id }}">
+                                        <input type="hidden" name="statuses[]" value="{{ pt.status }}">
                                     </td>
 
                                     <!-- Test Value Input with Color Validation -->
@@ -126,16 +126,6 @@
                                             </small>
                                             <br><small class="text-muted">{{ pt.test.unit or 'units' }}</small>
                                         </div>
-                                    </td>
-
-                                    <!-- Status -->
-                                    <td>
-                                        <select name="statuses[]" class="form-select form-select-sm status-select-modern">
-                                            <option value="Pending" {{ 'selected' if pt.status == 'Pending' }}>Pending</option>
-                                            <option value="In Progress" {{ 'selected' if pt.status == 'In Progress' }}>Progress</option>
-                                            <option value="Completed" {{ 'selected' if pt.status == 'Completed' }}>Done</option>
-                                            <option value="Cancelled" {{ 'selected' if pt.status == 'Cancelled' }}>Cancel</option>
-                                        </select>
                                     </td>
 
                                     <!-- Notes -->
@@ -423,13 +413,38 @@
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
+                    <!-- Submit Buttons -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                         <a href="{{ url_for('patients') }}" class="btn btn-secondary me-md-2">Back to Patients</a>
                         {% if patient_tests %}
-                        <a href="{{ url_for('patient_billing', patient_id=patient.id) }}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-credit-card me-2"></i>Pay & Generate Report
-                        </a>
+                            <button type="submit" class="btn btn-outline-primary btn-lg me-md-2">
+                                <i class="fas fa-save me-2"></i>Update Tests
+                            </button>
+
+                            <!-- Check if any test has results -->
+                            {% set tests_with_results = patient_tests|selectattr("results")|list %}
+
+                            {% if tests_with_results %}
+                            <!-- Tests have results - Show Print Report Button -->
+                            <a href="{{ url_for('print_patient_report', patient_id=patient.id) }}" class="btn btn-primary btn-lg me-md-2" target="_blank">
+                                <i class="fas fa-print me-2"></i>Print Report
+                            </a>
+                            {% endif %}
+
+                            {% if patient_bill and patient_bill.remaining_amount <= 0 %}
+                            <!-- Payment Complete - Show Print Bill and Status -->
+                            <a href="{{ url_for('print_bill', patient_id=patient.id) }}" class="btn btn-outline-primary btn-lg me-md-2" target="_blank">
+                                <i class="fas fa-file-invoice me-2"></i>Print Bill
+                            </a>
+                            <button class="btn btn-success btn-lg" disabled>
+                                <i class="fas fa-check-circle me-2"></i>Already Paid
+                            </button>
+                            {% else %}
+                            <!-- Payment Pending - Show Pay Button -->
+                            <a href="{{ url_for('patient_billing', patient_id=patient.id) }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Pay & Generate Report
+                            </a>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </form>
