@@ -324,11 +324,33 @@ def patient_detail(id):
     # Get sample collectors for dropdown
     collectors = SampleCollector.query.all()
 
+    # Get or create patient bill
+    patient_bill = PatientBill.query.filter_by(patient_id=id).first()
+    if not patient_bill:
+        patient_bill = PatientBill(
+            patient_id=id,
+            total_amount=0.0,
+            paid_amount=0.0,
+            remaining_amount=0.0
+        )
+        db.session.add(patient_bill)
+        db.session.commit()
+
+    # Calculate total test cost
+    total_test_cost = sum(pt.test.cost for pt in patient_tests)
+
+    # Update bill if needed
+    if patient_bill.total_amount != total_test_cost:
+        patient_bill.total_amount = total_test_cost
+        patient_bill.remaining_amount = total_test_cost - patient_bill.paid_amount
+        db.session.commit()
+
     return render_template('patient_detail.html',
                          patient=patient,
                          patient_tests=patient_tests,
                          all_tests=all_tests,
-                         collectors=collectors)
+                         collectors=collectors,
+                         patient_bill=patient_bill)
 
 @app.route('/update_patient_tests/<int:patient_id>', methods=['POST'])
 @login_required
@@ -541,22 +563,33 @@ def update_patient_tests(patient_id):
 def test_results_dashboard():
     """Dashboard for updating test results and managing pending payments"""
     from sqlalchemy.orm import joinedload
+    from collections import defaultdict
 
     # Get all pending tests that need results
-    pending_tests = PatientTest.query.options(
+    pending_tests_raw = PatientTest.query.options(
         joinedload(PatientTest.patient),
         joinedload(PatientTest.test)
     ).filter(PatientTest.status.in_(['Pending', 'In Progress'])).order_by(
         PatientTest.date_ordered.desc()
     ).all()
 
+    # Group pending tests by patient
+    pending_tests_grouped = defaultdict(list)
+    for pt in pending_tests_raw:
+        pending_tests_grouped[pt.patient_id].append(pt)
+
     # Get all completed tests that might need final payment
-    completed_tests = PatientTest.query.options(
+    completed_tests_raw = PatientTest.query.options(
         joinedload(PatientTest.patient),
         joinedload(PatientTest.test)
     ).filter(PatientTest.status == 'Completed').order_by(
         PatientTest.date_completed.desc()
     ).limit(50).all()
+
+    # Group completed tests by patient
+    completed_tests_grouped = defaultdict(list)
+    for pt in completed_tests_raw:
+        completed_tests_grouped[pt.patient_id].append(pt)
 
     # Get patient bills with pending amounts1
     pending_bills = PatientBill.query.options(
@@ -566,7 +599,7 @@ def test_results_dashboard():
     ).all()
 
     # Calculate summary statistics
-    total_pending_tests = len(pending_tests)
+    total_pending_tests = len(pending_tests_raw)
     total_pending_amount = sum([bill.remaining_amount for bill in pending_bills])
     total_completed_today = PatientTest.query.filter(
         PatientTest.status == 'Completed',
@@ -574,8 +607,8 @@ def test_results_dashboard():
     ).count()
 
     return render_template('test_results_dashboard.html',
-                         pending_tests=pending_tests,
-                         completed_tests=completed_tests,
+                         pending_tests_grouped=pending_tests_grouped,
+                         completed_tests_grouped=completed_tests_grouped,
                          pending_bills=pending_bills,
                          total_pending_tests=total_pending_tests,
                          total_pending_amount=total_pending_amount,

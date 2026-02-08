@@ -1,904 +1,1223 @@
-{% extends "base.html" %}
-
-{% block title %}Patient Registration & Test Assignment{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <!-- Simple Header -->
-            <div class="row mb-3">
-                <div class="col-12">
-                    <h3 class="text-center">
-                        <i class="fas fa-user-plus me-2"></i>Patient Registration & Test Assignment
-                    </h3>
-                </div>
-            </div>
-
-            <!-- Multi-Step Form -->
-            <form id="multiStepForm" method="POST" action="{{ url_for('multi_step_registration') }}">
-                <!-- Step 1: Patient Information -->
-                <div class="step-content" id="step1">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5><i class="fas fa-user me-2"></i>Patient Information & Collection Details</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <!-- Personal Information -->
-                                <div class="col-md-6">
-                                    <h6 class="text-primary mb-3">Personal Details</h6>
-
-                                    <div class="row">
-                                        <div class="col-md-2">
-                                            <div class="mb-3">
-                                                <label class="form-label">Title *</label>
-                                                <select class="form-select" name="title" id="title" required onchange="updateGenderFromTitle()">
-                                                    <option value="">Select Title</option>
-                                                    <option value="Mr." data-gender="Male">Mr.</option>
-                                                    <option value="Mrs." data-gender="Female">Mrs.</option>
-                                                    <option value="Miss" data-gender="Female">Miss</option>
-                                                    <option value="Dr." data-gender="">Dr.</option>
-                                                    <option value="Prof." data-gender="">Prof.</option>
-                                                    <option value="Master" data-gender="Male">Master</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <div class="mb-3">
-                                                <label class="form-label">First Name *</label>
-                                                <input type="text" class="form-control" name="first_name" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <div class="mb-3">
-                                                <label class="form-label">Last Name *</label>
-                                                <input type="text" class="form-control" name="last_name" required>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Age *</label>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <select class="form-select" name="age_years" required>
-                                                    <option value="">Years</option>
-                                                    {% for year in range(0, 101) %}
-                                                    <option value="{{ year }}">{{ year }} years</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                            <div class="col-6">
-                                                <select class="form-select" name="age_months">
-                                                    <option value="0">0 months</option>
-                                                    {% for month in range(1, 12) %}
-                                                    <option value="{{ month }}">{{ month }} months</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <small class="form-text text-muted">Select years and additional months</small>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Gender *</label>
-                                        <div class="mt-2">
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input" type="radio" name="gender" id="gender-male" value="Male" required>
-                                                <label class="form-check-label" for="gender-male">
-                                                    <i class="fas fa-mars text-primary me-1"></i>Male
-                                                </label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input" type="radio" name="gender" id="gender-female" value="Female" required>
-                                                <label class="form-check-label" for="gender-female">
-                                                    <i class="fas fa-venus text-danger me-1"></i>Female
-                                                </label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input" type="radio" name="gender" id="gender-other" value="Other" required>
-                                                <label class="form-check-label" for="gender-other">
-                                                    <i class="fas fa-genderless text-secondary me-1"></i>Other
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Phone Number *</label>
-                                        <input type="tel" class="form-control" name="phone" required>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Barcode</label>
-                                        <input type="text" class="form-control" name="barcode" placeholder="Enter or scan barcode">
-                                        <small class="text-muted">Optional: Unique identifier for sample tracking</small>
-                                    </div>
-                                </div>
-
-                                <!-- Contact & Medical Information -->
-                                <div class="col-md-6">
-                                    <h6 class="text-primary mb-3">Contact & Medical Details</h6>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" name="email">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Address</label>
-                                        <textarea class="form-control" name="address" rows="2"></textarea>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Emergency Contact</label>
-                                        <input type="text" class="form-control" name="emergency_contact">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Medical History</label>
-                                        <textarea class="form-control" name="medical_history" rows="2" placeholder="Any relevant medical conditions, allergies, medications..."></textarea>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-8">
-                                            <div class="mb-3">
-                                                <label class="form-label">Referring Doctor</label>
-                                                <div class="position-relative">
-                                                    <input type="text" class="form-control" name="referring_doctor" id="referring-doctor-input" placeholder="Search or select doctor..." autocomplete="off">
-                                                    <div id="doctor-suggestions" class="position-absolute w-100 bg-white border rounded shadow-sm d-none" style="z-index: 1000; max-height: 150px; overflow-y: auto;">
-                                                        <!-- Doctor suggestions will be populated here -->
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label class="form-label">&nbsp;</label>
-                                                <button type="button" class="btn btn-outline-primary w-100" onclick="showAddDoctorModal()">
-                                                    <i class="fas fa-plus me-1"></i>Add New
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Collection Information -->
-                            <hr class="my-4">
-                            <div class="row">
-                                <div class="col-12">
-                                    <h6 class="text-primary mb-3">Collection Information</h6>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label class="form-label">Collected By</label>
-                                                <select class="form-select" name="collected_by" id="collected-by-select">
-                                                    <option value="">Select Collector</option>
-                                                    <option value="Lab Technician 1">Lab Technician 1</option>
-                                                    <option value="Lab Technician 2">Lab Technician 2</option>
-                                                    <option value="Phlebotomist 1">Phlebotomist 1</option>
-                                                    <option value="Phlebotomist 2">Phlebotomist 2</option>
-                                                    <option value="Home Collection Team">Home Collection Team</option>
-                                                    <option value="Other">Other (Specify)</option>
-                                                </select>
-                                                <input type="text" class="form-control mt-2 d-none" id="other-collector" name="other_collector" placeholder="Specify collector name">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label class="form-label">Collected At</label>
-                                                <select class="form-select" name="collected_at">
-                                                    <option value="">Select Location</option>
-                                                    <option value="Lab - Main Branch">Lab - Main Branch</option>
-                                                    <option value="Lab - Branch 2">Lab - Branch 2</option>
-                                                    <option value="Patient Home">Patient Home</option>
-                                                    <option value="Hospital - City Hospital">Hospital - City Hospital</option>
-                                                    <option value="Hospital - General Hospital">Hospital - General Hospital</option>
-                                                    <option value="Clinic - Dr. Smith Clinic">Clinic - Dr. Smith Clinic</option>
-                                                    <option value="Other">Other Location</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label class="form-label">Collection Date & Time</label>
-                                                <input type="datetime-local" class="form-control" name="collection_datetime" value="">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Navigation Buttons -->
-                            <div class="row mt-4">
-                                <div class="col-12 text-end">
-                                    <button type="button" class="btn btn-primary btn-lg" onclick="nextStep()">
-                                        Next: Test Selection <i class="fas fa-arrow-right ms-2"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 2: Test Selection & Billing -->
-                <div class="step-content d-none" id="step2">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h5><i class="fas fa-vial me-2"></i>Test Selection & Billing</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <!-- Test Selection -->
-                                <div class="col-md-8">
-                                    <h6 class="text-success mb-3">Select Tests</h6>
-
-                                    <!-- Search Test Input -->
-                                    <div class="mb-4">
-                                        <label class="form-label">Search & Add Tests</label>
-                                        <div class="position-relative">
-                                            <input type="text" class="form-control" id="test-search" placeholder="Type test name to search..." autocomplete="off">
-                                            <div id="test-suggestions" class="position-absolute w-100 bg-white border rounded shadow-sm d-none" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
-                                                <!-- Suggestions will be populated here -->
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">Start typing to see test suggestions with prices</small>
-                                    </div>
-
-                                    <!-- Selected Tests Display -->
-                                    <div class="mb-3">
-                                        <h6 class="text-muted">Selected Tests & Services</h6>
-                                        <div id="selected-tests-display" class="border rounded p-3 bg-light">
-                                            <p class="text-muted mb-0">No tests selected. Use the search box above to add tests.</p>
-                                        </div>
-                                    </div>
-
-
-
-                                    <!-- Quick Test Categories (Optional) -->
-                                    <div class="mb-3">
-                                        <h6 class="text-muted">Quick Add - Common Tests</h6>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="d-grid gap-2">
-                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Complete Blood Count (CBC)', 300)">
-                                                        <i class="fas fa-plus me-1"></i>CBC - ₹300
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Blood Sugar (Fasting)', 150)">
-                                                        <i class="fas fa-plus me-1"></i>Blood Sugar - ₹150
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Lipid Profile', 500)">
-                                                        <i class="fas fa-plus me-1"></i>Lipid Profile - ₹500
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="d-grid gap-2">
-                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Thyroid Profile', 600)">
-                                                        <i class="fas fa-plus me-1"></i>Thyroid - ₹600
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('Urine Analysis', 200)">
-                                                        <i class="fas fa-plus me-1"></i>Urine Analysis - ₹200
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuickTest('X-Ray Chest', 250)">
-                                                        <i class="fas fa-plus me-1"></i>X-Ray - ₹250
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-                                
-                                <!-- Billing Summary -->
-                                <div class="col-md-4">
-                                    <div class="card bg-light">
-                                        <div class="card-header">
-                                            <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Billing Summary</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <!-- Tests Summary -->
-                                            <div class="mb-3">
-                                                <h6 class="text-primary mb-2">Tests & Services</h6>
-                                                <div id="selected-tests">
-                                                    <p class="text-muted">No tests selected</p>
-                                                </div>
-                                            </div>
-
-                                            <hr>
-
-                                            <!-- Subtotals -->
-                                            <div class="d-flex justify-content-between mb-1">
-                                                <span>Tests Subtotal:</span>
-                                                <span id="tests-subtotal">₹0</span>
-                                            </div>
-
-                                            <hr>
-
-                                            <div class="d-flex justify-content-between">
-                                                <strong>Total Amount:</strong>
-                                                <strong id="total-amount">₹0</strong>
-                                            </div>
-                                            
-                                            <hr>
-                                            
-                                            <!-- Payment Options -->
-                                            <h6 class="text-success mb-3">Payment Option</h6>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="payment_option" value="full" id="payment-full" checked>
-                                                <label class="form-check-label" for="payment-full">
-                                                    Full Payment
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="payment_option" value="half" id="payment-half">
-                                                <label class="form-check-label" for="payment-half">
-                                                    Half Payment (50%)
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="payment_option" value="custom" id="payment-custom">
-                                                <label class="form-check-label" for="payment-custom">
-                                                    Custom Amount
-                                                </label>
-                                            </div>
-
-                                            <!-- Custom Amount Input -->
-                                            <div class="mt-2" id="custom-amount-section" style="display: none;">
-                                                <div class="input-group">
-                                                    <span class="input-group-text">₹</span>
-                                                    <input type="number" class="form-control" id="custom-amount-input" placeholder="Enter custom amount" min="1">
-                                                </div>
-                                                <small class="text-muted">Enter the amount you want to pay now</small>
-                                            </div>
-
-                                            <!-- Discount Section -->
-                                            <div class="mt-3">
-                                                <h6 class="text-info mb-2">Discount</h6>
-                                                <div class="row">
-                                                    <div class="col-6">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="discount_type" value="percentage" id="discount-percentage" checked>
-                                                            <label class="form-check-label" for="discount-percentage">
-                                                                Percentage (%)
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="radio" name="discount_type" value="amount" id="discount-amount">
-                                                            <label class="form-check-label" for="discount-amount">
-                                                                Fixed Amount (₹)
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="mt-2">
-                                                    <div class="input-group">
-                                                        <span class="input-group-text" id="discount-symbol">%</span>
-                                                        <input type="number" class="form-control" id="discount-input" placeholder="Enter discount" min="0" max="100" step="0.01">
-                                                        <button type="button" class="btn btn-outline-secondary" onclick="clearDiscount()">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
-                                                    </div>
-                                                    <small class="text-muted" id="discount-help">Enter discount percentage (0-100%)</small>
-                                                </div>
-                                            </div>
-
-                                            <div class="mt-3">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Subtotal:</span>
-                                                    <span id="subtotal-amount">₹0</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between text-success">
-                                                    <span>Discount:</span>
-                                                    <span id="discount-amount-display">-₹0</span>
-                                                </div>
-                                                <hr class="my-2">
-                                                <div class="d-flex justify-content-between">
-                                                    <span><strong>Total Amount:</strong></span>
-                                                    <strong id="total-amount">₹0</strong>
-                                                </div>
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Amount to Pay:</span>
-                                                    <strong id="amount-to-pay">₹0</strong>
-                                                </div>
-                                                <div class="d-flex justify-content-between text-muted">
-                                                    <small>Remaining:</small>
-                                                    <small id="remaining-amount">₹0</small>
-                                                </div>
-                                            </div>
-                                            
-                                            <hr>
-
-                                            <!-- Payment Method -->
-                                            <div class="mt-3">
-                                                <label class="form-label">Payment Method</label>
-                                                <select class="form-select" name="payment_method">
-                                                    <option value="Cash">Cash</option>
-                                                    <option value="Card">Card</option>
-                                                    <option value="UPI">UPI</option>
-                                                    <option value="Bank Transfer">Bank Transfer</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Navigation Buttons -->
-                            <div class="row mt-4">
-                                <div class="col-6">
-                                    <button type="button" class="btn btn-outline-secondary btn-lg" onclick="previousStep()">
-                                        <i class="fas fa-arrow-left me-2"></i> Back
-                                    </button>
-                                </div>
-                                <div class="col-6 text-end">
-                                    <button type="submit" class="btn btn-success btn-lg" id="submit-btn" disabled>
-                                        <i class="fas fa-check me-2"></i> Complete Registration
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <!-- Simple Header -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <h3 class="text-center">
+            <i class="fas fa-user-plus me-2"></i>Patient Registration & Test
+            Assignment
+          </h3>
         </div>
+      </div>
+
+      <!-- Multi-Step Form -->
+      <form
+        id="multiStepForm"
+        method="POST"
+        action="{{ url_for('multi_step_registration') }}"
+      >
+        <!-- Step 1: Patient Information -->
+        <div class="step-content" id="step1">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h5>
+                <i class="fas fa-user me-2"></i>Patient Information & Collection
+                Details
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <!-- Personal Information -->
+                <div class="col-md-6">
+                  <h6 class="text-primary mb-3">Personal Details</h6>
+
+                  <div class="row">
+                    <div class="col-md-2">
+                      <div class="mb-3">
+                        <label class="form-label">Title *</label>
+                        <select
+                          class="form-select"
+                          name="title"
+                          id="title"
+                          required
+                          onchange="updateGenderFromTitle()"
+                        >
+                          <option value="">Select Title</option>
+                          <option value="Mr." data-gender="Male">Mr.</option>
+                          <option value="Mrs." data-gender="Female">
+                            Mrs.
+                          </option>
+                          <option value="Miss" data-gender="Female">
+                            Miss
+                          </option>
+                          <option value="Dr." data-gender="">Dr.</option>
+                          <option value="Prof." data-gender="">Prof.</option>
+                          <option value="Master" data-gender="Male">
+                            Master
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-5">
+                      <div class="mb-3">
+                        <label class="form-label">First Name *</label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          name="first_name"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div class="col-md-5">
+                      <div class="mb-3">
+                        <label class="form-label">Last Name *</label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          name="last_name"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Age *</label>
+                    <div class="row">
+                      <div class="col-6">
+                        <select class="form-select" name="age_years" required>
+                          <option value="">Years</option>
+                          {% for year in range(0, 101) %}
+                          <option value="{{ year }}">{{ year }} years</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                      <div class="col-6">
+                        <select class="form-select" name="age_months">
+                          <option value="0">0 months</option>
+                          {% for month in range(1, 12) %}
+                          <option value="{{ month }}">
+                            {{ month }} months
+                          </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <small class="form-text text-muted"
+                      >Select years and additional months</small
+                    >
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Gender *</label>
+                    <div class="mt-2">
+                      <div class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          name="gender"
+                          id="gender-male"
+                          value="Male"
+                          required
+                        />
+                        <label class="form-check-label" for="gender-male">
+                          <i class="fas fa-mars text-primary me-1"></i>Male
+                        </label>
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          name="gender"
+                          id="gender-female"
+                          value="Female"
+                          required
+                        />
+                        <label class="form-check-label" for="gender-female">
+                          <i class="fas fa-venus text-danger me-1"></i>Female
+                        </label>
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          name="gender"
+                          id="gender-other"
+                          value="Other"
+                          required
+                        />
+                        <label class="form-check-label" for="gender-other">
+                          <i class="fas fa-genderless text-secondary me-1"></i
+                          >Other
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Phone Number *</label>
+                    <input
+                      type="tel"
+                      class="form-control"
+                      name="phone"
+                      required
+                    />
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Barcode</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      name="barcode"
+                      placeholder="Enter or scan barcode"
+                    />
+                    <small class="text-muted"
+                      >Optional: Unique identifier for sample tracking</small
+                    >
+                  </div>
+                </div>
+
+                <!-- Contact & Medical Information -->
+                <div class="col-md-6">
+                  <h6 class="text-primary mb-3">Contact & Medical Details</h6>
+
+                  <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" name="email" />
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <textarea
+                      class="form-control"
+                      name="address"
+                      rows="2"
+                    ></textarea>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Emergency Contact</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      name="emergency_contact"
+                    />
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Medical History</label>
+                    <textarea
+                      class="form-control"
+                      name="medical_history"
+                      rows="2"
+                      placeholder="Any relevant medical conditions, allergies, medications..."
+                    ></textarea>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-8">
+                      <div class="mb-3">
+                        <label class="form-label">Referring Doctor</label>
+                        <div class="position-relative">
+                          <input
+                            type="text"
+                            class="form-control"
+                            name="referring_doctor"
+                            id="referring-doctor-input"
+                            placeholder="Search or select doctor..."
+                            autocomplete="off"
+                          />
+                          <div
+                            id="doctor-suggestions"
+                            class="position-absolute w-100 bg-white border rounded shadow-sm d-none"
+                            style="
+                              z-index: 1000;
+                              max-height: 150px;
+                              overflow-y: auto;
+                            "
+                          >
+                            <!-- Doctor suggestions will be populated here -->
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button
+                          type="button"
+                          class="btn btn-outline-primary w-100"
+                          onclick="showAddDoctorModal()"
+                        >
+                          <i class="fas fa-plus me-1"></i>Add New
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Collection Information -->
+              <hr class="my-4" />
+              <div class="row">
+                <div class="col-12">
+                  <h6 class="text-primary mb-3">Collection Information</h6>
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="mb-3">
+                        <label class="form-label">Collected By</label>
+                        <select
+                          class="form-select"
+                          name="collected_by"
+                          id="collected-by-select"
+                        >
+                          <option value="">Select Collector</option>
+                          <option value="Lab Technician 1">
+                            Lab Technician 1
+                          </option>
+                          <option value="Lab Technician 2">
+                            Lab Technician 2
+                          </option>
+                          <option value="Phlebotomist 1">Phlebotomist 1</option>
+                          <option value="Phlebotomist 2">Phlebotomist 2</option>
+                          <option value="Home Collection Team">
+                            Home Collection Team
+                          </option>
+                          <option value="Other">Other (Specify)</option>
+                        </select>
+                        <input
+                          type="text"
+                          class="form-control mt-2 d-none"
+                          id="other-collector"
+                          name="other_collector"
+                          placeholder="Specify collector name"
+                        />
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="mb-3">
+                        <label class="form-label">Collected At</label>
+                        <select class="form-select" name="collected_at">
+                          <option value="">Select Location</option>
+                          <option value="Lab - Main Branch">
+                            Lab - Main Branch
+                          </option>
+                          <option value="Lab - Branch 2">Lab - Branch 2</option>
+                          <option value="Patient Home">Patient Home</option>
+                          <option value="Hospital - City Hospital">
+                            Hospital - City Hospital
+                          </option>
+                          <option value="Hospital - General Hospital">
+                            Hospital - General Hospital
+                          </option>
+                          <option value="Clinic - Dr. Smith Clinic">
+                            Clinic - Dr. Smith Clinic
+                          </option>
+                          <option value="Other">Other Location</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="mb-3">
+                        <label class="form-label">Collection Date & Time</label>
+                        <input
+                          type="datetime-local"
+                          class="form-control"
+                          name="collection_datetime"
+                          value=""
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation Buttons -->
+              <div class="row mt-4">
+                <div class="col-12 text-end">
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-lg"
+                    onclick="nextStep()"
+                  >
+                    Next: Test Selection <i class="fas fa-arrow-right ms-2"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Test Selection & Billing -->
+        <div class="step-content d-none" id="step2">
+          <div class="card">
+            <div class="card-header bg-success text-white">
+              <h5><i class="fas fa-vial me-2"></i>Test Selection & Billing</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <!-- Test Selection -->
+                <div class="col-md-8">
+                  <h6 class="text-success mb-3">Select Tests</h6>
+
+                  <!-- Search Test Input -->
+                  <div class="mb-4">
+                    <label class="form-label">Search & Add Tests</label>
+                    <div class="position-relative">
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="test-search"
+                        placeholder="Type test name to search..."
+                        autocomplete="off"
+                      />
+                      <div
+                        id="test-suggestions"
+                        class="position-absolute w-100 bg-white border rounded shadow-sm d-none"
+                        style="
+                          z-index: 1000;
+                          max-height: 200px;
+                          overflow-y: auto;
+                        "
+                      >
+                        <!-- Suggestions will be populated here -->
+                      </div>
+                    </div>
+                    <small class="text-muted"
+                      >Start typing to see test suggestions with prices</small
+                    >
+                  </div>
+
+                  <!-- Selected Tests Display -->
+                  <div class="mb-3">
+                    <h6 class="text-muted">Selected Tests & Services</h6>
+                    <div
+                      id="selected-tests-display"
+                      class="border rounded p-3 bg-light"
+                    >
+                      <p class="text-muted mb-0">
+                        No tests selected. Use the search box above to add
+                        tests.
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Quick Test Categories (Optional) -->
+                  <div class="mb-3">
+                    <h6 class="text-muted">Quick Add - Common Tests</h6>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="
+                              addQuickTest('Complete Blood Count (CBC)', 300)
+                            "
+                          >
+                            <i class="fas fa-plus me-1"></i>CBC - ₹300
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="addQuickTest('Blood Sugar (Fasting)', 150)"
+                          >
+                            <i class="fas fa-plus me-1"></i>Blood Sugar - ₹150
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="addQuickTest('Lipid Profile', 500)"
+                          >
+                            <i class="fas fa-plus me-1"></i>Lipid Profile - ₹500
+                          </button>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="d-grid gap-2">
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="addQuickTest('Thyroid Profile', 600)"
+                          >
+                            <i class="fas fa-plus me-1"></i>Thyroid - ₹600
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="addQuickTest('Urine Analysis', 200)"
+                          >
+                            <i class="fas fa-plus me-1"></i>Urine Analysis -
+                            ₹200
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="addQuickTest('X-Ray Chest', 250)"
+                          >
+                            <i class="fas fa-plus me-1"></i>X-Ray - ₹250
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Billing Summary -->
+                <div class="col-md-4">
+                  <div class="card bg-light">
+                    <div class="card-header">
+                      <h6 class="mb-0">
+                        <i class="fas fa-calculator me-2"></i>Billing Summary
+                      </h6>
+                    </div>
+                    <div class="card-body">
+                      <!-- Tests Summary -->
+                      <div class="mb-3">
+                        <h6 class="text-primary mb-2">Tests & Services</h6>
+                        <div id="selected-tests">
+                          <p class="text-muted">No tests selected</p>
+                        </div>
+                      </div>
+
+                      <hr />
+
+                      <!-- Subtotals -->
+                      <div class="d-flex justify-content-between mb-1">
+                        <span>Tests Subtotal:</span>
+                        <span id="tests-subtotal">₹0</span>
+                      </div>
+
+                      <hr />
+
+                      <div class="d-flex justify-content-between">
+                        <strong>Total Amount:</strong>
+                        <strong id="total-amount">₹0</strong>
+                      </div>
+
+                      <hr />
+
+                      <!-- Payment Options -->
+                      <h6 class="text-success mb-3">Payment Option</h6>
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          name="payment_option"
+                          value="full"
+                          id="payment-full"
+                          checked
+                        />
+                        <label class="form-check-label" for="payment-full">
+                          Full Payment
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          name="payment_option"
+                          value="half"
+                          id="payment-half"
+                        />
+                        <label class="form-check-label" for="payment-half">
+                          Half Payment (50%)
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="radio"
+                          name="payment_option"
+                          value="custom"
+                          id="payment-custom"
+                        />
+                        <label class="form-check-label" for="payment-custom">
+                          Custom Amount
+                        </label>
+                      </div>
+
+                      <!-- Custom Amount Input -->
+                      <div
+                        class="mt-2"
+                        id="custom-amount-section"
+                        style="display: none"
+                      >
+                        <div class="input-group">
+                          <span class="input-group-text">₹</span>
+                          <input
+                            type="number"
+                            class="form-control"
+                            id="custom-amount-input"
+                            placeholder="Enter custom amount"
+                            min="1"
+                          />
+                        </div>
+                        <small class="text-muted"
+                          >Enter the amount you want to pay now</small
+                        >
+                      </div>
+
+                      <!-- Discount Section -->
+                      <div class="mt-3">
+                        <h6 class="text-info mb-2">Discount</h6>
+                        <div class="row">
+                          <div class="col-6">
+                            <div class="form-check">
+                              <input
+                                class="form-check-input"
+                                type="radio"
+                                name="discount_type"
+                                value="percentage"
+                                id="discount-percentage"
+                                checked
+                              />
+                              <label
+                                class="form-check-label"
+                                for="discount-percentage"
+                              >
+                                Percentage (%)
+                              </label>
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <div class="form-check">
+                              <input
+                                class="form-check-input"
+                                type="radio"
+                                name="discount_type"
+                                value="amount"
+                                id="discount-amount"
+                              />
+                              <label
+                                class="form-check-label"
+                                for="discount-amount"
+                              >
+                                Fixed Amount (₹)
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="mt-2">
+                          <div class="input-group">
+                            <span class="input-group-text" id="discount-symbol"
+                              >%</span
+                            >
+                            <input
+                              type="number"
+                              class="form-control"
+                              id="discount-input"
+                              placeholder="Enter discount"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                            />
+                            <button
+                              type="button"
+                              class="btn btn-outline-secondary"
+                              onclick="clearDiscount()"
+                            >
+                              <i class="fas fa-times"></i>
+                            </button>
+                          </div>
+                          <small class="text-muted" id="discount-help"
+                            >Enter discount percentage (0-100%)</small
+                          >
+                        </div>
+                      </div>
+
+                      <div class="mt-3">
+                        <div class="d-flex justify-content-between">
+                          <span>Subtotal:</span>
+                          <span id="subtotal-amount">₹0</span>
+                        </div>
+                        <div
+                          class="d-flex justify-content-between text-success"
+                        >
+                          <span>Discount:</span>
+                          <span id="discount-amount-display">-₹0</span>
+                        </div>
+                        <hr class="my-2" />
+                        <div class="d-flex justify-content-between">
+                          <span><strong>Total Amount:</strong></span>
+                          <strong id="total-amount">₹0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                          <span>Amount to Pay:</span>
+                          <strong id="amount-to-pay">₹0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted">
+                          <small>Remaining:</small>
+                          <small id="remaining-amount">₹0</small>
+                        </div>
+                      </div>
+
+                      <hr />
+
+                      <!-- Payment Method -->
+                      <div class="mt-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" name="payment_method">
+                          <option value="Cash">Cash</option>
+                          <option value="Card">Card</option>
+                          <option value="UPI">UPI</option>
+                          <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation Buttons -->
+              <div class="row mt-4">
+                <div class="col-6">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-lg"
+                    onclick="previousStep()"
+                  >
+                    <i class="fas fa-arrow-left me-2"></i> Back
+                  </button>
+                </div>
+                <div class="col-6 text-end">
+                  <button
+                    type="submit"
+                    class="btn btn-success btn-lg"
+                    id="submit-btn"
+                    disabled
+                  >
+                    <i class="fas fa-check me-2"></i> Complete Registration
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
 <!-- Add Doctor Modal -->
-<div class="modal fade" id="addDoctorModal" tabindex="-1" aria-labelledby="addDoctorModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addDoctorModalLabel">
-                    <i class="fas fa-user-md me-2"></i>Add New Doctor
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addDoctorForm">
-                    <div class="mb-3">
-                        <label class="form-label">Doctor Name *</label>
-                        <input type="text" class="form-control" id="new-doctor-name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Specialization</label>
-                        <input type="text" class="form-control" id="new-doctor-specialization" placeholder="e.g., Cardiologist, General Physician">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Hospital/Clinic</label>
-                        <input type="text" class="form-control" id="new-doctor-hospital" placeholder="e.g., City Hospital">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input type="tel" class="form-control" id="new-doctor-phone">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="addNewDoctor()">
-                    <i class="fas fa-save me-1"></i>Add Doctor
-                </button>
-            </div>
-        </div>
+<div
+  class="modal fade"
+  id="addDoctorModal"
+  tabindex="-1"
+  aria-labelledby="addDoctorModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addDoctorModalLabel">
+          <i class="fas fa-user-md me-2"></i>Add New Doctor
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="addDoctorForm">
+          <div class="mb-3">
+            <label class="form-label">Doctor Name *</label>
+            <input
+              type="text"
+              class="form-control"
+              id="new-doctor-name"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Specialization</label>
+            <input
+              type="text"
+              class="form-control"
+              id="new-doctor-specialization"
+              placeholder="e.g., Cardiologist, General Physician"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Hospital/Clinic</label>
+            <input
+              type="text"
+              class="form-control"
+              id="new-doctor-hospital"
+              placeholder="e.g., City Hospital"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="new-doctor-phone" />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" onclick="addNewDoctor()">
+          <i class="fas fa-save me-1"></i>Add Doctor
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Print Invoice Modal -->
-<div class="modal fade" id="printInvoiceModal" tabindex="-1" aria-labelledby="printInvoiceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="printInvoiceModalLabel">
-                    <i class="fas fa-check-circle text-success me-2"></i>Registration Successful
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
-                    <h4 class="text-success mt-2">Registration Completed Successfully!</h4>
-                    <p class="text-muted">Patient has been registered and tests have been assigned.</p>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <i class="fas fa-file-invoice fa-2x text-primary mb-3"></i>
-                                <h6>Print Invoice</h6>
-                                <p class="text-muted small">Print billing invoice for patient records</p>
-                                <button type="button" class="btn btn-primary" onclick="printInvoice()">
-                                    <i class="fas fa-print me-1"></i>Print Invoice
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <i class="fas fa-file-medical fa-2x text-success mb-3"></i>
-                                <h6>Print Report Template</h6>
-                                <p class="text-muted small">Print test report template for lab use</p>
-                                <button type="button" class="btn btn-success" onclick="printReport()">
-                                    <i class="fas fa-print me-1"></i>Print Report
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-4">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Next Steps:</strong>
-                        <ul class="mb-0 mt-2">
-                            <li>Collect sample from patient</li>
-                            <li>Process tests in laboratory</li>
-                            <li>Update test results when ready</li>
-                            <li>Generate final report for patient</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('index') }}'">
-                    <i class="fas fa-home me-1"></i>Go to Dashboard
-                </button>
-            </div>
+<div
+  class="modal fade"
+  id="printInvoiceModal"
+  tabindex="-1"
+  aria-labelledby="printInvoiceModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="printInvoiceModalLabel">
+          <i class="fas fa-check-circle text-success me-2"></i>Registration
+          Successful
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <i
+            class="fas fa-check-circle text-success"
+            style="font-size: 3rem"
+          ></i>
+          <h4 class="text-success mt-2">
+            Registration Completed Successfully!
+          </h4>
+          <p class="text-muted">
+            Patient has been registered and tests have been assigned.
+          </p>
         </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-file-invoice fa-2x text-primary mb-3"></i>
+                <h6>Print Invoice</h6>
+                <p class="text-muted small">
+                  Print billing invoice for patient records
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  onclick="printInvoice()"
+                >
+                  <i class="fas fa-print me-1"></i>Print Invoice
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-file-medical fa-2x text-success mb-3"></i>
+                <h6>Print Report Template</h6>
+                <p class="text-muted small">
+                  Print test report template for lab use
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  onclick="printReport()"
+                >
+                  <i class="fas fa-print me-1"></i>Print Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Next Steps:</strong>
+            <ul class="mb-0 mt-2">
+              <li>Collect sample from patient</li>
+              <li>Process tests in laboratory</li>
+              <li>Update test results when ready</li>
+              <li>Generate final report for patient</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          onclick="window.location.href='{{ url_for('index') }}'"
+        >
+          <i class="fas fa-home me-1"></i>Go to Dashboard
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 <style>
-/* Print styles */
-@media print {
+  /* Print styles */
+  @media print {
     body * {
-        visibility: hidden;
+      visibility: hidden;
     }
-    .print-content, .print-content * {
-        visibility: visible;
+    .print-content,
+    .print-content * {
+      visibility: visible;
     }
     .print-content {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
     }
-}
+  }
 
-.test-category .form-check {
+  .test-category .form-check {
     margin-bottom: 8px;
-}
+  }
 
-.test-checkbox:checked + label {
+  .test-checkbox:checked + label {
     font-weight: bold;
     color: #28a745;
-}
+  }
 
-#selected-tests {
+  #selected-tests {
     max-height: 200px;
     overflow-y: auto;
-}
+  }
 
-.selected-test-item {
+  .selected-test-item {
     display: flex;
     justify-content: between;
     align-items: center;
     padding: 5px 0;
     border-bottom: 1px solid #dee2e6;
-}
+  }
 
-.selected-test-item:last-child {
+  .selected-test-item:last-child {
     border-bottom: none;
-}
+  }
 
-.suggestion-item:hover {
+  .suggestion-item:hover {
     background-color: #e3f2fd !important;
     cursor: pointer;
-}
+  }
 
-.suggestion-item:last-child {
+  .suggestion-item:last-child {
     border-bottom: none !important;
-}
+  }
 
-.suggestion-item.highlighted {
+  .suggestion-item.highlighted {
     background-color: #e3f2fd !important;
-}
+  }
 
-#test-suggestions {
+  #test-suggestions {
     border-top: none;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     max-height: 300px;
     overflow-y: auto;
-}
+  }
 
-#test-search:focus {
+  #test-search:focus {
     border-color: #007bff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
+  }
 
-.border-success {
+  .border-success {
     border-color: #28a745 !important;
     transition: border-color 0.3s ease;
-}
+  }
 
-/* Enhanced search highlighting */
-.suggestion-item mark {
+  /* Enhanced search highlighting */
+  .suggestion-item mark {
     background-color: #fff3cd !important;
     color: #856404 !important;
     padding: 1px 2px;
     border-radius: 2px;
-}
+  }
 
-.suggestion-item.keyboard-highlighted {
+  .suggestion-item.keyboard-highlighted {
     background-color: #e3f2fd !important;
     border-left: 3px solid #2196f3;
-}
+  }
 
-.suggestion-item:hover {
+  .suggestion-item:hover {
     background-color: #f8f9fa !important;
     transition: background-color 0.2s ease;
-}
+  }
 
-.form-check-input.is-invalid {
+  .form-check-input.is-invalid {
     border-color: #dc3545;
-}
+  }
 
-.form-check-input.is-invalid:focus {
+  .form-check-input.is-invalid:focus {
     border-color: #dc3545;
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-}
+  }
 </style>
 
 <script>
-let currentStep = 1;
-let subtotalAmount = 0;  // Amount before discount
-let discountAmount = 0;  // Discount amount
-let totalAmount = 0;     // Final amount after discount
-let selectedTests = [];
+  let currentStep = 1;
+  let subtotalAmount = 0;  // Amount before discount
+  let discountAmount = 0;  // Discount amount
+  let totalAmount = 0;     // Final amount after discount
+  let selectedTests = [];
 
-// Available doctors database for search suggestions
-const availableDoctors = [
-    {% if doctors %}
-        {% for doctor in doctors %}
-        {
-            id: {{ doctor.id }},
-            name: "{{ doctor.name }}",
-            specialization: "{{ doctor.specialization or 'General' }}",
-            hospital: "{{ doctor.hospital_name or 'Not specified' }}",
-            commission_type: "{{ doctor.commission_type }}",
-            commission_rate: "{{ doctor.commission_percentage if doctor.commission_type == 'percentage' else doctor.commission_amount }}"
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-    {% else %}
-        {name: "No doctors available", specialization: "", hospital: ""}
-    {% endif %}
-];
+  // Available doctors database for search suggestions
+  const availableDoctors = [
+      {% if doctors %}
+          {% for doctor in doctors %}
+          {
+              id: {{ doctor.id }},
+              name: "{{ doctor.name }}",
+              specialization: "{{ doctor.specialization or 'General' }}",
+              hospital: "{{ doctor.hospital_name or 'Not specified' }}",
+              commission_type: "{{ doctor.commission_type }}",
+              commission_rate: "{{ doctor.commission_percentage if doctor.commission_type == 'percentage' else doctor.commission_amount }}"
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+      {% else %}
+          {name: "No doctors available", specialization: "", hospital: ""}
+      {% endif %}
+  ];
 
-// Available tests database for search suggestions
-const availableTests = [
-    {name: "Complete Blood Count (CBC)", price: 300, category: "Blood Test"},
-    {name: "Blood Sugar (Fasting)", price: 150, category: "Blood Test"},
-    {name: "Blood Sugar (Random)", price: 120, category: "Blood Test"},
-    {name: "Blood Sugar (Post Prandial)", price: 140, category: "Blood Test"},
-    {name: "HbA1c (Glycated Hemoglobin)", price: 400, category: "Blood Test"},
-    {name: "Lipid Profile", price: 500, category: "Blood Test"},
-    {name: "Liver Function Test (LFT)", price: 400, category: "Blood Test"},
-    {name: "Kidney Function Test (KFT)", price: 350, category: "Blood Test"},
-    {name: "Thyroid Profile (T3, T4, TSH)", price: 600, category: "Hormone Test"},
-    {name: "Thyroid TSH", price: 200, category: "Hormone Test"},
-    {name: "Vitamin D", price: 800, category: "Vitamin Test"},
-    {name: "Vitamin B12", price: 600, category: "Vitamin Test"},
-    {name: "Iron Studies", price: 450, category: "Blood Test"},
-    {name: "Urine Analysis (Routine)", price: 200, category: "Urine Test"},
-    {name: "Urine Culture", price: 300, category: "Urine Test"},
-    {name: "Stool Analysis", price: 150, category: "Stool Test"},
-    {name: "X-Ray Chest", price: 250, category: "Radiology"},
-    {name: "X-Ray Abdomen", price: 300, category: "Radiology"},
-    {name: "ECG (Electrocardiogram)", price: 200, category: "Cardiology"},
-    {name: "Echo Cardiogram", price: 800, category: "Cardiology"},
-    {name: "Ultrasound Abdomen", price: 600, category: "Radiology"},
-    {name: "Ultrasound Pelvis", price: 650, category: "Radiology"},
-    {name: "CT Scan Head", price: 2500, category: "Radiology"},
-    {name: "MRI Brain", price: 5000, category: "Radiology"},
-    {name: "Hepatitis B Surface Antigen", price: 300, category: "Infection Test"},
-    {name: "HIV Test", price: 400, category: "Infection Test"},
-    {name: "Malaria Test", price: 150, category: "Infection Test"},
-    {name: "Dengue Test", price: 500, category: "Infection Test"},
-    {name: "COVID-19 RT-PCR", price: 800, category: "Infection Test"},
-    {name: "COVID-19 Antigen", price: 300, category: "Infection Test"}
-];
+  // Available tests database for search suggestions
+  const availableTests = [
+      {name: "Complete Blood Count (CBC)", price: 300, category: "Blood Test"},
+      {name: "Blood Sugar (Fasting)", price: 150, category: "Blood Test"},
+      {name: "Blood Sugar (Random)", price: 120, category: "Blood Test"},
+      {name: "Blood Sugar (Post Prandial)", price: 140, category: "Blood Test"},
+      {name: "HbA1c (Glycated Hemoglobin)", price: 400, category: "Blood Test"},
+      {name: "Lipid Profile", price: 500, category: "Blood Test"},
+      {name: "Liver Function Test (LFT)", price: 400, category: "Blood Test"},
+      {name: "Kidney Function Test (KFT)", price: 350, category: "Blood Test"},
+      {name: "Thyroid Profile (T3, T4, TSH)", price: 600, category: "Hormone Test"},
+      {name: "Thyroid TSH", price: 200, category: "Hormone Test"},
+      {name: "Vitamin D", price: 800, category: "Vitamin Test"},
+      {name: "Vitamin B12", price: 600, category: "Vitamin Test"},
+      {name: "Iron Studies", price: 450, category: "Blood Test"},
+      {name: "Urine Analysis (Routine)", price: 200, category: "Urine Test"},
+      {name: "Urine Culture", price: 300, category: "Urine Test"},
+      {name: "Stool Analysis", price: 150, category: "Stool Test"},
+      {name: "X-Ray Chest", price: 250, category: "Radiology"},
+      {name: "X-Ray Abdomen", price: 300, category: "Radiology"},
+      {name: "ECG (Electrocardiogram)", price: 200, category: "Cardiology"},
+      {name: "Echo Cardiogram", price: 800, category: "Cardiology"},
+      {name: "Ultrasound Abdomen", price: 600, category: "Radiology"},
+      {name: "Ultrasound Pelvis", price: 650, category: "Radiology"},
+      {name: "CT Scan Head", price: 2500, category: "Radiology"},
+      {name: "MRI Brain", price: 5000, category: "Radiology"},
+      {name: "Hepatitis B Surface Antigen", price: 300, category: "Infection Test"},
+      {name: "HIV Test", price: 400, category: "Infection Test"},
+      {name: "Malaria Test", price: 150, category: "Infection Test"},
+      {name: "Dengue Test", price: 500, category: "Infection Test"},
+      {name: "COVID-19 RT-PCR", price: 800, category: "Infection Test"},
+      {name: "COVID-19 Antigen", price: 300, category: "Infection Test"}
+  ];
 
-// Title to Gender mapping function
-function updateGenderFromTitle() {
-    const titleSelect = document.getElementById('title');
-    const selectedOption = titleSelect.options[titleSelect.selectedIndex];
-    const gender = selectedOption.getAttribute('data-gender');
+  // Title to Gender mapping function
+  function updateGenderFromTitle() {
+      const titleSelect = document.getElementById('title');
+      const selectedOption = titleSelect.options[titleSelect.selectedIndex];
+      const gender = selectedOption.getAttribute('data-gender');
 
-    if (gender) {
-        // Clear all radio buttons first
-        document.querySelectorAll('input[name="gender"]').forEach(radio => {
-            radio.checked = false;
-        });
+      if (gender) {
+          // Clear all radio buttons first
+          document.querySelectorAll('input[name="gender"]').forEach(radio => {
+              radio.checked = false;
+          });
 
-        // Select the appropriate gender
-        const genderRadio = document.querySelector(`input[name="gender"][value="${gender}"]`);
-        if (genderRadio) {
-            genderRadio.checked = true;
-        }
-    }
-}
+          // Select the appropriate gender
+          const genderRadio = document.querySelector(`input[name="gender"][value="${gender}"]`);
+          if (genderRadio) {
+              genderRadio.checked = true;
+          }
+      }
+  }
 
-// Doctor Search Functionality
-function initializeDoctorSearch() {
-    const doctorInput = document.getElementById('referring-doctor-input');
-    const suggestionsDiv = document.getElementById('doctor-suggestions');
+  // Doctor Search Functionality
+  function initializeDoctorSearch() {
+      const doctorInput = document.getElementById('referring-doctor-input');
+      const suggestionsDiv = document.getElementById('doctor-suggestions');
 
-    doctorInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
+      doctorInput.addEventListener('input', function() {
+          const query = this.value.toLowerCase().trim();
 
-        if (query.length < 2) {
-            suggestionsDiv.classList.add('d-none');
-            return;
-        }
+          if (query.length < 2) {
+              suggestionsDiv.classList.add('d-none');
+              return;
+          }
 
-        const filteredDoctors = availableDoctors.filter(doctor =>
-            doctor.name.toLowerCase().includes(query) ||
-            doctor.specialization.toLowerCase().includes(query) ||
-            doctor.hospital.toLowerCase().includes(query)
-        );
+          const filteredDoctors = availableDoctors.filter(doctor =>
+              doctor.name.toLowerCase().includes(query) ||
+              doctor.specialization.toLowerCase().includes(query) ||
+              doctor.hospital.toLowerCase().includes(query)
+          );
 
-        if (filteredDoctors.length > 0) {
-            let suggestionsHTML = '';
-            filteredDoctors.slice(0, 5).forEach(doctor => {
-                suggestionsHTML += `
-                    <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
-                         onclick="selectDoctorFromSuggestion('${doctor.name}')">
-                        <div>
-                            <strong>${doctor.name}</strong>
-                            <small class="text-muted d-block">${doctor.specialization} - ${doctor.hospital}</small>
-                        </div>
-                    </div>
-                `;
-            });
+          if (filteredDoctors.length > 0) {
+              let suggestionsHTML = '';
+              filteredDoctors.slice(0, 5).forEach(doctor => {
+                  suggestionsHTML += `
+                      <div class="suggestion-item p-2 border-bottom" style="cursor: pointer;"
+                           onclick="selectDoctorFromSuggestion('${doctor.name}')">
+                          <div>
+                              <strong>${doctor.name}</strong>
+                              <small class="text-muted d-block">${doctor.specialization} - ${doctor.hospital}</small>
+                          </div>
+                      </div>
+                  `;
+              });
 
-            suggestionsDiv.innerHTML = suggestionsHTML;
-            suggestionsDiv.classList.remove('d-none');
-        } else {
-            suggestionsDiv.innerHTML = '<div class="p-2 text-muted">No doctors found</div>';
-            suggestionsDiv.classList.remove('d-none');
-        }
-    });
+              suggestionsDiv.innerHTML = suggestionsHTML;
+              suggestionsDiv.classList.remove('d-none');
+          } else {
+              suggestionsDiv.innerHTML = '<div class="p-2 text-muted">No doctors found</div>';
+              suggestionsDiv.classList.remove('d-none');
+          }
+      });
 
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!doctorInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-            suggestionsDiv.classList.add('d-none');
-        }
-    });
-}
+      // Hide suggestions when clicking outside
+      document.addEventListener('click', function(e) {
+          if (!doctorInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+              suggestionsDiv.classList.add('d-none');
+          }
+      });
+  }
 
-function selectDoctorFromSuggestion(doctorName) {
-    document.getElementById('referring-doctor-input').value = doctorName;
-    document.getElementById('doctor-suggestions').classList.add('d-none');
-}
+  function selectDoctorFromSuggestion(doctorName) {
+      document.getElementById('referring-doctor-input').value = doctorName;
+      document.getElementById('doctor-suggestions').classList.add('d-none');
+  }
 
-function showAddDoctorModal() {
-    const modal = new bootstrap.Modal(document.getElementById('addDoctorModal'));
-    modal.show();
-}
+  function showAddDoctorModal() {
+      const modal = new bootstrap.Modal(document.getElementById('addDoctorModal'));
+      modal.show();
+  }
 
-function addNewDoctor() {
-    const name = document.getElementById('new-doctor-name').value.trim();
-    const specialization = document.getElementById('new-doctor-specialization').value.trim();
-    const hospital = document.getElementById('new-doctor-hospital').value.trim();
-    const phone = document.getElementById('new-doctor-phone').value.trim();
+  function addNewDoctor() {
+      const name = document.getElementById('new-doctor-name').value.trim();
+      const specialization = document.getElementById('new-doctor-specialization').value.trim();
+      const hospital = document.getElementById('new-doctor-hospital').value.trim();
+      const phone = document.getElementById('new-doctor-phone').value.trim();
 
-    if (!name) {
-        alert('Please enter doctor name');
-        return;
-    }
+      if (!name) {
+          alert('Please enter doctor name');
+          return;
+      }
 
-    // Add to available doctors list
-    availableDoctors.push({
-        name: name,
-        specialization: specialization || 'General Physician',
-        hospital: hospital || 'Not specified'
-    });
+      // Add to available doctors list
+      availableDoctors.push({
+          name: name,
+          specialization: specialization || 'General Physician',
+          hospital: hospital || 'Not specified'
+      });
 
-    // Set as selected doctor
-    document.getElementById('referring-doctor-input').value = name;
+      // Set as selected doctor
+      document.getElementById('referring-doctor-input').value = name;
 
-    // Clear form
-    document.getElementById('addDoctorForm').reset();
+      // Clear form
+      document.getElementById('addDoctorForm').reset();
 
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addDoctorModal'));
-    modal.hide();
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('addDoctorModal'));
+      modal.hide();
 
-    alert('Doctor added successfully!');
-}
+      alert('Doctor added successfully!');
+  }
 
-// Collection fields functionality
-function initializeCollectionFields() {
-    const collectedBySelect = document.getElementById('collected-by-select');
-    const otherCollectorInput = document.getElementById('other-collector');
+  // Collection fields functionality
+  function initializeCollectionFields() {
+      const collectedBySelect = document.getElementById('collected-by-select');
+      const otherCollectorInput = document.getElementById('other-collector');
 
-    collectedBySelect.addEventListener('change', function() {
-        if (this.value === 'Other') {
-            otherCollectorInput.classList.remove('d-none');
-            otherCollectorInput.required = true;
-        } else {
-            otherCollectorInput.classList.add('d-none');
-            otherCollectorInput.required = false;
-            otherCollectorInput.value = '';
-        }
-    });
+      collectedBySelect.addEventListener('change', function() {
+          if (this.value === 'Other') {
+              otherCollectorInput.classList.remove('d-none');
+              otherCollectorInput.required = true;
+          } else {
+              otherCollectorInput.classList.add('d-none');
+              otherCollectorInput.required = false;
+              otherCollectorInput.value = '';
+          }
+      });
 
-    // Set default collection date/time to now
-    const now = new Date();
-    const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    document.querySelector('input[name="collection_datetime"]').value = localDateTime;
-}</script>
+      // Set default collection date/time to now
+      const now = new Date();
+      const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.querySelector('input[name="collection_datetime"]').value = localDateTime;
+  }
+</script>
 
 <script>
+  // Simple Google-like Test Search - Rebuilt from scratch
+  function initializeTestSearch() {
+    console.log("=== INITIALIZING NEW SEARCH ===");
 
-// Simple Google-like Test Search - Rebuilt from scratch
-function initializeTestSearch() {
-    console.log('=== INITIALIZING NEW SEARCH ===');
-
-    const searchInput = document.getElementById('test-search');
-    const suggestionsDiv = document.getElementById('test-suggestions');
+    const searchInput = document.getElementById("test-search");
+    const suggestionsDiv = document.getElementById("test-suggestions");
 
     if (!searchInput || !suggestionsDiv) {
-        console.error('Search elements not found!');
-        return;
+      console.error("Search elements not found!");
+      return;
     }
 
-    console.log('Search elements found successfully');
-    console.log('Available tests:', availableTests.length);
+    console.log("Search elements found successfully");
+    console.log("Available tests:", availableTests.length);
 
     // Clear any existing content
-    suggestionsDiv.innerHTML = '';
-    suggestionsDiv.classList.add('d-none');
+    suggestionsDiv.innerHTML = "";
+    suggestionsDiv.classList.add("d-none");
 
     // Simple input event - no complex logic
-    searchInput.oninput = function() {
-        const query = this.value.trim();
-        console.log('User typed:', query);
+    searchInput.oninput = function () {
+      const query = this.value.trim();
+      console.log("User typed:", query);
 
-        if (query.length === 0) {
-            suggestionsDiv.classList.add('d-none');
-            return;
+      if (query.length === 0) {
+        suggestionsDiv.classList.add("d-none");
+        return;
+      }
+
+      // Simple search - just find tests that contain the query
+      const results = [];
+      for (let i = 0; i < availableTests.length; i++) {
+        const test = availableTests[i];
+        if (test.name.toLowerCase().includes(query.toLowerCase())) {
+          results.push(test);
         }
+      }
 
-        // Simple search - just find tests that contain the query
-        const results = [];
-        for (let i = 0; i < availableTests.length; i++) {
-            const test = availableTests[i];
-            if (test.name.toLowerCase().includes(query.toLowerCase())) {
-                results.push(test);
-            }
-        }
+      console.log("Found results:", results.length);
 
-        console.log('Found results:', results.length);
-
-        // Show results
-        if (results.length > 0) {
-            let html = '';
-            for (let i = 0; i < Math.min(results.length, 8); i++) {
-                const test = results[i];
-                html += `
+      // Show results
+      if (results.length > 0) {
+        let html = "";
+        for (let i = 0; i < Math.min(results.length, 8); i++) {
+          const test = results[i];
+          html += `
                     <div class="search-result p-2 border-bottom" style="cursor: pointer;" onclick="addTestFromSearch('${test.name}', ${test.price})">
                         <div class="d-flex justify-content-between">
                             <div>
@@ -909,99 +1228,99 @@ function initializeTestSearch() {
                         </div>
                     </div>
                 `;
-            }
-            suggestionsDiv.innerHTML = html;
-            suggestionsDiv.classList.remove('d-none');
-        } else {
-            suggestionsDiv.innerHTML = '<div class="p-2 text-muted">No tests found</div>';
-            suggestionsDiv.classList.remove('d-none');
         }
+        suggestionsDiv.innerHTML = html;
+        suggestionsDiv.classList.remove("d-none");
+      } else {
+        suggestionsDiv.innerHTML =
+          '<div class="p-2 text-muted">No tests found</div>';
+        suggestionsDiv.classList.remove("d-none");
+      }
     };
 
     // Hide suggestions when clicking outside
-    document.onclick = function(e) {
-        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-            suggestionsDiv.classList.add('d-none');
-        }
+    document.onclick = function (e) {
+      if (
+        !searchInput.contains(e.target) &&
+        !suggestionsDiv.contains(e.target)
+      ) {
+        suggestionsDiv.classList.add("d-none");
+      }
     };
 
-    console.log('New search initialized successfully!');
-}
+    console.log("New search initialized successfully!");
+  }
 
-// Simple function to add test from search results
-function addTestFromSearch(testName, testPrice) {
-    console.log('Adding test from search:', testName, testPrice);
+  // Simple function to add test from search results
+  function addTestFromSearch(testName, testPrice) {
+    console.log("Adding test from search:", testName, testPrice);
 
     // Clear search
-    const searchInput = document.getElementById('test-search');
-    const suggestionsDiv = document.getElementById('test-suggestions');
+    const searchInput = document.getElementById("test-search");
+    const suggestionsDiv = document.getElementById("test-suggestions");
 
-    if (searchInput) searchInput.value = '';
-    if (suggestionsDiv) suggestionsDiv.classList.add('d-none');
+    if (searchInput) searchInput.value = "";
+    if (suggestionsDiv) suggestionsDiv.classList.add("d-none");
 
     // Add to selected tests (reuse existing function)
     selectTestFromSuggestion(testName, testPrice);
-}
+  }
 
-// Removed old complex search function
+  // Removed old complex search function
 
-// Removed all complex helper functions - keeping it simple
+  // Removed all complex helper functions - keeping it simple
 
-
-
-
-
-function selectTestFromSuggestion(testName, testPrice) {
-    console.log('Selecting test:', testName, 'Price:', testPrice);
+  function selectTestFromSuggestion(testName, testPrice) {
+    console.log("Selecting test:", testName, "Price:", testPrice);
 
     // Check if test is already selected
-    const existingTest = selectedTests.find(test => test.name === testName);
+    const existingTest = selectedTests.find((test) => test.name === testName);
     if (existingTest) {
-        alert('This test is already selected!');
-        return;
+      alert("This test is already selected!");
+      return;
     }
 
     // Add test to selected tests
-    selectedTests.push({name: testName, price: testPrice});
+    selectedTests.push({ name: testName, price: testPrice });
     totalAmount += testPrice;
 
     // Clear search input and hide suggestions
-    const searchInput = document.getElementById('test-search');
-    const suggestionsDiv = document.getElementById('test-suggestions');
+    const searchInput = document.getElementById("test-search");
+    const suggestionsDiv = document.getElementById("test-suggestions");
 
-    if (searchInput) searchInput.value = '';
-    if (suggestionsDiv) suggestionsDiv.classList.add('d-none');
+    if (searchInput) searchInput.value = "";
+    if (suggestionsDiv) suggestionsDiv.classList.add("d-none");
 
     // Update displays
     updateSelectedTestsDisplay();
     updateBilling();
 
     // Enable submit button
-    const submitBtn = document.getElementById('submit-btn');
+    const submitBtn = document.getElementById("submit-btn");
     if (submitBtn) {
-        submitBtn.disabled = selectedTests.length === 0;
+      submitBtn.disabled = selectedTests.length === 0;
     }
 
     // Show success feedback
     const searchContainer = searchInput?.parentElement;
     if (searchContainer) {
-        searchContainer.classList.add('border-success');
-        setTimeout(() => {
-            searchContainer.classList.remove('border-success');
-        }, 1000);
+      searchContainer.classList.add("border-success");
+      setTimeout(() => {
+        searchContainer.classList.remove("border-success");
+      }, 1000);
     }
-}
+  }
 
-function addQuickTest(testName, testPrice) {
+  function addQuickTest(testName, testPrice) {
     // Check if test is already selected
-    const existingTest = selectedTests.find(test => test.name === testName);
+    const existingTest = selectedTests.find((test) => test.name === testName);
     if (existingTest) {
-        alert('This test is already selected!');
-        return;
+      alert("This test is already selected!");
+      return;
     }
 
     // Add test to selected tests
-    selectedTests.push({name: testName, price: testPrice});
+    selectedTests.push({ name: testName, price: testPrice });
     totalAmount += testPrice;
 
     // Update displays
@@ -1009,34 +1328,36 @@ function addQuickTest(testName, testPrice) {
     updateBilling();
 
     // Enable submit button
-    document.getElementById('submit-btn').disabled = false;
-}
+    document.getElementById("submit-btn").disabled = false;
+  }
 
-function removeTest(testName) {
-    const testIndex = selectedTests.findIndex(test => test.name === testName);
+  function removeTest(testName) {
+    const testIndex = selectedTests.findIndex((test) => test.name === testName);
     if (testIndex > -1) {
-        totalAmount -= selectedTests[testIndex].price;
-        selectedTests.splice(testIndex, 1);
+      totalAmount -= selectedTests[testIndex].price;
+      selectedTests.splice(testIndex, 1);
 
-        updateSelectedTestsDisplay();
-        updateBilling();
+      updateSelectedTestsDisplay();
+      updateBilling();
 
-        // Disable submit button if no tests
-        document.getElementById('submit-btn').disabled = selectedTests.length === 0;
+      // Disable submit button if no tests
+      document.getElementById("submit-btn").disabled =
+        selectedTests.length === 0;
     }
-}
+  }
 
-function updateSelectedTestsDisplay() {
-    const displayDiv = document.getElementById('selected-tests-display');
+  function updateSelectedTestsDisplay() {
+    const displayDiv = document.getElementById("selected-tests-display");
 
     if (selectedTests.length === 0) {
-        displayDiv.innerHTML = '<p class="text-muted mb-0">No tests selected. Use the search box above to add tests.</p>';
-        return;
+      displayDiv.innerHTML =
+        '<p class="text-muted mb-0">No tests selected. Use the search box above to add tests.</p>';
+      return;
     }
 
-    let html = '';
-    selectedTests.forEach(test => {
-        html += `
+    let html = "";
+    selectedTests.forEach((test) => {
+      html += `
             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border">
                 <div>
                     <strong>${test.name}</strong>
@@ -1050,61 +1371,61 @@ function updateSelectedTestsDisplay() {
     });
 
     displayDiv.innerHTML = html;
-}
+  }
 
-// Step Navigation
-function nextStep() {
+  // Step Navigation
+  function nextStep() {
     if (validateStep1()) {
-        document.getElementById('step1').classList.add('d-none');
-        document.getElementById('step2').classList.remove('d-none');
+      document.getElementById("step1").classList.add("d-none");
+      document.getElementById("step2").classList.remove("d-none");
 
-        document.getElementById('step1-indicator').classList.remove('active');
-        document.getElementById('step1-indicator').classList.add('completed');
-        document.getElementById('step2-indicator').classList.add('active');
+      document.getElementById("step1-indicator").classList.remove("active");
+      document.getElementById("step1-indicator").classList.add("completed");
+      document.getElementById("step2-indicator").classList.add("active");
 
-        document.getElementById('progress-bar').style.width = '100%';
-        currentStep = 2;
+      document.getElementById("progress-bar").style.width = "100%";
+      currentStep = 2;
 
-        // Initialize test search when entering step 2
-        setTimeout(() => {
-            initializeTestSearch();
+      // Initialize test search when entering step 2
+      setTimeout(() => {
+        initializeTestSearch();
 
-            // Test if search is working
-            const testInput = document.getElementById('test-search');
-            if (testInput) {
-                console.log('Test search input found, adding test event');
-                testInput.focus();
-            }
-        }, 100);
+        // Test if search is working
+        const testInput = document.getElementById("test-search");
+        if (testInput) {
+          console.log("Test search input found, adding test event");
+          testInput.focus();
+        }
+      }, 100);
     }
-}
+  }
 
-function previousStep() {
-    document.getElementById('step2').classList.add('d-none');
-    document.getElementById('step1').classList.remove('d-none');
-    
-    document.getElementById('step2-indicator').classList.remove('active');
-    document.getElementById('step1-indicator').classList.remove('completed');
-    document.getElementById('step1-indicator').classList.add('active');
-    
-    document.getElementById('progress-bar').style.width = '50%';
+  function previousStep() {
+    document.getElementById("step2").classList.add("d-none");
+    document.getElementById("step1").classList.remove("d-none");
+
+    document.getElementById("step2-indicator").classList.remove("active");
+    document.getElementById("step1-indicator").classList.remove("completed");
+    document.getElementById("step1-indicator").classList.add("active");
+
+    document.getElementById("progress-bar").style.width = "50%";
     currentStep = 1;
-}
+  }
 
-// Validation
-function validateStep1() {
-    const requiredFields = ['title', 'first_name', 'last_name', 'phone'];
+  // Validation
+  function validateStep1() {
+    const requiredFields = ["title", "first_name", "last_name", "phone"];
     let isValid = true;
 
     // Validate text and select fields
-    requiredFields.forEach(field => {
-        const input = document.querySelector(`[name="${field}"]`);
-        if (!input.value.trim()) {
-            input.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            input.classList.remove('is-invalid');
-        }
+    requiredFields.forEach((field) => {
+      const input = document.querySelector(`[name="${field}"]`);
+      if (!input.value.trim()) {
+        input.classList.add("is-invalid");
+        isValid = false;
+      } else {
+        input.classList.remove("is-invalid");
+      }
     });
 
     // Validate age dropdowns
@@ -1112,77 +1433,89 @@ function validateStep1() {
     const ageMonthsField = document.querySelector('[name="age_months"]');
 
     if (!ageYearsField.value) {
-        ageYearsField.classList.add('is-invalid');
-        isValid = false;
+      ageYearsField.classList.add("is-invalid");
+      isValid = false;
     } else {
-        ageYearsField.classList.remove('is-invalid');
-        ageMonthsField.classList.remove('is-invalid');
+      ageYearsField.classList.remove("is-invalid");
+      ageMonthsField.classList.remove("is-invalid");
     }
 
     // Validate gender radio buttons
-    const genderSelected = document.querySelector('input[name="gender"]:checked');
+    const genderSelected = document.querySelector(
+      'input[name="gender"]:checked',
+    );
     if (!genderSelected) {
-        document.querySelectorAll('input[name="gender"]').forEach(radio => {
-            radio.classList.add('is-invalid');
-        });
-        isValid = false;
+      document.querySelectorAll('input[name="gender"]').forEach((radio) => {
+        radio.classList.add("is-invalid");
+      });
+      isValid = false;
     } else {
-        document.querySelectorAll('input[name="gender"]').forEach(radio => {
-            radio.classList.remove('is-invalid');
-        });
+      document.querySelectorAll('input[name="gender"]').forEach((radio) => {
+        radio.classList.remove("is-invalid");
+      });
     }
 
     // Validate "Other" collector specification
     const collectedBy = document.querySelector('[name="collected_by"]');
     const otherCollector = document.querySelector('[name="other_collector"]');
-    if (collectedBy && collectedBy.value === 'Other' && !otherCollector.value.trim()) {
-        otherCollector.classList.add('is-invalid');
-        isValid = false;
+    if (
+      collectedBy &&
+      collectedBy.value === "Other" &&
+      !otherCollector.value.trim()
+    ) {
+      otherCollector.classList.add("is-invalid");
+      isValid = false;
     } else if (otherCollector) {
-        otherCollector.classList.remove('is-invalid');
+      otherCollector.classList.remove("is-invalid");
     }
 
     if (!isValid) {
-        alert('Please fill in all required fields marked with * and select gender');
+      alert(
+        "Please fill in all required fields marked with * and select gender",
+      );
     }
 
     return isValid;
-}
+  }
 
-// Initialize age dropdowns (no longer needed as dropdowns are pre-populated in HTML)
-function initializeAgeDropdowns() {
+  // Initialize age dropdowns (no longer needed as dropdowns are pre-populated in HTML)
+  function initializeAgeDropdowns() {
     // Age dropdowns are now pre-populated in HTML template
     // No additional JavaScript initialization needed
-}
+  }
 
-// Test Selection
-document.addEventListener('DOMContentLoaded', function() {
+  // Test Selection
+  document.addEventListener("DOMContentLoaded", function () {
     // Initialize age dropdowns (no longer needed)
     initializeAgeDropdowns();
 
     // Initialize test search
     initializeTestSearch();
-    const paymentOptions = document.querySelectorAll('input[name="payment_option"]');
+    const paymentOptions = document.querySelectorAll(
+      'input[name="payment_option"]',
+    );
 
-    paymentOptions.forEach(option => {
-        option.addEventListener('change', updatePaymentAmount);
+    paymentOptions.forEach((option) => {
+      option.addEventListener("change", updatePaymentAmount);
     });
 
     // Add event listener for custom amount input
-    const customAmountInput = document.getElementById('custom-amount-input');
+    const customAmountInput = document.getElementById("custom-amount-input");
     if (customAmountInput) {
-        customAmountInput.addEventListener('input', updatePaymentAmount);
+      customAmountInput.addEventListener("input", updatePaymentAmount);
     }
 
     // Add event listeners for discount functionality
-    const discountTypeOptions = document.querySelectorAll('input[name="discount_type"]');
-    discountTypeOptions.forEach(option => {
-        option.addEventListener('change', updateDiscountDisplay);
+    const discountTypeOptions = document.querySelectorAll(
+      'input[name="discount_type"]',
+    );
+    discountTypeOptions.forEach((option) => {
+      option.addEventListener("change", updateDiscountDisplay);
     });
 
-    const discountInput = document.getElementById('discount-input');
+    const discountInput = document.getElementById("discount-input");
     if (discountInput) {
-        discountInput.addEventListener('input', updateBilling);
+      discountInput.addEventListener("input", updateBilling);
     }
 
     // Initialize doctor search
@@ -1190,9 +1523,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize collection fields
     initializeCollectionFields();
-});
+  });
 
-function updateBilling() {
+  function updateBilling() {
     // Calculate subtotal from selected tests
     subtotalAmount = selectedTests.reduce((sum, test) => sum + test.price, 0);
 
@@ -1207,25 +1540,25 @@ function updateBilling() {
     updatePaymentAmount();
 
     // Enable/disable submit button
-    const submitBtn = document.getElementById('submit-btn');
+    const submitBtn = document.getElementById("submit-btn");
     submitBtn.disabled = selectedTests.length === 0;
-}
+  }
 
-function displaySelectedTests() {
-    const container = document.getElementById('selected-tests');
+  function displaySelectedTests() {
+    const container = document.getElementById("selected-tests");
 
     if (selectedTests.length === 0) {
-        container.innerHTML = '<p class="text-muted">No tests selected</p>';
-        // Reset all amounts
-        document.getElementById('subtotal-amount').textContent = '₹0';
-        document.getElementById('discount-amount-display').textContent = '-₹0';
-        document.getElementById('total-amount').textContent = '₹0';
-        return;
+      container.innerHTML = '<p class="text-muted">No tests selected</p>';
+      // Reset all amounts
+      document.getElementById("subtotal-amount").textContent = "₹0";
+      document.getElementById("discount-amount-display").textContent = "-₹0";
+      document.getElementById("total-amount").textContent = "₹0";
+      return;
     }
 
-    let html = '';
-    selectedTests.forEach(test => {
-        html += `
+    let html = "";
+    selectedTests.forEach((test) => {
+      html += `
             <div class="selected-test-item">
                 <span>${test.name}</span>
                 <span>₹${test.price}</span>
@@ -1236,155 +1569,169 @@ function displaySelectedTests() {
     container.innerHTML = html;
 
     // Update billing breakdown
-    document.getElementById('subtotal-amount').textContent = `₹${subtotalAmount}`;
-    document.getElementById('discount-amount-display').textContent = `-₹${discountAmount}`;
-    document.getElementById('total-amount').textContent = `₹${totalAmount}`;
-}
+    document.getElementById("subtotal-amount").textContent =
+      `₹${subtotalAmount}`;
+    document.getElementById("discount-amount-display").textContent =
+      `-₹${discountAmount}`;
+    document.getElementById("total-amount").textContent = `₹${totalAmount}`;
+  }
 
-function updatePaymentAmount() {
-    const paymentOption = document.querySelector('input[name="payment_option"]:checked').value;
-    const customAmountSection = document.getElementById('custom-amount-section');
-    const customAmountInput = document.getElementById('custom-amount-input');
+  function updatePaymentAmount() {
+    const paymentOption = document.querySelector(
+      'input[name="payment_option"]:checked',
+    ).value;
+    const customAmountSection = document.getElementById(
+      "custom-amount-section",
+    );
+    const customAmountInput = document.getElementById("custom-amount-input");
 
     let amountToPay = totalAmount;
     let remainingAmount = 0;
 
-    if (paymentOption === 'half') {
-        amountToPay = Math.round(totalAmount / 2);
+    if (paymentOption === "half") {
+      amountToPay = Math.round(totalAmount / 2);
+      remainingAmount = totalAmount - amountToPay;
+      customAmountSection.style.display = "none";
+    } else if (paymentOption === "custom") {
+      customAmountSection.style.display = "block";
+      const customAmount = parseInt(customAmountInput.value) || 0;
+      if (customAmount > 0 && customAmount <= totalAmount) {
+        amountToPay = customAmount;
         remainingAmount = totalAmount - amountToPay;
-        customAmountSection.style.display = 'none';
-    } else if (paymentOption === 'custom') {
-        customAmountSection.style.display = 'block';
-        const customAmount = parseInt(customAmountInput.value) || 0;
-        if (customAmount > 0 && customAmount <= totalAmount) {
-            amountToPay = customAmount;
-            remainingAmount = totalAmount - amountToPay;
-        } else {
-            amountToPay = 0;
-            remainingAmount = totalAmount;
-        }
+      } else {
+        amountToPay = 0;
+        remainingAmount = totalAmount;
+      }
     } else {
-        // Full payment
-        amountToPay = totalAmount;
-        remainingAmount = 0;
-        customAmountSection.style.display = 'none';
+      // Full payment
+      amountToPay = totalAmount;
+      remainingAmount = 0;
+      customAmountSection.style.display = "none";
     }
 
     // Update total amount display
-    document.getElementById('total-amount').textContent = `₹${totalAmount}`;
-    document.getElementById('amount-to-pay').textContent = `₹${amountToPay}`;
-    document.getElementById('remaining-amount').textContent = `₹${remainingAmount}`;
-}
+    document.getElementById("total-amount").textContent = `₹${totalAmount}`;
+    document.getElementById("amount-to-pay").textContent = `₹${amountToPay}`;
+    document.getElementById("remaining-amount").textContent =
+      `₹${remainingAmount}`;
+  }
 
-// Discount calculation functions
-function calculateDiscount() {
-    const discountType = document.querySelector('input[name="discount_type"]:checked').value;
-    const discountInput = document.getElementById('discount-input');
+  // Discount calculation functions
+  function calculateDiscount() {
+    const discountType = document.querySelector(
+      'input[name="discount_type"]:checked',
+    ).value;
+    const discountInput = document.getElementById("discount-input");
     const discountValue = parseFloat(discountInput.value) || 0;
 
     let calculatedDiscount = 0;
 
     if (discountValue > 0) {
-        if (discountType === 'percentage') {
-            // Percentage discount (0-100%)
-            const percentage = Math.min(discountValue, 100); // Cap at 100%
-            calculatedDiscount = Math.round((subtotalAmount * percentage) / 100);
-        } else {
-            // Fixed amount discount
-            calculatedDiscount = Math.min(discountValue, subtotalAmount); // Can't exceed subtotal
-        }
+      if (discountType === "percentage") {
+        // Percentage discount (0-100%)
+        const percentage = Math.min(discountValue, 100); // Cap at 100%
+        calculatedDiscount = Math.round((subtotalAmount * percentage) / 100);
+      } else {
+        // Fixed amount discount
+        calculatedDiscount = Math.min(discountValue, subtotalAmount); // Can't exceed subtotal
+      }
     }
 
     return calculatedDiscount;
-}
+  }
 
-function updateDiscountDisplay() {
-    const discountType = document.querySelector('input[name="discount_type"]:checked').value;
-    const discountSymbol = document.getElementById('discount-symbol');
-    const discountHelp = document.getElementById('discount-help');
-    const discountInput = document.getElementById('discount-input');
+  function updateDiscountDisplay() {
+    const discountType = document.querySelector(
+      'input[name="discount_type"]:checked',
+    ).value;
+    const discountSymbol = document.getElementById("discount-symbol");
+    const discountHelp = document.getElementById("discount-help");
+    const discountInput = document.getElementById("discount-input");
 
-    if (discountType === 'percentage') {
-        discountSymbol.textContent = '%';
-        discountHelp.textContent = 'Enter discount percentage (0-100%)';
-        discountInput.max = '100';
-        discountInput.placeholder = 'Enter discount %';
+    if (discountType === "percentage") {
+      discountSymbol.textContent = "%";
+      discountHelp.textContent = "Enter discount percentage (0-100%)";
+      discountInput.max = "100";
+      discountInput.placeholder = "Enter discount %";
     } else {
-        discountSymbol.textContent = '₹';
-        discountHelp.textContent = 'Enter discount amount in rupees';
-        discountInput.max = subtotalAmount.toString();
-        discountInput.placeholder = 'Enter discount amount';
+      discountSymbol.textContent = "₹";
+      discountHelp.textContent = "Enter discount amount in rupees";
+      discountInput.max = subtotalAmount.toString();
+      discountInput.placeholder = "Enter discount amount";
     }
 
     // Recalculate when type changes
     updateBilling();
-}
+  }
 
-function clearDiscount() {
-    document.getElementById('discount-input').value = '';
+  function clearDiscount() {
+    document.getElementById("discount-input").value = "";
     updateBilling();
-}
+  }
 
-// Updated billing calculation function
+  // Updated billing calculation function
 
+  // Form Submission
+  document
+    .getElementById("multiStepForm")
+    .addEventListener("submit", function (e) {
+      e.preventDefault(); // Prevent default form submission
 
-
-// Form Submission
-document.getElementById('multiStepForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // Prevent default form submission
-
-    if (selectedTests.length === 0) {
-        alert('Please select at least one test');
+      if (selectedTests.length === 0) {
+        alert("Please select at least one test");
         return;
-    }
+      }
 
-    // Collect form data
-    const formData = new FormData(this);
+      // Collect form data
+      const formData = new FormData(this);
 
-    // Add selected tests and total amount
-    formData.append('selected_tests', JSON.stringify(selectedTests));
-    formData.append('total_amount', totalAmount);
+      // Add selected tests and total amount
+      formData.append("selected_tests", JSON.stringify(selectedTests));
+      formData.append("total_amount", totalAmount);
 
-    // Show loading state
-    const submitBtn = document.getElementById('submit-btn');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
-    submitBtn.disabled = true;
+      // Show loading state
+      const submitBtn = document.getElementById("submit-btn");
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+      submitBtn.disabled = true;
 
-    // Submit form via AJAX
-    fetch('{{ url_for("multi_step_registration") }}', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+      // Submit form via AJAX
+      fetch('{{ url_for("multi_step_registration") }}', {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
             // Store registration data for printing
             window.registrationData = data.registration_data;
 
             // Show success modal
-            const modal = new bootstrap.Modal(document.getElementById('printInvoiceModal'));
+            const modal = new bootstrap.Modal(
+              document.getElementById("printInvoiceModal"),
+            );
             modal.show();
-        } else {
-            alert('Registration failed: ' + (data.error || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Registration failed: Network error');
-    })
-    .finally(() => {
-        // Restore button state
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
+          } else {
+            alert("Registration failed: " + (data.error || "Unknown error"));
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Registration failed: Network error");
+        })
+        .finally(() => {
+          // Restore button state
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        });
     });
-});
 
-// Print Functions
-function printInvoice() {
+  // Print Functions
+  function printInvoice() {
     if (!window.registrationData) {
-        alert('No registration data available');
-        return;
+      alert("No registration data available");
+      return;
     }
 
     const data = window.registrationData;
@@ -1403,9 +1750,9 @@ function printInvoice() {
                     <h5>Patient Information</h5>
                     <p><strong>Name:</strong> ${data.title} ${data.first_name} ${data.last_name}</p>
                     <p><strong>Phone:</strong> ${data.phone}</p>
-                    <p><strong>Age:</strong> ${data.age_years} years ${data.age_months > 0 ? data.age_months + ' months' : ''}</p>
+                    <p><strong>Age:</strong> ${data.age_years} years ${data.age_months > 0 ? data.age_months + " months" : ""}</p>
                     <p><strong>Gender:</strong> ${data.gender}</p>
-                    ${data.barcode ? `<p><strong>Barcode:</strong> ${data.barcode}</p>` : ''}
+                    ${data.barcode ? `<p><strong>Barcode:</strong> ${data.barcode}</p>` : ""}
                 </div>
                 <div>
                     <h5>Invoice Details</h5>
@@ -1424,12 +1771,16 @@ function printInvoice() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${selectedTests.map(test => `
+                    ${selectedTests
+                      .map(
+                        (test) => `
                         <tr>
                             <td style="border: 1px solid #dee2e6; padding: 8px;">${test.name}</td>
                             <td style="border: 1px solid #dee2e6; padding: 8px;">₹${test.price}</td>
                         </tr>
-                    `).join('')}
+                    `,
+                      )
+                      .join("")}
                 </tbody>
                 <tfoot>
                     <tr style="background-color: #f8f9fa;">
@@ -1449,10 +1800,10 @@ function printInvoice() {
 
             <div style="margin-top: 30px;">
                 <p><strong>Collection Information:</strong></p>
-                <p>Collected By: ${data.collected_by || 'Not specified'}</p>
-                <p>Collected At: ${data.collected_at || 'Not specified'}</p>
-                <p>Collection Date: ${data.collection_datetime || 'Not specified'}</p>
-                ${data.referring_doctor ? `<p>Referring Doctor: ${data.referring_doctor}</p>` : ''}
+                <p>Collected By: ${data.collected_by || "Not specified"}</p>
+                <p>Collected At: ${data.collected_at || "Not specified"}</p>
+                <p>Collection Date: ${data.collection_datetime || "Not specified"}</p>
+                ${data.referring_doctor ? `<p>Referring Doctor: ${data.referring_doctor}</p>` : ""}
             </div>
 
             <div style="text-align: center; margin-top: 40px;">
@@ -1463,7 +1814,7 @@ function printInvoice() {
     `;
 
     // Open print window
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(`
         <html>
             <head>
@@ -1482,12 +1833,12 @@ function printInvoice() {
     `);
     printWindow.document.close();
     printWindow.print();
-}
+  }
 
-function printReport() {
+  function printReport() {
     if (!window.registrationData) {
-        alert('No registration data available');
-        return;
+      alert("No registration data available");
+      return;
     }
 
     const data = window.registrationData;
@@ -1507,7 +1858,7 @@ function printReport() {
                     <p><strong>Name:</strong> ${data.title} ${data.first_name} ${data.last_name}</p>
                     <p><strong>Age/Gender:</strong> ${data.gender}</p>
                     <p><strong>Phone:</strong> ${data.phone}</p>
-                    ${data.barcode ? `<p><strong>Sample ID:</strong> ${data.barcode}</p>` : ''}
+                    ${data.barcode ? `<p><strong>Sample ID:</strong> ${data.barcode}</p>` : ""}
                 </div>
                 <div>
                     <h5>Report Details</h5>
@@ -1528,23 +1879,27 @@ function printReport() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${selectedTests.map(test => `
+                    ${selectedTests
+                      .map(
+                        (test) => `
                         <tr>
                             <td style="border: 1px solid #dee2e6; padding: 8px;">${test.name}</td>
                             <td style="border: 1px solid #dee2e6; padding: 8px;">___________</td>
                             <td style="border: 1px solid #dee2e6; padding: 8px;">___________</td>
                             <td style="border: 1px solid #dee2e6; padding: 8px;">___________</td>
                         </tr>
-                    `).join('')}
+                    `,
+                      )
+                      .join("")}
                 </tbody>
             </table>
 
             <div style="margin-top: 30px;">
                 <div style="display: flex; justify-content: space-between;">
                     <div>
-                        <p><strong>Referring Doctor:</strong> ${data.referring_doctor || '_______________'}</p>
-                        <p><strong>Collection Date:</strong> ${data.collection_datetime || '_______________'}</p>
-                        <p><strong>Collected By:</strong> ${data.collected_by || '_______________'}</p>
+                        <p><strong>Referring Doctor:</strong> ${data.referring_doctor || "_______________"}</p>
+                        <p><strong>Collection Date:</strong> ${data.collection_datetime || "_______________"}</p>
+                        <p><strong>Collected By:</strong> ${data.collected_by || "_______________"}</p>
                     </div>
                     <div>
                         <p><strong>Verified By:</strong> _______________</p>
@@ -1561,7 +1916,7 @@ function printReport() {
     `;
 
     // Open print window
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(`
         <html>
             <head>
@@ -1580,6 +1935,6 @@ function printReport() {
     `);
     printWindow.document.close();
     printWindow.print();
-}
+  }
 </script>
 {% endblock %}

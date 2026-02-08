@@ -1,300 +1,366 @@
-{% extends "base.html" %}
-
-{% block title %}Dashboard - Pathology Lab{% endblock %}
-
-{% block extra_css %}
+{% extends "base.html" %} {% block title %}Dashboard - Pathology Lab{% endblock
+%} {% block extra_css %}
 <style>
-    .clickable-card {
-        transition: all 0.3s ease;
-        cursor: pointer;
-        border: none !important;
-    }
-    .clickable-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    }
-    .clickable-card .card-footer {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .clickable-card:hover .card-footer {
-        opacity: 1;
-    }
-    .statistics-card {
-        position: relative;
-        overflow: hidden;
-    }
-    .statistics-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-        transition: left 0.5s;
-    }
-    .statistics-card:hover::before {
-        left: 100%;
-    }
+  .clickable-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none !important;
+  }
+  .clickable-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  }
+  .clickable-card .card-footer {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .clickable-card:hover .card-footer {
+    opacity: 1;
+  }
+  .statistics-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .statistics-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+  .statistics-card:hover::before {
+    left: 100%;
+  }
 </style>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">
-            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-        </h1>
-    </div>
+  <div class="col-12">
+    <h1 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+  </div>
 </div>
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <a href="{{ url_for('patients') }}" class="text-decoration-none">
-            <div class="card bg-primary text-white clickable-card statistics-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4>{{ total_patients }}</h4>
-                            <p class="mb-0">Total Patients</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-users fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-primary border-0">
-                    <small class="text-light">
-                        <i class="fas fa-arrow-right me-1"></i>View All Patients
-                    </small>
-                </div>
+  <div class="col-md-3">
+    <a href="{{ url_for('patients') }}" class="text-decoration-none">
+      <div class="card bg-primary text-white clickable-card statistics-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ total_patients }}</h4>
+              <p class="mb-0">Total Patients</p>
             </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('tests') }}" class="text-decoration-none">
-            <div class="card bg-success text-white clickable-card statistics-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4>{{ total_tests }}</h4>
-                            <p class="mb-0">Available Tests</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-flask fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-success border-0">
-                    <small class="text-light">
-                        <i class="fas fa-arrow-right me-1"></i>View All Tests
-                    </small>
-                </div>
+            <div class="align-self-center">
+              <i class="fas fa-users fa-2x"></i>
             </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('test_results_dashboard') }}#pending" class="text-decoration-none">
-            <div class="card bg-warning text-white clickable-card statistics-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4>{{ pending_tests }}</h4>
-                            <p class="mb-0">Pending Tests</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-clock fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-warning border-0">
-                    <small class="text-dark">
-                        <i class="fas fa-arrow-right me-1"></i>Update Results
-                    </small>
-                </div>
+          </div>
+        </div>
+        <div class="card-footer bg-primary border-0">
+          <small class="text-light">
+            <i class="fas fa-arrow-right me-1"></i>View All Patients
+          </small>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{{ url_for('tests') }}" class="text-decoration-none">
+      <div class="card bg-primary text-white clickable-card statistics-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ total_tests }}</h4>
+              <p class="mb-0">Available Tests</p>
             </div>
-        </a>
-    </div>
-    <div class="col-md-3">
-        <a href="{{ url_for('test_results_dashboard') }}#completed" class="text-decoration-none">
-            <div class="card bg-info text-white clickable-card statistics-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4>{{ completed_tests }}</h4>
-                            <p class="mb-0">Completed Tests</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-check-circle fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-info border-0">
-                    <small class="text-light">
-                        <i class="fas fa-arrow-right me-1"></i>View Completed
-                    </small>
-                </div>
+            <div class="align-self-center">
+              <i class="fas fa-flask fa-2x"></i>
             </div>
-        </a>
-    </div>
+          </div>
+        </div>
+        <div class="card-footer bg-primary border-0">
+          <small class="text-light">
+            <i class="fas fa-arrow-right me-1"></i>View All Tests
+          </small>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a
+      href="{{ url_for('test_results_dashboard') }}#pending"
+      class="text-decoration-none"
+    >
+      <div class="card bg-primary text-white clickable-card statistics-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ pending_tests }}</h4>
+              <p class="mb-0">Pending Tests</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-clock fa-2x"></i>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-primary border-0">
+          <small class="text-light">
+            <i class="fas fa-arrow-right me-1"></i>Update Results
+          </small>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a
+      href="{{ url_for('test_results_dashboard') }}#completed"
+      class="text-decoration-none"
+    >
+      <div class="card bg-primary text-white clickable-card statistics-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ completed_tests }}</h4>
+              <p class="mb-0">Completed Tests</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-check-circle fa-2x"></i>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-primary border-0">
+          <small class="text-light">
+            <i class="fas fa-arrow-right me-1"></i>View Completed
+          </small>
+        </div>
+      </div>
+    </a>
+  </div>
 </div>
 
 <!-- Quick Actions -->
 <div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-bolt me-2"></i>Quick Actions
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <!-- Row 1: Primary Actions -->
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('multi_step_registration') }}" class="btn btn-primary w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
-                            <span class="h6 mb-1">Quick Registration</span>
-                            <small class="text-light">Patient + Tests + Billing</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('test_results_dashboard') }}" class="btn btn-success w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-microscope fa-2x mb-2"></i>
-                            <span class="h6 mb-1">Test Results & Payment</span>
-                            <small class="text-light">Update results & collect payments</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('assign_multiple_tests') }}" class="btn btn-info w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-clipboard-list fa-2x mb-2"></i>
-                            <span class="h6 mb-1">Assign Tests to Patient</span>
-                            <small class="text-light">Multi-grid view assignment</small>
-                        </a>
-                    </div>
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Row 1: Primary Actions -->
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('multi_step_registration') }}"
+              class="btn btn-primary w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+              <span class="h6 mb-1">Quick Registration</span>
+              <small class="text-light">Patient + Tests + Billing</small>
+            </a>
+          </div>
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('test_results_dashboard') }}"
+              class="btn btn-success w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-microscope fa-2x mb-2"></i>
+              <span class="h6 mb-1">Test Results & Payment</span>
+              <small class="text-light"
+                >Update results & collect payments</small
+              >
+            </a>
+          </div>
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('assign_multiple_tests') }}"
+              class="btn btn-info w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+              <span class="h6 mb-1">Assign Tests to Patient</span>
+              <small class="text-light">Multi-grid view assignment</small>
+            </a>
+          </div>
 
-                    <!-- Row 2: Secondary Actions -->
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('register_patient') }}" class="btn btn-outline-primary w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-user fa-2x mb-2"></i>
-                            <span class="h6 mb-1">Patient Only</span>
-                            <small class="text-muted">Basic patient registration</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('patient_tests') }}" class="btn btn-dark w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-list-alt fa-2x mb-2"></i>
-                            <span class="h6 mb-1">View Test Orders</span>
-                            <small class="text-light">All test orders & status</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('payment_overview') }}" class="btn btn-warning w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-chart-pie fa-2x mb-2"></i>
-                            <span class="h6 mb-1">Payment Overview</span>
-                            <small class="text-light">Pending, Paid, Doctor Commissions</small>
-                        </a>
-                    </div>
+          <!-- Row 2: Secondary Actions -->
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('register_patient') }}"
+              class="btn btn-outline-primary w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-user fa-2x mb-2"></i>
+              <span class="h6 mb-1">Patient Only</span>
+              <small class="text-muted">Basic patient registration</small>
+            </a>
+          </div>
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('patient_tests') }}"
+              class="btn btn-dark w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-list-alt fa-2x mb-2"></i>
+              <span class="h6 mb-1">View Test Orders</span>
+              <small class="text-light">All test orders & status</small>
+            </a>
+          </div>
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('payment_overview') }}"
+              class="btn btn-warning w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-chart-pie fa-2x mb-2"></i>
+              <span class="h6 mb-1">Payment Overview</span>
+              <small class="text-light"
+                >Pending, Paid, Doctor Commissions</small
+              >
+            </a>
+          </div>
 
-                    <!-- Row 3: Additional Actions -->
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('patients') }}" class="btn btn-secondary w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-search fa-2x mb-2"></i>
-                            <span class="h6 mb-1">Patient Search</span>
-                            <small class="text-light">Find & view patients</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('assign_test') }}" class="btn btn-info w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-vial fa-2x mb-2"></i>
-                            <span class="h6 mb-1">Assign Tests</span>
-                            <small class="text-light">Add tests to patient</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('financial_overview') }}" class="btn btn-gradient w-100 d-flex flex-column justify-content-center" style="min-height: 80px; background: linear-gradient(135deg, #ffc107, #fd7e14); border: none;">
-                            <i class="fas fa-chart-line fa-2x mb-2 text-white"></i>
-                            <span class="h6 mb-1 text-white">Financial Overview</span>
-                            <small class="text-white">Revenue, Commissions, Analytics</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('database_viewer') }}" class="btn btn-dark w-100 d-flex flex-column justify-content-center" style="min-height: 80px;">
-                            <i class="fas fa-database fa-2x mb-2"></i>
-                            <span class="h6 mb-1">Database Viewer</span>
-                            <small class="text-light">View & export data</small>
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('doctors') }}" class="btn btn-purple w-100 d-flex flex-column justify-content-center" style="min-height: 80px; background: linear-gradient(135deg, #6f42c1, #e83e8c); border: none;">
-                            <i class="fas fa-user-md fa-2x mb-2 text-white"></i>
-                            <span class="h6 mb-1 text-white">Doctor Management</span>
-                            <small class="text-white">Add, Edit, Commission Setup</small>
-                        </a>
-                    </div>
-                </div>
-            </div>
+          <!-- Row 3: Additional Actions -->
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('patients') }}"
+              class="btn btn-secondary w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-search fa-2x mb-2"></i>
+              <span class="h6 mb-1">Patient Search</span>
+              <small class="text-light">Find & view patients</small>
+            </a>
+          </div>
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('assign_test') }}"
+              class="btn btn-info w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-vial fa-2x mb-2"></i>
+              <span class="h6 mb-1">Assign Tests</span>
+              <small class="text-light">Add tests to patient</small>
+            </a>
+          </div>
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('financial_overview') }}"
+              class="btn btn-gradient w-100 d-flex flex-column justify-content-center"
+              style="
+                min-height: 80px;
+                background: linear-gradient(135deg, #ffc107, #fd7e14);
+                border: none;
+              "
+            >
+              <i class="fas fa-chart-line fa-2x mb-2 text-white"></i>
+              <span class="h6 mb-1 text-white">Financial Overview</span>
+              <small class="text-white">Revenue, Commissions, Analytics</small>
+            </a>
+          </div>
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('database_viewer') }}"
+              class="btn btn-dark w-100 d-flex flex-column justify-content-center"
+              style="min-height: 80px"
+            >
+              <i class="fas fa-database fa-2x mb-2"></i>
+              <span class="h6 mb-1">Database Viewer</span>
+              <small class="text-light">View & export data</small>
+            </a>
+          </div>
+          <div class="col-md-4 mb-3">
+            <a
+              href="{{ url_for('doctors') }}"
+              class="btn btn-purple w-100 d-flex flex-column justify-content-center"
+              style="
+                min-height: 80px;
+                background: linear-gradient(135deg, #6f42c1, #e83e8c);
+                border: none;
+              "
+            >
+              <i class="fas fa-user-md fa-2x mb-2 text-white"></i>
+              <span class="h6 mb-1 text-white">Doctor Management</span>
+              <small class="text-white">Add, Edit, Commission Setup</small>
+            </a>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Recent Activity -->
 <div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-user-clock me-2"></i>Recent Patients
-                </h5>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-user-clock me-2"></i>Recent Patients
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if recent_patients %}
+        <div class="list-group list-group-flush">
+          {% for patient in recent_patients %}
+          <div
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <strong>{{ patient.full_name }}</strong><br />
+              <small class="text-muted">{{ patient.phone }}</small>
             </div>
-            <div class="card-body">
-                {% if recent_patients %}
-                    <div class="list-group list-group-flush">
-                        {% for patient in recent_patients %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ patient.full_name }}</strong><br>
-                                <small class="text-muted">{{ patient.phone }}</small>
-                            </div>
-                            <small class="text-muted">{{ patient.date_registered.strftime('%Y-%m-%d') }}</small>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">No patients registered yet.</p>
-                {% endif %}
-            </div>
+            <small class="text-muted"
+              >{{ patient.date_registered.strftime('%Y-%m-%d') }}</small
+            >
+          </div>
+          {% endfor %}
         </div>
+        {% else %}
+        <p class="text-muted">No patients registered yet.</p>
+        {% endif %}
+      </div>
     </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-clipboard-check me-2"></i>Recent Test Orders
-                </h5>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-clipboard-check me-2"></i>Recent Test Orders
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if recent_test_orders %}
+        <div class="list-group list-group-flush">
+          {% for order in recent_test_orders %}
+          <div
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <strong>{{ order.patient.full_name }}</strong><br />
+              <small class="text-muted">{{ order.test.name }}</small>
             </div>
-            <div class="card-body">
-                {% if recent_test_orders %}
-                    <div class="list-group list-group-flush">
-                        {% for order in recent_test_orders %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ order.patient.full_name }}</strong><br>
-                                <small class="text-muted">{{ order.test.name }}</small>
-                            </div>
-                            <span class="badge bg-{{ 'success' if order.status == 'Completed' else 'warning' if order.status == 'Pending' else 'secondary' }}">
-                                {{ order.status }}
-                            </span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-muted">No test orders yet.</p>
-                {% endif %}
-            </div>
+            <span
+              class="badge bg-{{ 'success' if order.status == 'Completed' else 'warning' if order.status == 'Pending' else 'secondary' }}"
+            >
+              {{ order.status }}
+            </span>
+          </div>
+          {% endfor %}
         </div>
+        {% else %}
+        <p class="text-muted">No test orders yet.</p>
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
