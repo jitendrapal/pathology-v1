@@ -1,16 +1,16 @@
 # Pathology Lab Management System - Python Dependencies
 
 # Core Flask Framework
-Flask==2.3.3
-Flask-SQLAlchemy==3.0.5
-Flask-WTF==1.1.1
-WTForms==3.0.1
-Werkzeug==2.3.7
-Jinja2==3.1.2
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-WTF==1.2.1
+WTForms==3.1.1
+Werkzeug==3.0.1
+Jinja2==3.1.3
 MarkupSafe==2.1.3
 itsdangerous==2.1.2
 click==8.1.7
-blinker==1.6.3
+blinker==1.7.0
 
 # Production Server
 gunicorn==21.2.0
@@ -22,10 +22,10 @@ psycopg2-binary==2.9.7
 email-validator==2.0.0
 
 # Data Processing (Optional - for enhanced CSV export)
-# Compatible versions to avoid binary incompatibility
-numpy==1.24.3
-pandas==2.0.3
+# Python 3.12 compatible versions
+numpy>=1.26.0
+pandas>=2.1.0
 
 # Note: pandas is optional - the application will work without it
 # If pandas is not available, CSV export will use Python's built-in csv module
-# NumPy and Pandas versions are pinned for binary compatibility
+# NumPy and Pandas versions are compatible with Python 3.12+
